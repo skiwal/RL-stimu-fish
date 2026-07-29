@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scenario>
+
+    <!--
+        Stonefish 静态水池基准环境
+        坐标系：NED
+          X：水池长度方向
+          Y：水池宽度方向
+          Z：向下为正
+
+        水池内部尺寸：
+          长度 12.0 m
+          宽度  6.0 m
+          水深  4.0 m
+
+        水面位于 Z = 0.0 m
+        池底位于 Z = 4.0 m
+
+        静态水域设置：
+          平坦水面：waves height = 0
+          无水流：不定义任何 current
+    -->
+
+    <environment>
+        <ned latitude="0.0" longitude="0.0"/>
+
+        <ocean>
+            <!-- 淡水密度约 997 kg/m^3；jerlov 较低表示较清澈 -->
+            <water density="997.0" jerlov="0.05" temperature="20.0"/>
+
+            <!-- 静止、平坦水面 -->
+            <waves height="0.0"/>
+
+            <!-- 关闭悬浮颗粒，便于第一阶段观察与调试 -->
+            <particles enabled="false"/>
+
+            <!--
+                故意不添加 <current>：
+                当前环境中的水流速度场为零。
+            -->
+        </ocean>
+    </environment>
+
+    <!-- 水池墙体的物理材料 -->
+    <materials>
+        <material
+            name="PoolConcrete"
+            density="2400.0"
+            restitution="0.20"/>
+
+        <friction_table>
+            <friction
+                material1="PoolConcrete"
+                material2="PoolConcrete"
+                static="0.80"
+                dynamic="0.60"/>
+        </friction_table>
+    </materials>
+
+    <!-- 水池墙体的显示外观 -->
+    <looks>
+        <look
+            name="PoolBottomLook"
+            rgb="0.25 0.45 0.55"
+            roughness="0.85"
+            metalness="0.0"/>
+
+        <look
+            name="PoolWallLook"
+            rgb="0.65 0.75 0.78"
+            roughness="0.75"
+            metalness="0.0"/>
+    </looks>
+
+    <!--
+        池底：
+        内部池底表面在 Z = 4.0 m。
+        厚度 0.30 m，因此几何中心位于 Z = 4.15 m。
+    -->
+    <static name="PoolBottom" type="box">
+        <dimensions xyz="12.6 6.6 0.30"/>
+        <material name="PoolConcrete"/>
+        <look name="PoolBottomLook"/>
+        <world_transform xyz="0.0 0.0 4.15" rpy="0.0 0.0 0.0"/>
+    </static>
+
+    <!-- 左右两侧长墙；墙厚 0.30 m，高 4.0 m -->
+    <static name="PoolWallPositiveY" type="box">
+        <dimensions xyz="12.6 0.30 4.0"/>
+        <material name="PoolConcrete"/>
+        <look name="PoolWallLook"/>
+        <world_transform xyz="0.0 3.15 2.0" rpy="0.0 0.0 0.0"/>
+    </static>
+
+    <static name="PoolWallNegativeY" type="box">
+        <dimensions xyz="12.6 0.30 4.0"/>
+        <material name="PoolConcrete"/>
+        <look name="PoolWallLook"/>
+        <world_transform xyz="0.0 -3.15 2.0" rpy="0.0 0.0 0.0"/>
+    </static>
+
+    <!-- 前后两端短墙；墙厚 0.30 m，高 4.0 m -->
+    <static name="PoolWallPositiveX" type="box">
+        <dimensions xyz="0.30 6.0 4.0"/>
+        <material name="PoolConcrete"/>
+        <look name="PoolWallLook"/>
+        <world_transform xyz="6.15 0.0 2.0" rpy="0.0 0.0 0.0"/>
+    </static>
+
+    <static name="PoolWallNegativeX" type="box">
+        <dimensions xyz="0.30 6.0 4.0"/>
+        <material name="PoolConcrete"/>
+        <look name="PoolWallLook"/>
+        <world_transform xyz="-6.15 0.0 2.0" rpy="0.0 0.0 0.0"/>
+    </static>
+
+</scenario>

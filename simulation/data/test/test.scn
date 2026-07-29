@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+
+<scenario>
+
+    <environment>
+        <ned latitude="0.0" longitude="0.0"/>
+    </environment>
+
+    <materials>
+        <material
+            name="Aluminium"
+            density="2700.0"
+            restitution="0.8"/>
+
+        <material
+            name="Steel"
+            density="7810.0"
+            restitution="0.9"/>
+
+        <friction_table>
+            <friction
+                material1="Aluminium"
+                material2="Aluminium"
+                static="0.7"
+                dynamic="0.5"/>
+
+            <friction
+                material1="Steel"
+                material2="Steel"
+                static="0.4"
+                dynamic="0.2"/>
+
+            <friction
+                material1="Aluminium"
+                material2="Steel"
+                static="0.6"
+                dynamic="0.4"/>
+        </friction_table>
+    </materials>
+
+    <looks>
+        <look
+            name="Gray"
+            gray="0.5"
+            roughness="0.3"
+            metalness="0.2"/>
+
+        <look
+            name="Red"
+            rgb="1.0 0.0 0.0"
+            roughness="0.1"/>
+    </looks>
+
+    <static name="Ground" type="plane">
+        <material name="Steel"/>
+        <look name="Gray"/>
+        <world_transform
+            xyz="0.0 0.0 0.0"
+            rpy="0.0 0.0 0.0"/>
+    </static>
+
+    <dynamic
+        name="TestSphere"
+        type="sphere"
+        physics="surface"
+        buoyant="false">
+
+        <dimensions radius="0.1"/>
+
+        <origin
+            xyz="0.0 0.0 0.0"
+            rpy="0.0 0.0 0.0"/>
+
+        <material name="Aluminium"/>
+        <look name="Red"/>
+
+        <world_transform
+            xyz="0.0 0.0 -1.0"
+            rpy="0.0 0.0 0.0"/>
+    </dynamic>
+
+</scenario>
