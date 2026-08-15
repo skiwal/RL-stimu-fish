@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<scenario>
+
+    <!--
+        坐标系：NED
+
+        +X：上游方向
+        -X：下游方向
+        +Y/-Y：河流宽度方向
+        +Z：向下
+
+        水面：Z = 0 m
+        河床：Z = 4 m
+        河宽：8 m
+
+        河床和河岸区块由 C++ 创建，
+        因为它们需要在运行过程中循环复用。
+    -->
+
+    <environment>
+        <ned latitude="0.0" longitude="0.0"/>
+
+        <ocean>
+            <water
+                density="997.0"
+                jerlov="0.08"
+                temperature="20.0"/>
+
+            <waves height="0.0"/>
+
+            <particles enabled="false"/>
+
+            <!-- 水流沿 -X，即向下游流动 -->
+            <current type="uniform">
+                <velocity xyz="-1.0 0.0 0.0"/>
+            </current>
+        </ocean>
+    </environment>
+
+    <materials>
+        <!-- 河床和河岸 -->
+        <material
+            name="RiverRock"
+            density="2600.0"
+            restitution="0.15"/>
+
+        <!--
+            临时鱼体材料密度接近淡水，
+            使测试鱼接近中性浮力。
+        -->
+        <material
+            name="FishMaterial"
+            density="997.0"
+            restitution="0.20"/>
+
+        <friction_table>
+            <friction
+                material1="RiverRock"
+                material2="RiverRock"
+                static="0.90"
+                dynamic="0.70"/>
+
+            <friction
+                material1="FishMaterial"
+                material2="RiverRock"
+                static="0.45"
+                dynamic="0.30"/>
+
+            <friction
+                material1="FishMaterial"
+                material2="FishMaterial"
+                static="0.30"
+                dynamic="0.20"/>
+        </friction_table>
+    </materials>
+
+    <looks>
+        <look
+            name="RiverBedLook"
+            rgb="0.32 0.24 0.16"
+            roughness="0.95"
+            metalness="0.0"/>
+
+        <look
+            name="RiverBankLook"
+            rgb="0.28 0.38 0.20"
+            roughness="0.95"
+            metalness="0.0"/>
+
+        <look
+            name="FishLook"
+            rgb="0.95 0.30 0.08"
+            roughness="0.40"
+            metalness="0.0"/>
+    </looks>
+
+    <!--
+        临时鱼体。
+
+        它是正常的动态刚体，不会被锁定。
+        后续用真正的仿生鱼机器人替换它，
+        只需要继续使用名称 FishProxy，
+        或在 C++ 中修改目标实体名称。
+    -->
+    <dynamic
+        name="FishProxy"
+        type="sphere"
+        physics="submerged"
+        buoyant="true">
+
+        <dimensions radius="0.30"/>
+
+        <origin
+            xyz="0.0 0.0 0.0"
+            rpy="0.0 0.0 0.0"/>
+
+        <material name="FishMaterial"/>
+        <look name="FishLook"/>
+
+        <!-- 河流中央、水下 2 m -->
+        <world_transform
+            xyz="0.0 0.0 2.0"
+            rpy="0.0 0.0 0.0"/>
+    </dynamic>
+
+</scenario>

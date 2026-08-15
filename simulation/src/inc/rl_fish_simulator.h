@@ -2,18 +2,27 @@
 
 #include <Stonefish/core/SimulationManager.h>
 
-class RLFishSimulator final : public sf::SimulationManager
+#include "river_chunk_manager.h"
+
+namespace sf
+{
+class SolidEntity;
+}
+
+class RLFishSimulator final
+    : public sf::SimulationManager
 {
 public:
-    explicit RLFishSimulator(sf::Scalar stepsPerSecond);
+    explicit RLFishSimulator(
+        sf::Scalar stepsPerSecond);
 
     void BuildScenario() override;
 
-    // 后续接入强化学习时再加入：
-    //
-    // void SimulationStepCompleted(sf::Scalar timeStep) override;
-    // void ResetEpisode();
-    // void SetAction(...);
-    // Observation GetObservation();
-};
+    void SimulationStepCompleted(
+        sf::Scalar timeStep) override;
 
+private:
+    sf::SolidEntity* fish_ = nullptr;
+
+    RiverChunkManager river_;
+};

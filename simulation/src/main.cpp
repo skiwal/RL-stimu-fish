@@ -1,27 +1,55 @@
 #include <Stonefish/core/GraphicalSimulationApp.h>
 
-#include <string>
-
 #include "inc/rl_fish_simulator.h"
 
-int main(int argc, char** argv)
+#include <string>
+
+namespace
 {
-    // Stonefish 默认渲染设置
+
+std::string NormalizeDataDirectory(
+    std::string path)
+{
+    if (path.empty())
+    {
+        return "../data/";
+    }
+
+    if (path.back() != '/')
+    {
+        path.push_back('/');
+    }
+
+    return path;
+}
+
+} // namespace
+
+int main(
+    int argc,
+    char** argv)
+{
     sf::RenderSettings renderSettings;
 
-    // Stonefish 默认辅助显示设置
+    renderSettings.windowW = 1920;
+    renderSettings.windowH = 1080;
+
     sf::HelperSettings helperSettings;
 
-    // 每秒执行 500 个物理仿真步
     RLFishSimulator simulator(500.0);
 
+    const std::string dataDirectory =
+        NormalizeDataDirectory(
+            argc > 1
+                ? argv[1]
+                : "../data/");
+
     sf::GraphicalSimulationApp app(
-        "RL Bionic Fish Simulator",
-        "data/",
+        "RL Bionic Fish - Basic River",
+        dataDirectory,
         renderSettings,
         helperSettings,
-        &simulator
-    );
+        &simulator);
 
     app.Run();
 

@@ -16,3 +16,5 @@ cmake -S . -B build \
 cmake --build build -j$(nproc)
 
 ```
+
+simulation/data/env/basic_river.scn
