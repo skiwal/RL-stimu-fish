@@ -4,6 +4,7 @@
 #include <Stonefish/core/SimulationApp.h>
 #include <Stonefish/entities/Entity.h>
 #include <Stonefish/entities/SolidEntity.h>
+#include <Stonefish/entities/forcefields/Ocean.h>
 
 #include <stdexcept>
 #include <string>
@@ -70,6 +71,16 @@ void RLFishSimulator::BuildScenario()
             "Failed to parse scenario: "
             + scenarioPath);
     }
+
+    sf::Ocean* ocean = getOcean();
+
+    if(ocean == nullptr)
+    {
+        throw std::runtime_error(
+            "Ocean is not available.");
+    }
+
+    ocean->EnableCurrents();    
 
     /*
         SCN 解析完成后，通过唯一名称寻找临时鱼体。

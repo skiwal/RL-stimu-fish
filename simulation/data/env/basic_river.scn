@@ -24,16 +24,16 @@
         <ocean>
             <water
                 density="997.0"
-                jerlov="0.08"
+                jerlov="0.48"
                 temperature="20.0"/>
 
             <waves height="0.0"/>
 
-            <particles enabled="false"/>
+            <particles enabled="true"/>
 
             <!-- 水流沿 -X，即向下游流动 -->
             <current type="uniform">
-                <velocity xyz="-1.0 0.0 0.0"/>
+                <velocity xyz="-5.0 0.0 0.0"/>
             </current>
         </ocean>
     </environment>
