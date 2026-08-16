@@ -1,117 +1,346 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <scenario>
 
     <!--
-        Stonefish 静态水池基准环境
-        坐标系：NED
-          X：水池长度方向
-          Y：水池宽度方向
-          Z：向下为正
+        ============================================================
+        Bionic Fish V1 - Static Pool Test Bench
+        ============================================================
 
-        水池内部尺寸：
-          长度 12.0 m
-          宽度  6.0 m
-          水深  4.0 m
+        NED：
 
-        水面位于 Z = 0.0 m
-        池底位于 Z = 4.0 m
+            X = 水池长度
+            Y = 水池宽度
+            Z = 向下
 
-        静态水域设置：
-          平坦水面：waves height = 0
-          无水流：不定义任何 current
+        Pool:
+
+            X = -6 ~ +6 m
+            Y = -3 ~ +3 m
+            Z =  0 ~  4 m
+
+        水面：
+            Z = 0
+
+        池底：
+            Z = 4
+
+        当前测试环境故意：
+
+            无 current
+            无 wave
+            无 obstacle
+
+        目标：
+
+            只验证仿生鱼本体：
+            - propulsion
+            - steering
+            - dive/rise
+            - IMU
+            - pressure
+            - sonar
+            - motor feedback
     -->
 
+
+    <!-- ==========================================================
+         Environment
+         ========================================================== -->
+
     <environment>
-        <ned latitude="0.0" longitude="0.0"/>
+
+        <ned
+            latitude="0.0"
+            longitude="0.0"/>
+
 
         <ocean>
-            <!-- 淡水密度约 997 kg/m^3；jerlov 较低表示较清澈 -->
-            <water density="997.0" jerlov="0.05" temperature="20.0"/>
 
-            <!-- 静止、平坦水面 -->
-            <waves height="0.0"/>
+            <water
+                density="997.0"
+                jerlov="0.05"
+                temperature="20.0"/>
 
-            <!-- 关闭悬浮颗粒，便于第一阶段观察与调试 -->
-            <particles enabled="false"/>
+            <waves
+                height="0.0"/>
+
+            <particles
+                enabled="false"/>
 
             <!--
-                故意不添加 <current>：
-                当前环境中的水流速度场为零。
+                故意没有 current。
             -->
+
         </ocean>
+
     </environment>
 
-    <!-- 水池墙体的物理材料 -->
+
+    <!-- ==========================================================
+         Materials
+         ========================================================== -->
+
     <materials>
+
+
+        <!-- 水池 -->
+
         <material
             name="PoolConcrete"
             density="2400.0"
             restitution="0.20"/>
 
+
+        <!--
+            第一版鱼体使用与水一致的密度。
+
+            这样整个多刚体机器人接近中性浮力，
+            先排除浮力失配对推进实验的干扰。
+
+            后面可以故意改成轻微正浮力。
+        -->
+
+        <material
+            name="FishNeutral"
+            density="997.0"
+            restitution="0.10"/>
+
+
         <friction_table>
+
+
             <friction
                 material1="PoolConcrete"
                 material2="PoolConcrete"
                 static="0.80"
                 dynamic="0.60"/>
+
+
+            <friction
+                material1="FishNeutral"
+                material2="PoolConcrete"
+                static="0.30"
+                dynamic="0.20"/>
+
+
+            <friction
+                material1="FishNeutral"
+                material2="FishNeutral"
+                static="0.20"
+                dynamic="0.10"/>
+
+
         </friction_table>
+
     </materials>
 
-    <!-- 水池墙体的显示外观 -->
+
+    <!-- ==========================================================
+         Looks
+         ========================================================== -->
+
     <looks>
+
+
         <look
             name="PoolBottomLook"
             rgb="0.25 0.45 0.55"
             roughness="0.85"
             metalness="0.0"/>
 
+
         <look
             name="PoolWallLook"
             rgb="0.65 0.75 0.78"
             roughness="0.75"
             metalness="0.0"/>
+
+
+        <!-- Fish Body -->
+
+        <look
+            name="FishBodyLook"
+            rgb="0.95 0.35 0.08"
+            roughness="0.40"
+            metalness="0.0"/>
+
+
+        <!-- Tail -->
+
+        <look
+            name="FishTailLook"
+            rgb="0.85 0.12 0.08"
+            roughness="0.40"
+            metalness="0.0"/>
+
+
+        <!--
+            两侧鳍故意使用不同颜色，
+            第一阶段方便判断关节方向。
+        -->
+
+        <look
+            name="FishLeftFinLook"
+            rgb="0.10 0.80 0.30"
+            roughness="0.40"
+            metalness="0.0"/>
+
+
+        <look
+            name="FishRightFinLook"
+            rgb="0.10 0.45 0.95"
+            roughness="0.40"
+            metalness="0.0"/>
+
+
     </looks>
 
+
+    <!-- ==========================================================
+         Pool Bottom
+         ========================================================== -->
+
+    <static
+        name="PoolBottom"
+        type="box">
+
+        <dimensions
+            xyz="12.6 6.6 0.30"/>
+
+        <material
+            name="PoolConcrete"/>
+
+        <look
+            name="PoolBottomLook"/>
+
+        <world_transform
+            xyz="0.0 0.0 4.15"
+            rpy="0.0 0.0 0.0"/>
+
+    </static>
+
+
+    <!-- ==========================================================
+         Side Walls
+         ========================================================== -->
+
+    <static
+        name="PoolWallPositiveY"
+        type="box">
+
+        <dimensions
+            xyz="12.6 0.30 4.0"/>
+
+        <material
+            name="PoolConcrete"/>
+
+        <look
+            name="PoolWallLook"/>
+
+        <world_transform
+            xyz="0.0 3.15 2.0"
+            rpy="0.0 0.0 0.0"/>
+
+    </static>
+
+
+    <static
+        name="PoolWallNegativeY"
+        type="box">
+
+        <dimensions
+            xyz="12.6 0.30 4.0"/>
+
+        <material
+            name="PoolConcrete"/>
+
+        <look
+            name="PoolWallLook"/>
+
+        <world_transform
+            xyz="0.0 -3.15 2.0"
+            rpy="0.0 0.0 0.0"/>
+
+    </static>
+
+
+    <!-- ==========================================================
+         End Walls
+         ========================================================== -->
+
+    <static
+        name="PoolWallPositiveX"
+        type="box">
+
+        <dimensions
+            xyz="0.30 6.0 4.0"/>
+
+        <material
+            name="PoolConcrete"/>
+
+        <look
+            name="PoolWallLook"/>
+
+        <world_transform
+            xyz="6.15 0.0 2.0"
+            rpy="0.0 0.0 0.0"/>
+
+    </static>
+
+
+    <static
+        name="PoolWallNegativeX"
+        type="box">
+
+        <dimensions
+            xyz="0.30 6.0 4.0"/>
+
+        <material
+            name="PoolConcrete"/>
+
+        <look
+            name="PoolWallLook"/>
+
+        <world_transform
+            xyz="-6.15 0.0 2.0"
+            rpy="0.0 0.0 0.0"/>
+
+    </static>
+
+
+    <!-- ==========================================================
+         Bionic Fish
+         ========================================================== -->
+
     <!--
-        池底：
-        内部池底表面在 Z = 4.0 m。
-        厚度 0.30 m，因此几何中心位于 Z = 4.15 m。
+        Stonefish include 路径相对于 SimulationApp data path。
+
+        当前程序的 data path 是：
+
+            ./data/
+
+        所以这里：
+
+            env/bionic_fish_v1.scn
     -->
-    <static name="PoolBottom" type="box">
-        <dimensions xyz="12.6 6.6 0.30"/>
-        <material name="PoolConcrete"/>
-        <look name="PoolBottomLook"/>
-        <world_transform xyz="0.0 0.0 4.15" rpy="0.0 0.0 0.0"/>
-    </static>
 
-    <!-- 左右两侧长墙；墙厚 0.30 m，高 4.0 m -->
-    <static name="PoolWallPositiveY" type="box">
-        <dimensions xyz="12.6 0.30 4.0"/>
-        <material name="PoolConcrete"/>
-        <look name="PoolWallLook"/>
-        <world_transform xyz="0.0 3.15 2.0" rpy="0.0 0.0 0.0"/>
-    </static>
+    <include
+        file="env/bionic_fish_v1.scn">
 
-    <static name="PoolWallNegativeY" type="box">
-        <dimensions xyz="12.6 0.30 4.0"/>
-        <material name="PoolConcrete"/>
-        <look name="PoolWallLook"/>
-        <world_transform xyz="0.0 -3.15 2.0" rpy="0.0 0.0 0.0"/>
-    </static>
+        <arg
+            name="robot_name"
+            value="BionicFish"/>
 
-    <!-- 前后两端短墙；墙厚 0.30 m，高 4.0 m -->
-    <static name="PoolWallPositiveX" type="box">
-        <dimensions xyz="0.30 6.0 4.0"/>
-        <material name="PoolConcrete"/>
-        <look name="PoolWallLook"/>
-        <world_transform xyz="6.15 0.0 2.0" rpy="0.0 0.0 0.0"/>
-    </static>
+        <!--
+            从 X=-3.5 开始，
+            给 +X 前进实验留下较长距离。
+        -->
+        <arg
+            name="robot_position"
+            value="-3.5 0.0 2.0"/>
 
-    <static name="PoolWallNegativeX" type="box">
-        <dimensions xyz="0.30 6.0 4.0"/>
-        <material name="PoolConcrete"/>
-        <look name="PoolWallLook"/>
-        <world_transform xyz="-6.15 0.0 2.0" rpy="0.0 0.0 0.0"/>
-    </static>
+    </include>
+
 
 </scenario>

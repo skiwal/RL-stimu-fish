@@ -1,0 +1,509 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<scenario>
+
+    <!--
+        ============================================================
+        Bionic Fish V1
+        ============================================================
+
+        坐标约定：
+
+            +X : 鱼头朝向 / 前进方向
+            +Y : 鱼体右侧
+            +Z : NED 向下
+
+        当前版本：
+
+            Body 
+              |
+              +-- Tail
+              |
+              +-- LeftPectoralFin
+              |
+              +-- RightPectoralFin
+
+        三个主动关节：
+
+            TailJoint
+            LeftPectoralJoint
+            RightPectoralJoint 
+
+        三个 Servo：
+
+            TailServo
+            LeftPectoralServo
+            RightPectoralServo
+
+        传感器：
+
+            IMU
+            Pressure
+            ForwardSonar
+            3 x Encoder
+    -->
+
+
+    <robot
+        name="$(arg robot_name)"
+        fixed="false"
+        self_collisions="false">
+
+
+        <!-- ======================================================
+             BODY
+             ====================================================== -->
+
+        <!--
+            Stonefish cylinder 默认沿局部 Z 轴。
+
+            绕 Y 旋转 +90°，
+            使圆柱长轴沿鱼的 +X 方向。
+
+            长度 0.45 m
+            半径 0.065 m
+        -->
+
+        <base_link
+            name="Body"
+            type="cylinder"
+            physics="submerged"
+            buoyant="true">
+
+            <dimensions
+                radius="0.065"
+                height="0.45"/>
+
+            <origin
+                xyz="0.0 0.0 0.0"
+                rpy="0.0 1.57079632679 0.0"/>
+
+            <material
+                name="FishNeutral"/>
+
+            <look
+                name="FishBodyLook"/>
+
+        </base_link>
+
+
+        <!-- ======================================================
+             TAIL
+             ====================================================== -->
+
+        <!--
+            第一版先使用薄 box 作为尾部水动力板。
+
+            Joint 位于尾端连接位置。
+            box 的几何中心位于 joint 后方。
+
+            不给 Body 直接施加推进力。
+            所有推进必须来自这个尾板摆动后的 hydrodynamics。
+        -->
+
+        <link
+            name="Tail"
+            type="box"
+            physics="submerged"
+            buoyant="true">
+
+            <dimensions
+                xyz="0.28 0.018 0.20"/>
+
+            <origin
+                xyz="-0.14 0.0 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+            <material
+                name="FishNeutral"/>
+
+            <look
+                name="FishTailLook"/>
+
+        </link>
+
+
+        <!-- ======================================================
+             LEFT PECTORAL FIN
+             ====================================================== -->
+
+        <!--
+            零角度时胸鳍基本处于水平面。
+
+            绕 Y 轴改变角度，
+            在鱼前进时产生 pitch 控制作用。
+        -->
+
+        <link
+            name="LeftPectoralFin"
+            type="box"
+            physics="submerged"
+            buoyant="true">
+
+            <dimensions
+                xyz="0.16 0.21 0.010"/>
+
+            <!--
+                joint 位于鳍根，
+                几何体沿 +Y 向外伸展。
+            -->
+            <origin
+                xyz="0.0 0.105 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+            <material
+                name="FishNeutral"/>
+
+            <look
+                name="FishLeftFinLook"/>
+
+        </link>
+
+
+        <!-- ======================================================
+             RIGHT PECTORAL FIN
+             ====================================================== -->
+
+        <link
+            name="RightPectoralFin"
+            type="box"
+            physics="submerged"
+            buoyant="true">
+
+            <dimensions
+                xyz="0.16 0.21 0.010"/>
+
+            <!--
+                沿 -Y 方向伸展。
+            -->
+            <origin
+                xyz="0.0 -0.105 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+            <material
+                name="FishNeutral"/>
+
+            <look
+                name="FishRightFinLook"/>
+
+        </link>
+
+
+        <!-- ======================================================
+             JOINTS
+             ====================================================== -->
+
+
+        <!-- 尾巴左右摆动 -->
+
+        <joint
+            name="TailJoint"
+            type="revolute">
+
+            <parent
+                name="Body"/>
+
+            <child
+                name="Tail"/>
+
+            <!-- Body 长 0.45，因此尾端是 X=-0.225 -->
+            <origin
+                xyz="-0.225 0.0 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+            <!-- 绕 Z 摆动 = 水平左右摆尾 -->
+            <axis
+                xyz="0.0 0.0 1.0"/>
+
+            <!-- ±40° -->
+            <limits
+                min="-0.6981317008"
+                max="0.6981317008"/>
+
+        </joint>
+
+
+        <!-- 左胸鳍 -->
+
+        <joint
+            name="LeftPectoralJoint"
+            type="revolute">
+
+            <parent
+                name="Body"/>
+
+            <child
+                name="LeftPectoralFin"/>
+
+            <origin
+                xyz="0.060 0.055 0.015"
+                rpy="0.0 0.0 0.0"/>
+
+            <axis
+                xyz="0.0 1.0 0.0"/>
+
+            <!-- ±30° -->
+            <limits
+                min="-0.5235987756"
+                max="0.5235987756"/>
+
+        </joint>
+
+
+        <!-- 右胸鳍 -->
+
+        <joint
+            name="RightPectoralJoint"
+            type="revolute">
+
+            <parent
+                name="Body"/>
+
+            <child
+                name="RightPectoralFin"/>
+
+            <origin
+                xyz="0.060 -0.055 0.015"
+                rpy="0.0 0.0 0.0"/>
+
+            <axis
+                xyz="0.0 1.0 0.0"/>
+
+            <limits
+                min="-0.5235987756"
+                max="0.5235987756"/>
+
+        </joint>
+
+
+        <!-- ======================================================
+             VIRTUAL HARDWARE - IMU
+             ====================================================== -->
+
+        <sensor
+            name="IMU"
+            type="imu"
+            rate="100">
+
+            <link
+                name="Body"/>
+
+            <origin
+                xyz="0.0 0.0 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+            <range
+                angular_velocity="20.0"
+                linear_acceleration="50.0"/>
+
+            <!--
+                第一阶段先关闭测量噪声，
+                验证动力学之后再加入真实 IMU noise。
+            -->
+
+            <history
+                samples="8"/>
+
+        </sensor>
+
+
+        <!-- ======================================================
+             VIRTUAL HARDWARE - PRESSURE / DEPTH
+             ====================================================== -->
+
+        <sensor
+            name="Pressure"
+            type="pressure"
+            rate="50">
+
+            <link
+                name="Body"/>
+
+            <origin
+                xyz="0.0 0.0 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+            <!-- 约可覆盖 6 m 淡水深度 -->
+            <range
+                pressure="60000.0"/>
+
+            <history
+                samples="8"/>
+
+        </sensor>
+
+
+        <!-- ======================================================
+             VIRTUAL HARDWARE - FORWARD SONAR
+             ====================================================== -->
+
+        <!--
+            Stonefish 1D multibeam：
+
+                local +X = 正前方
+                XY plane = 扫描平面
+
+            fov = 90°
+            steps = 18
+
+            实际产生 19 条 beam。
+        -->
+
+        <sensor
+            name="ForwardSonar"
+            type="multibeam"
+            rate="20">
+
+            <link
+                name="Body"/>
+
+            <!--
+                Body 前端约为 X=+0.225。
+                Sonar 放在前方 0.24 m，
+                避免射线首先打到鱼自身。
+            -->
+            <origin
+                xyz="0.240 0.0 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+            <specs
+                fov="90.0"
+                steps="18"/>
+
+            <range
+                distance_min="0.10"
+                distance_max="6.0"/>
+
+            <history
+                samples="4"/>
+
+        </sensor>
+
+
+        <!-- ======================================================
+             JOINT ENCODERS
+             ====================================================== -->
+
+        <sensor
+            name="TailEncoder"
+            type="encoder"
+            rate="100">
+
+            <joint
+                name="TailJoint"/>
+
+            <history
+                samples="8"/>
+
+        </sensor>
+
+
+        <sensor
+            name="LeftPectoralEncoder"
+            type="encoder"
+            rate="100">
+
+            <joint
+                name="LeftPectoralJoint"/>
+
+            <history
+                samples="8"/>
+
+        </sensor>
+
+
+        <sensor
+            name="RightPectoralEncoder"
+            type="encoder"
+            rate="100">
+
+            <joint
+                name="RightPectoralJoint"/>
+
+            <history
+                samples="8"/>
+
+        </sensor>
+
+
+        <!-- ======================================================
+             MOTORS / SERVOS
+             ====================================================== -->
+
+
+        <!--
+            M1 - Tail
+
+            最大力矩先取 4 Nm。
+            后面根据真实电机规格和运动结果标定。
+        -->
+
+        <actuator
+            name="TailServo"
+            type="servo">
+
+            <joint
+                name="TailJoint"/>
+
+            <controller
+                position_gain="12.0"
+                velocity_gain="1.5"
+                max_torque="4.0"/>
+
+            <initial
+                position="0.0"/>
+
+        </actuator>
+
+
+        <!-- M2 - Left pectoral -->
+
+        <actuator
+            name="LeftPectoralServo"
+            type="servo">
+
+            <joint
+                name="LeftPectoralJoint"/>
+
+            <controller
+                position_gain="8.0"
+                velocity_gain="1.0"
+                max_torque="1.5"/>
+
+            <initial
+                position="0.0"/>
+
+        </actuator>
+
+
+        <!-- M3 - Right pectoral -->
+
+        <actuator
+            name="RightPectoralServo"
+            type="servo">
+
+            <joint
+                name="RightPectoralJoint"/>
+
+            <controller
+                position_gain="8.0"
+                velocity_gain="1.0"
+                max_torque="1.5"/>
+
+            <initial
+                position="0.0"/>
+
+        </actuator>
+
+
+        <!-- ======================================================
+             INITIAL POSE
+             ====================================================== -->
+
+        <world_transform
+            xyz="$(arg robot_position)"
+            rpy="0.0 0.0 0.0"/>
+
+    </robot>
+
+</scenario>
