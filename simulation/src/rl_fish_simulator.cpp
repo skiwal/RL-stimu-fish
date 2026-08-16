@@ -63,6 +63,8 @@ RiverChunkConfig CreateRiverConfig()
     // 固定障碍物
     // ============================================================
 
+    // TODO: mesh障碍物，更加真实
+
     config.minFixedObstaclesPerChunk =
         2;
 
