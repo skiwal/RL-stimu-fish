@@ -1,0 +1,448 @@
+generator: generate_bionic_fish.py
+config_name: BionicFishV1Config
+config_revision: 0.2.1
+units: m
+coordinate_frame:
+  x: forward/head
+  y: right
+  z: down
+reference_meshes:
+  caudal_fin:
+    mode: fishsim_reference_mesh
+    source: /home/ubuntu/code/fishsim/Geometry/Meshes/finTail.obj
+  dorsal_fin:
+    mode: fishsim_reference_mesh
+    source: /home/ubuntu/code/fishsim/Geometry/Meshes/finTop.obj
+resolution:
+  visual:
+    body_longitudinal_sections_requested: 65
+    body_circumferential_points: 28
+  physics:
+    body_longitudinal_sections_requested: 13
+    body_circumferential_points: 10
+link_origins_body_xyz_m:
+  Body:
+  - 0.0
+  - 0.0
+  - 0.0
+  Tail0:
+  - -0.181
+  - 0.0
+  - 0.0
+  Tail1:
+  - -0.2105
+  - 0.0
+  - 0.0
+  Tail2:
+  - -0.2415
+  - 0.0
+  - 0.0
+  Tail3:
+  - -0.272
+  - 0.0
+  - 0.0
+  Tail4:
+  - -0.297
+  - 0.0
+  - 0.0
+  CaudalFin:
+  - -0.31855
+  - 0.0
+  - 0.0
+  DorsalFin:
+  - -0.156
+  - 0.0
+  - -0.04
+  LeftPectoralFin:
+  - 0.06
+  - -0.08
+  - 0.01
+  RightPectoralFin:
+  - 0.06
+  - 0.08
+  - 0.01
+visual_meshes:
+  body.obj:
+    vertices: 2018
+    faces: 4032
+    boundary_edges: 0
+    closed: true
+    volume_m3: 0.005302045573057034
+    bbox_min_xyz_m:
+    - -0.181
+    - -0.08535888258204304
+    - -0.07280610573174259
+    bbox_max_xyz_m:
+    - 0.181
+    - 0.08535888258204304
+    - 0.07280610573174259
+    bbox_dimensions_xyz_m:
+    - 0.362
+    - 0.17071776516408607
+    - 0.14561221146348519
+  tail_0.obj:
+    vertices: 198
+    faces: 392
+    boundary_edges: 0
+    closed: true
+    volume_m3: 0.00020357895676963145
+    bbox_min_xyz_m:
+    - -0.0295
+    - -0.05021060863931368
+    - -0.05021060863931368
+    bbox_max_xyz_m:
+    - 0.0
+    - 0.05021060863931368
+    - 0.05021060863931368
+    bbox_dimensions_xyz_m:
+    - 0.0295
+    - 0.10042121727862736
+    - 0.10042121727862736
+  tail_1.obj:
+    vertices: 198
+    faces: 392
+    boundary_edges: 0
+    closed: true
+    volume_m3: 0.0001579315400975105
+    bbox_min_xyz_m:
+    - -0.031
+    - -0.040168486911450946
+    - -0.047700078207348
+    bbox_max_xyz_m:
+    - 0.0
+    - 0.040168486911450946
+    - 0.047700078207348
+    bbox_dimensions_xyz_m:
+    - 0.031
+    - 0.08033697382290189
+    - 0.095400156414696
+  tail_2.obj:
+    vertices: 198
+    faces: 392
+    boundary_edges: 0
+    closed: true
+    volume_m3: 0.00010507950482710563
+    bbox_min_xyz_m:
+    - -0.0305
+    - -0.030126365183588206
+    - -0.04518954777538231
+    bbox_max_xyz_m:
+    - 0.0
+    - 0.030126365183588206
+    - 0.04518954777538231
+    bbox_dimensions_xyz_m:
+    - 0.0305
+    - 0.06025273036717641
+    - 0.09037909555076462
+  tail_3.obj:
+    vertices: 198
+    faces: 392
+    boundary_edges: 0
+    closed: true
+    volume_m3: 4.882432890018277e-05
+    bbox_min_xyz_m:
+    - -0.025
+    - -0.02008424345572547
+    - -0.04267901734341662
+    bbox_max_xyz_m:
+    - 0.0
+    - 0.02008424345572547
+    - 0.04267901734341662
+    bbox_dimensions_xyz_m:
+    - 0.025
+    - 0.04016848691145094
+    - 0.08535803468683324
+  tail_4.obj:
+    vertices: 198
+    faces: 392
+    boundary_edges: 0
+    closed: true
+    volume_m3: 1.9270576022881347e-05
+    bbox_min_xyz_m:
+    - -0.02155
+    - -0.010042121727862736
+    - -0.040168486911450946
+    bbox_max_xyz_m:
+    - 0.0
+    - 0.010042121727862736
+    - 0.040168486911450946
+    bbox_dimensions_xyz_m:
+    - 0.02155
+    - 0.020084243455725473
+    - 0.08033697382290189
+  caudal_fin.obj:
+    vertices: 408
+    faces: 812
+    boundary_edges: 0
+    closed: true
+    volume_m3: 1.5083783700000016e-05
+    bbox_min_xyz_m:
+    - -0.059815999999999994
+    - -0.001
+    - -0.101476
+    bbox_max_xyz_m:
+    - 0.0
+    - 0.001
+    - 0.101476
+    bbox_dimensions_xyz_m:
+    - 0.059815999999999994
+    - 0.002
+    - 0.202952
+  dorsal_fin.obj:
+    vertices: 220
+    faces: 436
+    boundary_edges: 0
+    closed: true
+    volume_m3: 1.3691985600000014e-05
+    bbox_min_xyz_m:
+    - -0.025455
+    - -0.0015
+    - -0.095
+    bbox_max_xyz_m:
+    - 0.06
+    - 0.0015
+    - 0.0
+    bbox_dimensions_xyz_m:
+    - 0.085455
+    - 0.003
+    - 0.095
+  left_pectoral.obj:
+    vertices: 512
+    faces: 1020
+    boundary_edges: 0
+    closed: true
+    volume_m3: 2.06286750838741e-05
+    bbox_min_xyz_m:
+    - -0.06753672576928225
+    - -0.11
+    - -0.0019963159569845027
+    bbox_max_xyz_m:
+    - 0.0525
+    - -0.0
+    - 0.0019963159569845027
+    bbox_dimensions_xyz_m:
+    - 0.12003672576928226
+    - 0.11
+    - 0.0039926319139690055
+  right_pectoral.obj:
+    vertices: 512
+    faces: 1020
+    boundary_edges: 0
+    closed: true
+    volume_m3: 2.06286750838741e-05
+    bbox_min_xyz_m:
+    - -0.06753672576928225
+    - 0.0
+    - -0.0019963159569845027
+    bbox_max_xyz_m:
+    - 0.0525
+    - 0.11
+    - 0.0019963159569845027
+    bbox_dimensions_xyz_m:
+    - 0.12003672576928226
+    - 0.11
+    - 0.0039926319139690055
+physics_meshes:
+  body.obj:
+    vertices: 202
+    faces: 400
+    boundary_edges: 0
+    closed: true
+    volume_m3: 0.005300557938052826
+    bbox_min_xyz_m:
+    - -0.181
+    - -0.08786975936147816
+    - -0.071605451352779
+    bbox_max_xyz_m:
+    - 0.181
+    - 0.08786975936147816
+    - 0.071605451352779
+    bbox_dimensions_xyz_m:
+    - 0.362
+    - 0.17573951872295632
+    - 0.143210902705558
+  tail_0.obj:
+    vertices: 32
+    faces: 60
+    boundary_edges: 0
+    closed: true
+    volume_m3: 0.00020350320912097377
+    bbox_min_xyz_m:
+    - -0.0295
+    - -0.05169524475509316
+    - -0.04916509938580422
+    bbox_max_xyz_m:
+    - 0.0
+    - 0.05169524475509316
+    - 0.04916509938580422
+    bbox_dimensions_xyz_m:
+    - 0.0295
+    - 0.10339048951018633
+    - 0.09833019877160844
+  tail_1.obj:
+    vertices: 32
+    faces: 60
+    boundary_edges: 0
+    closed: true
+    volume_m3: 0.0001578519408734972
+    bbox_min_xyz_m:
+    - -0.031
+    - -0.04135619580407453
+    - -0.04670684441651401
+    bbox_max_xyz_m:
+    - 0.0
+    - 0.04135619580407453
+    - 0.04670684441651401
+    bbox_dimensions_xyz_m:
+    - 0.031
+    - 0.08271239160814906
+    - 0.09341368883302802
+  tail_2.obj:
+    vertices: 32
+    faces: 60
+    boundary_edges: 0
+    closed: true
+    volume_m3: 0.00010500118946154391
+    bbox_min_xyz_m:
+    - -0.0305
+    - -0.031017146853055896
+    - -0.0442485894472238
+    bbox_max_xyz_m:
+    - 0.0
+    - 0.031017146853055896
+    - 0.0442485894472238
+    bbox_dimensions_xyz_m:
+    - 0.0305
+    - 0.06203429370611179
+    - 0.0884971788944476
+  tail_3.obj:
+    vertices: 32
+    faces: 60
+    boundary_edges: 0
+    closed: true
+    volume_m3: 4.8760135977591567e-05
+    bbox_min_xyz_m:
+    - -0.025
+    - -0.02067809790203727
+    - -0.041790334477933594
+    bbox_max_xyz_m:
+    - 0.0
+    - 0.02067809790203727
+    - 0.041790334477933594
+    bbox_dimensions_xyz_m:
+    - 0.025
+    - 0.04135619580407454
+    - 0.08358066895586719
+  tail_4.obj:
+    vertices: 32
+    faces: 60
+    boundary_edges: 0
+    closed: true
+    volume_m3: 1.9182041144043664e-05
+    bbox_min_xyz_m:
+    - -0.02155
+    - -0.010339048951018632
+    - -0.03933207950864337
+    bbox_max_xyz_m:
+    - 0.0
+    - 0.010339048951018632
+    - 0.03933207950864337
+    bbox_dimensions_xyz_m:
+    - 0.02155
+    - 0.020678097902037264
+    - 0.07866415901728674
+  caudal_fin.obj:
+    vertices: 408
+    faces: 812
+    boundary_edges: 0
+    closed: true
+    volume_m3: 1.5083783700000016e-05
+    bbox_min_xyz_m:
+    - -0.059815999999999994
+    - -0.001
+    - -0.101476
+    bbox_max_xyz_m:
+    - 0.0
+    - 0.001
+    - 0.101476
+    bbox_dimensions_xyz_m:
+    - 0.059815999999999994
+    - 0.002
+    - 0.202952
+  dorsal_fin.obj:
+    vertices: 220
+    faces: 436
+    boundary_edges: 0
+    closed: true
+    volume_m3: 1.3691985600000014e-05
+    bbox_min_xyz_m:
+    - -0.025455
+    - -0.0015
+    - -0.095
+    bbox_max_xyz_m:
+    - 0.06
+    - 0.0015
+    - 0.0
+    bbox_dimensions_xyz_m:
+    - 0.085455
+    - 0.003
+    - 0.095
+  left_pectoral.obj:
+    vertices: 86
+    faces: 168
+    boundary_edges: 0
+    closed: true
+    volume_m3: 2.005868707953545e-05
+    bbox_min_xyz_m:
+    - -0.06753672576928225
+    - -0.11
+    - -0.001946704337488488
+    bbox_max_xyz_m:
+    - 0.0525
+    - -0.0
+    - 0.001946704337488488
+    bbox_dimensions_xyz_m:
+    - 0.12003672576928226
+    - 0.11
+    - 0.003893408674976976
+  right_pectoral.obj:
+    vertices: 86
+    faces: 168
+    boundary_edges: 0
+    closed: true
+    volume_m3: 2.005868707953545e-05
+    bbox_min_xyz_m:
+    - -0.06753672576928225
+    - 0.0
+    - -0.001946704337488488
+    bbox_max_xyz_m:
+    - 0.0525
+    - 0.11
+    - 0.001946704337488488
+    bbox_dimensions_xyz_m:
+    - 0.12003672576928226
+    - 0.11
+    - 0.003893408674976976
+assembly_preview:
+  vertices: 4660
+  faces: 9280
+  boundary_edges: 0
+  closed: true
+  volume_m3: 0.005906763599142079
+  bbox_min_xyz_m:
+  - -0.378366
+  - -0.19
+  - -0.135
+  bbox_max_xyz_m:
+  - 0.181
+  - 0.19
+  - 0.101476
+  bbox_dimensions_xyz_m:
+  - 0.559366
+  - 0.38
+  - 0.23647600000000002
+important:
+- assembly_preview.obj is only a neutral-pose visualization. The real Stonefish robot must use the separate link
+  meshes.
+- Tail link origins are their proximal joints, so the generated meshes are ready for an articulated kinematic chain.
+- Do not freeze vehicle mass/inertia until physics-mesh volumes and Stonefish link mass distribution are calculated.
