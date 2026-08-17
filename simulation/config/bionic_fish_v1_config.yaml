@@ -1,121 +1,96 @@
-# =============================================================================
-# BionicFishV1Config
-# =============================================================================
-#
-# Purpose
-# -------
-# Single source of truth for the first RL-stimu-fish bionic-fish model.
-#
-# This file intentionally separates:
-#   1. fishsim source-exact parameters
-#   2. values derived from the fishsim geometry
-#   3. project decisions already agreed for RL-stimu-fish
-#   4. project parameters that are intentionally still TBD
-#
-# IMPORTANT:
-# - Do not silently replace TBD values with guessed numbers.
-# - MuJoCo fluid coefficients are reference values only; they are NOT direct
-#   Stonefish hydrodynamic coefficients.
-# - MuJoCo joint/tendon stiffness units/semantics must not be copied blindly
-#   into Stonefish. The physical validation target is the measured 3.5 Hz
-#   passive-tail natural frequency.
-# - fishsim constrains Z/pitch/roll by default. BionicFishV1 must be full 6-DOF.
-#
-# Sources checked:
-#   fishsim repository:
-#     https://github.com/srl-ethz/fishsim
-#   auto_tendonFish.py:
-#     https://github.com/srl-ethz/fishsim/blob/main/Geometry/auto_tendonFish.py
-#   paper:
-#     https://arxiv.org/html/2602.23283v1
-#
-# Snapshot date:
-#   2026-08-16
-#
-# =============================================================================
-
 schema_version: 1
 config_name: BionicFishV1Config
-config_revision: "0.1.0"
-snapshot_date: "2026-08-16"
-
+config_revision: 0.2.1
+snapshot_date: '2026-08-16'
 project:
-  name: "RL-stimu-fish"
-  simulator: "Stonefish"
-  reference_robot_model: "srl-ethz/fishsim"
+  name: RL-stimu-fish
+  simulator: Stonefish
+  reference_robot_model: srl-ethz/fishsim
   reference_paper:
-    title: "Simple Models, Real Swimming: Digital Twins for Tendon-Driven Underwater Robots"
-    arxiv_id: "2602.23283v1"
-    date: "2026-02-26"
-
+    title: 'Simple Models, Real Swimming: Digital Twins for Tendon-Driven Underwater Robots'
+    arxiv_id: 2602.23283v1
+    date: '2026-02-26'
 units:
-  length: "m"
-  mass: "kg"
-  density: "kg/m^3"
-  dynamic_viscosity: "Pa*s"
-  time: "s"
-  frequency: "Hz"
-  angle: "rad unless explicitly marked deg"
-  angular_velocity: "rad/s"
-  pressure: "Pa"
-
+  length: m
+  mass: kg
+  density: kg/m^3
+  dynamic_viscosity: Pa*s
+  time: s
+  frequency: Hz
+  angle: rad unless explicitly marked deg
+  angular_velocity: rad/s
+  pressure: Pa
 provenance_labels:
-  source_exact: "Copied directly from fishsim source code or paper."
-  source_derived: "Calculated from source geometry/transforms; not an explicit source scalar."
-  project_decision: "Design decision already agreed for RL-stimu-fish."
-  project_tbd: "Required by our model but not yet numerically frozen."
-  reference_only: "Useful calibration/reference value; must not be copied directly into Stonefish."
-
-# =============================================================================
-# Coordinate conventions
-# =============================================================================
-
+  source_exact: Copied directly from fishsim source code or paper.
+  source_derived: Calculated from source geometry/transforms; not an explicit source scalar.
+  project_decision: Design decision already agreed for RL-stimu-fish.
+  project_tbd: Required by our model but not yet numerically frozen.
+  reference_only: Useful calibration/reference value; must not be copied directly into Stonefish.
 coordinate_frames:
-
   fishsim_reference:
-    description: >
-      MuJoCo model frame used by fishsim. The generated model extends from the
-      rigid front body toward the tail along increasing X. Paper marker
-      preprocessing uses its own heading convention as well.
-    tail_chain_direction: "+X"
+    description: 'MuJoCo model frame used by fishsim. The generated model extends from the rigid front body toward the
+      tail along increasing X. Paper marker preprocessing uses its own heading convention as well.
 
+      '
+    tail_chain_direction: +X
   stonefish_bionic_fish:
-    provenance: "project_decision"
-    frame: "NED-compatible body convention"
-    x_positive: "forward / head direction"
-    y_positive: "fish right"
-    z_positive: "down"
-    head_direction: "+X"
-    tail_direction: "-X"
-    note: >
-      Geometry imported/recreated from fishsim must be longitudinally
-      re-oriented so that our sonar points +X and the tail extends toward -X.
+    provenance: project_decision
+    frame: NED-compatible body convention
+    x_positive: forward / head direction
+    y_positive: fish right
+    z_positive: down
+    head_direction: +X
+    tail_direction: -X
+    note: 'Geometry imported/recreated from fishsim must be longitudinally re-oriented so that our sonar points +X and
+      the tail extends toward -X.
 
-# =============================================================================
-# FishSim: source-exact SYSTEMPARAMETERS
-# =============================================================================
-
+      '
+  fishsim_to_bionic_fish:
+    provenance: source_derived_and_project_decision
+    description: Port fishsim reference geometry into the project body frame by rotating 180 deg about Y and translating
+      +0.104 m in X.
+    rotation_rpy_rad:
+    - 0.0
+    - 3.141592653589793
+    - 0.0
+    translation_xyz_m:
+    - 0.104
+    - 0.0
+    - 0.0
+    mapping:
+      x_bionic: 0.104 - x_fishsim
+      y_bionic: y_fishsim
+      z_bionic: -z_fishsim
+    reference_points_m:
+      fishsim_nose_x: -0.077
+      fishsim_joint0_x: 0.285
+      bionic_nose_x: 0.181
+      bionic_joint0_x: -0.181
 fishsim_reference:
-
   simulation:
     dt_s: 0.001
     fix_head: false
     free_z: false
-    tendon_routing: [0, 0, 0, 1, 1]
+    tendon_routing:
+    - 0
+    - 0
+    - 0
+    - 1
+    - 1
     torque_control: false
     number_of_fish: 1
-    bounds: null
-
+    bounds:
+      status: not_used_in_reference_generator_by_default
+      value: unbounded/default MuJoCo scene
     provenance:
-      dt_s: "source_exact"
-      fix_head: "source_exact"
-      free_z: "source_exact"
-      tendon_routing: "source_exact"
-      torque_control: "source_exact"
-      number_of_fish: "source_exact"
-
+      dt_s: source_exact
+      fix_head: source_exact
+      free_z: source_exact
+      tendon_routing: source_exact
+      torque_control: source_exact
+      number_of_fish: source_exact
   default_head_constraints_when_free_z_false:
-    provenance: "source_exact"
+    provenance: source_exact
     translation_x:
       stiffness: 0.0
       damping: 0.0
@@ -134,726 +109,1054 @@ fishsim_reference:
     yaw_z:
       stiffness: 0.0
       damping: 0.0
-    note: >
-      These constraints reproduce fishsim's surface-swimmer setup and MUST NOT
-      be used for BionicFishV1. Our Stonefish fish is full 6-DOF.
+    note: 'These constraints reproduce fishsim''s surface-swimmer setup and MUST NOT be used for BionicFishV1. Our Stonefish
+      fish is full 6-DOF.
 
+      '
   mujoco_world:
-    provenance: "source_exact"
-    gravity_m_s2: [0.0, 0.0, 0.0]
-    integrator: "implicitfast"
-    solver: "Newton"
+    provenance: source_exact
+    gravity_m_s2:
+    - 0.0
+    - 0.0
+    - 0.0
+    integrator: implicitfast
+    solver: Newton
     iterations: 100
     contact_enabled: false
-    note: >
-      These are reference-simulator settings, not Stonefish target settings.
+    note: 'These are reference-simulator settings, not Stonefish target settings.
 
+      '
   fluid:
-    provenance: "source_exact"
-    shape: "ellipsoid"
+    provenance: source_exact
+    shape: ellipsoid
     density_kg_m3: 1000.0
     dynamic_viscosity_pa_s: 0.0013
     identified_coefficients:
-      blunt_drag: 0.40
+      blunt_drag: 0.4
       slender_drag: 7.79
       angular_drag: 2.81
       kutta_lift: 3.84
       magnus_lift: 0.27
-    coefficient_vector: [0.40, 7.79, 2.81, 3.84, 0.27]
+    coefficient_vector:
+    - 0.4
+    - 7.79
+    - 2.81
+    - 3.84
+    - 0.27
     transfer_to_stonefish: false
-    transfer_note: >
-      These five coefficients belong to fishsim/MuJoCo's stateless ellipsoid
-      fluid formulation. Preserve them for validation/reference only.
+    transfer_note: 'These five coefficients belong to fishsim/MuJoCo''s stateless ellipsoid fluid formulation. Preserve
+      them for validation/reference only.
 
+      '
   materials_and_lumped_masses:
-    provenance: "source_exact"
+    provenance: source_exact
     acrylic_density_kg_m3: 1180.0
     pla_density_kg_m3: 1250.0
     electronics_box_mass_kg: 0.53
-    main_body_mass_kg: 0.60
+    main_body_mass_kg: 0.6
     tail_fin_mass_kg: 0.01
     head_attachment_mass_kg: 0.08
     motor_shaft_mass_kg: 0.05
-
   center_of_mass_seed:
-    provenance: "source_exact"
-    xyz_m: [0.02456792, 0.0, 0.00080073]
-    note: >
-      auto_tendonFish.py recomputes this iteratively after generating the
-      MuJoCo model. Treat this as a fishsim reference, not our final Stonefish
-      COM.
+    provenance: source_exact
+    xyz_m:
+    - 0.02456792
+    - 0.0
+    - 0.00080073
+    note: 'auto_tendonFish.py recomputes this iteratively after generating the MuJoCo model. Treat this as a fishsim
+      reference, not our final Stonefish COM.
 
+      '
   hardware_bulk_envelope:
-    provenance: "source_exact"
+    provenance: source_exact
     length_m: 0.57
     height_m: 0.25
     width_m: 0.17
-    note: "Paper describes these as rough bulk dimensions of the physical robot."
-
+    note: Paper describes these as rough bulk dimensions of the physical robot.
   hardware_architecture:
-    provenance: "source_exact"
-    front_section: "passive rigid front-end"
-    active_section: "active compliant tendon-driven tail"
+    provenance: source_exact
+    front_section: passive rigid front-end
+    active_section: active compliant tendon-driven tail
     tail_spine_segment_count: 5
     main_motor:
-      model: "Dynamixel XW-540-T140-R"
+      model: Dynamixel XW-540-T140-R
       waterproof: true
       dual_shaft: true
     tendon_count: 2
-    tendon_material_description: "fishing wire"
+    tendon_material_description: fishing wire
     tendon_stretch_during_actuation_fraction_approx: 0.03
     nitinol_spine_rods:
       count: 4
       diameter_m: 0.001
     caudal_fin_nitinol_rods:
       count: 2
-      orientation_description: "vertical, perpendicular to the tail body"
-    structural_support_material: "3D-printed PLA"
-    waterproof_cover: "resistant fabric over tail and part of body"
-    buoyancy_material: "polyethylene foam"
+      orientation_description: vertical, perpendicular to the tail body
+    structural_support_material: 3D-printed PLA
+    waterproof_cover: resistant fabric over tail and part of body
+    buoyancy_material: polyethylene foam
     electronics:
-      computer: "Raspberry Pi Zero"
-      motor_controller: "Dynamixel U2D2"
-      battery: "3S LiPo"
-      power: "DC-DC converter"
-
-# =============================================================================
-# FishSim: rigid-front geometry generated by auto_tendonFish.py
-# MuJoCo box `size` is half-size; dimensions below are FULL dimensions.
-# =============================================================================
-
+      computer: Raspberry Pi Zero
+      motor_controller: Dynamixel U2D2
+      battery: 3S LiPo
+      power: DC-DC converter
   rigid_front_geometry:
-    provenance: "source_exact_with_full_dimensions_converted_from_mujoco_half_size"
-
+    provenance: source_exact_with_full_dimensions_converted_from_mujoco_half_size
     head_vertical_plate:
-      center_xyz_m: [0.0, 0.0, 0.0]
-      full_dimensions_xyz_m: [0.154, 0.005, 0.100]
-      material: "acrylic"
+      center_xyz_m:
+      - 0.0
+      - 0.0
+      - 0.0
+      full_dimensions_xyz_m:
+      - 0.154
+      - 0.005
+      - 0.1
+      material: acrylic
       density_kg_m3: 1180.0
-      fluid_shape: "ellipsoid"
-
+      fluid_shape: ellipsoid
     head_top_plate:
-      center_xyz_m: [0.010, 0.0, 0.0515]
-      full_dimensions_xyz_m: [0.160, 0.040, 0.003]
-      material: "acrylic"
+      center_xyz_m:
+      - 0.01
+      - 0.0
+      - 0.0515
+      full_dimensions_xyz_m:
+      - 0.16
+      - 0.04
+      - 0.003
+      material: acrylic
       density_kg_m3: 1180.0
-
     electronics_box:
-      center_xyz_m: [0.005, 0.0, 0.083]
-      full_dimensions_xyz_m: [0.120, 0.080, 0.060]
+      center_xyz_m:
+      - 0.005
+      - 0.0
+      - 0.083
+      full_dimensions_xyz_m:
+      - 0.12
+      - 0.08
+      - 0.06
       mass_kg: 0.53
-
     head_attachment:
-      center_xyz_m: [0.100, 0.0, 0.0]
-      full_dimensions_xyz_m: [0.046, 0.030, 0.100]
+      center_xyz_m:
+      - 0.1
+      - 0.0
+      - 0.0
+      full_dimensions_xyz_m:
+      - 0.046
+      - 0.03
+      - 0.1
       mass_kg: 0.08
-      fluid_shape: "ellipsoid"
-
+      fluid_shape: ellipsoid
     main_body:
-      center_xyz_m: [0.2005, 0.0, 0.0]
-      full_dimensions_xyz_m: [0.155, 0.020, 0.105]
-      mass_kg: 0.60
-      fluid_shape: "ellipsoid"
-
+      center_xyz_m:
+      - 0.2005
+      - 0.0
+      - 0.0
+      full_dimensions_xyz_m:
+      - 0.155
+      - 0.02
+      - 0.105
+      mass_kg: 0.6
+      fluid_shape: ellipsoid
     body_to_joint0_connector:
       full_length_x_m: 0.007
       full_thickness_y_m: 0.001
       full_height_z_m: 0.075
       mass_kg: 0.001
-      note: >
-        X length equals body-tail0 / 2 in the generated MuJoCo geometry.
+      note: 'X length equals body-tail0 / 2 in the generated MuJoCo geometry.
 
-# =============================================================================
-# FishSim: motor / tendon drive
-# =============================================================================
-
+        '
   tail_drive_motor:
-    provenance: "source_exact"
-
-    model: "Dynamixel XW-540-T140-R"
-
+    provenance: source_exact
+    model: Dynamixel XW-540-T140-R
     joint:
-      type: "hinge"
-      axis_xyz: [0.0, 1.0, 0.0]
-      fishsim_position_xyz_m: [0.1655, 0.0, 0.0]
+      type: hinge
+      axis_xyz:
+      - 0.0
+      - 1.0
+      - 0.0
+      fishsim_position_xyz_m:
+      - 0.1655
+      - 0.0
+      - 0.0
       limited: false
       stiffness: 0.0
       damping: 0.0
-
     shaft:
-      length_y_m: 0.120
-      full_dimensions_xyz_m: [0.015, 0.120, 0.015]
+      length_y_m: 0.12
+      full_dimensions_xyz_m:
+      - 0.015
+      - 0.12
+      - 0.015
       mass_kg: 0.05
-
     crank_arm:
       length_m: 0.0395
-      measured_real_length_m_approx: 0.040
-      full_cross_section_xy_m: [0.015, 0.010]
-      material: "PLA"
+      measured_real_length_m_approx: 0.04
+      full_cross_section_xy_m:
+      - 0.015
+      - 0.01
+      material: PLA
       density_kg_m3: 1250.0
-
     left_tendon_anchor_local_xyz_m:
-      # x = 0
-      # y = -motorShaftLength/2 + 0.005 = -0.055
-      # z = -motorArmLength + 0.005 = -0.0345
-      value: [0.0, -0.055, -0.0345]
-      provenance: "source_derived"
-
+      value:
+      - 0.0
+      - -0.055
+      - -0.0345
+      provenance: source_derived
     right_tendon_anchor_local_xyz_m:
-      value: [0.0, 0.055, 0.0345]
-      provenance: "source_derived"
-
+      value:
+      - 0.0
+      - 0.055
+      - 0.0345
+      provenance: source_derived
     tendon:
       count: 2
-      routing_bits: [0, 0, 0, 1, 1]
+      routing_bits:
+      - 0
+      - 0
+      - 0
+      - 1
+      - 1
       routing_semantics:
-        "0": "stay on the same side"
-        "1": "cross to the opposite side"
+        '0': stay on the same side
+        '1': cross to the opposite side
       stiffness: 20000.0
       damping: 10.0
       rendered_width_m: 0.001
       approximate_real_stretch_fraction: 0.03
-
     default_actuator:
-      mode: "velocity"
+      mode: velocity
       kv: 100.0
       control_limit_rad_s:
         min: -31.4
         max: 31.4
       equivalent_rotation_rate_limit_hz_approx: 5.0
-      force_range_simulator_units: [-100.0, 100.0]
-      warning: >
-        force_range is a MuJoCo actuator clamp, NOT the real Dynamixel
-        torque-speed specification and must not be copied as motor torque.
+      force_range_simulator_units:
+      - -100.0
+      - 100.0
+      warning: 'force_range is a MuJoCo actuator clamp, NOT the real Dynamixel torque-speed specification and must not
+        be copied as motor torque.
 
-# =============================================================================
-# FishSim: compliant tail
-# =============================================================================
-
+        '
   compliant_tail:
-    provenance: "source_exact_and_source_derived"
-
+    provenance: source_exact_and_source_derived
     active_motor_count: 1
     rigid_spine_segment_count: 5
     hinge_joint_count: 5
-
     segment_nominal_length_m: 0.015
-
     joint_default:
-      type: "hinge"
-      axis_xyz: [0.0, 0.0, 1.0]
-      range_deg: [-80.0, 80.0]
+      type: hinge
+      axis_xyz:
+      - 0.0
+      - 0.0
+      - 1.0
+      range_deg:
+      - -80.0
+      - 80.0
       stiffness_mujoco: 0.65
       damping_mujoco: 0.0
-
     physical_validation_target:
       passive_tail_natural_frequency_hz: 3.5
-      provenance: "source_exact"
-      priority: >
-        Match this physical natural frequency in Stonefish rather than copying
-        the raw MuJoCo stiffness scalar blindly.
+      provenance: source_exact
+      priority: 'Match this physical natural frequency in Stonefish rather than copying the raw MuJoCo stiffness scalar
+        blindly.
 
+        '
     spacing_m:
       body_to_tail0: 0.014
       tail0_to_tail1: 0.015
       tail1_to_tail2: 0.017
       tail2_to_tail3: 0.014
       tail3_to_tail4: 0.006
-      tail4_to_caudal_fin: 0.010
-
+      tail4_to_caudal_fin: 0.01
     tendon_lateral_offset_m:
       tail0: 0.045
       tail1: 0.035
       tail2: 0.025
       tail3: 0.015
       tail4: 0.005
-
-    # Fishsim absolute X coordinates reconstructed from the nested body chain.
-    # These are useful for verifying a regenerated reference skeleton.
     fishsim_joint_absolute_x_m:
-      provenance: "source_derived"
-      joint0: 0.2850
+      provenance: source_derived
+      joint0: 0.285
       joint1: 0.3145
       joint2: 0.3455
-      joint3: 0.3760
-      joint4: 0.4010
-
+      joint3: 0.376
+      joint4: 0.401
     fishsim_segment_center_absolute_x_m:
-      provenance: "source_derived"
+      provenance: source_derived
       tail0: 0.2995
       tail1: 0.3295
       tail2: 0.3615
       tail3: 0.3905
       tail4: 0.4115
-
     segments:
-
       tail0:
-        main_spine_full_dimensions_xyz_m: [0.015, 0.003, 0.100]
-        structural_support_full_width_y_m: 0.100
+        main_spine_full_dimensions_xyz_m:
+        - 0.015
+        - 0.003
+        - 0.1
+        structural_support_full_width_y_m: 0.1
         structural_support_crossbar_full_x_m: 0.006
         structural_support_crossbar_full_z_m: 0.014
-        tendon_site_y_m: [-0.045, 0.045]
-
+        tendon_site_y_m:
+        - -0.045
+        - 0.045
       tail1:
-        main_spine_full_dimensions_xyz_m: [0.015, 0.003, 0.095]
-        structural_support_full_width_y_m: 0.080
+        main_spine_full_dimensions_xyz_m:
+        - 0.015
+        - 0.003
+        - 0.095
+        structural_support_full_width_y_m: 0.08
         structural_support_crossbar_full_x_m: 0.006
         structural_support_crossbar_full_z_m: 0.014
-        tendon_site_y_m: [-0.035, 0.035]
-
+        tendon_site_y_m:
+        - -0.035
+        - 0.035
       tail2:
-        main_spine_full_dimensions_xyz_m: [0.015, 0.003, 0.090]
-        structural_support_full_width_y_m: 0.060
+        main_spine_full_dimensions_xyz_m:
+        - 0.015
+        - 0.003
+        - 0.09
+        structural_support_full_width_y_m: 0.06
         structural_support_crossbar_full_x_m: 0.006
         structural_support_crossbar_full_z_m: 0.014
-        tendon_site_y_m: [-0.025, 0.025]
-
+        tendon_site_y_m:
+        - -0.025
+        - 0.025
       tail3:
-        main_spine_full_dimensions_xyz_m: [0.015, 0.003, 0.085]
-        structural_support_full_width_y_m: 0.040
+        main_spine_full_dimensions_xyz_m:
+        - 0.015
+        - 0.003
+        - 0.085
+        structural_support_full_width_y_m: 0.04
         structural_support_crossbar_full_x_m: 0.006
         structural_support_crossbar_full_z_m: 0.014
-        tendon_site_y_m: [-0.015, 0.015]
-
+        tendon_site_y_m:
+        - -0.015
+        - 0.015
       tail4:
-        main_spine_full_dimensions_xyz_m: [0.015, 0.003, 0.080]
-        structural_support_full_width_y_m: 0.020
+        main_spine_full_dimensions_xyz_m:
+        - 0.015
+        - 0.003
+        - 0.08
+        structural_support_full_width_y_m: 0.02
         structural_support_crossbar_full_x_m: 0.006
         structural_support_crossbar_full_z_m: 0.014
-        tendon_site_y_m: [-0.005, 0.005]
-
+        tendon_site_y_m:
+        - -0.005
+        - 0.005
     routing:
       left_tendon:
-        tail0: "left"
-        tail1: "left"
-        tail2: "left"
-        tail3: "right"
-        tail4: "right"
+        tail0: left
+        tail1: left
+        tail2: left
+        tail3: right
+        tail4: right
       right_tendon:
-        tail0: "right"
-        tail1: "right"
-        tail2: "right"
-        tail3: "left"
-        tail4: "left"
-      description: "antagonistic S-bend tendon routing"
-
-# =============================================================================
-# FishSim meshes
-# =============================================================================
-
+        tail0: right
+        tail1: right
+        tail2: right
+        tail3: left
+        tail4: left
+      description: antagonistic S-bend tendon routing
   existing_meshes:
-
     caudal_fin:
-      provenance: "source_derived_from_finTail_obj"
-      source_file: "Geometry/Meshes/finTail.obj"
+      provenance: source_derived_from_finTail_obj
+      source_file: Geometry/Meshes/finTail.obj
       mass_kg_in_fishsim: 0.01
-      local_bbox_min_xyz_m: [0.005554, -0.001000, -0.101476]
-      local_bbox_max_xyz_m: [0.065370, 0.001000, 0.101476]
-      bbox_dimensions_xyz_m: [0.059816, 0.002000, 0.202952]
+      local_bbox_min_xyz_m:
+      - 0.005554
+      - -0.001
+      - -0.101476
+      local_bbox_max_xyz_m:
+      - 0.06537
+      - 0.001
+      - 0.101476
+      bbox_dimensions_xyz_m:
+      - 0.059816
+      - 0.002
+      - 0.202952
       fishsim_mesh_origin_x_m:
-        value: 0.4170
-        provenance: "source_derived"
+        value: 0.417
+        provenance: source_derived
       approximate_global_x_extent_m:
-        value: [0.422554, 0.482370]
-        provenance: "source_derived"
-      note: >
-        Keep this mesh as a strong starting point for the BionicFishV1 caudal
-        fin unless later visual redesign is needed.
+        value:
+        - 0.422554
+        - 0.48237
+        provenance: source_derived
+      note: 'Keep this mesh as a strong starting point for the BionicFishV1 caudal fin unless later visual redesign is
+        needed.
 
+        '
     dorsal_top_fin:
-      provenance: "source_derived_from_finTop_obj_previous_analysis"
-      source_file: "Geometry/Meshes/finTop.obj"
-      bbox_dimensions_xyz_m_approx: [0.0855, 0.0030, 0.0950]
-      fishsim_mount_position_xyz_m: [0.260, 0.0, 0.040]
-      material: "acrylic"
+      provenance: source_derived_from_finTop_obj_previous_analysis
+      source_file: Geometry/Meshes/finTop.obj
+      bbox_dimensions_xyz_m_approx:
+      - 0.0855
+      - 0.003
+      - 0.095
+      fishsim_mount_position_xyz_m:
+      - 0.26
+      - 0.0
+      - 0.04
+      material: acrylic
       density_kg_m3: 1180.0
       verification_required: true
-      note: >
-        Dimensions were extracted during our reference-model analysis and
-        should be re-checked automatically when the mesh generator/import
-        pipeline reads the OBJ.
+      note: 'Dimensions were extracted during our reference-model analysis and should be re-checked automatically when
+        the mesh generator/import pipeline reads the OBJ.
 
+        '
   derived_total_reference_length:
-    provenance: "source_derived"
+    provenance: source_derived
     value_m_approx: 0.559
     hardware_nominal_length_m: 0.57
     bionic_fish_v1_nominal_length_m: 0.57
-
   estimated_reference_model_mass:
-    provenance: "source_derived_previous_analysis"
+    provenance: source_derived_previous_analysis
     value_kg_approx: 1.48
     authoritative: false
-    warning: >
-      Do not use this as the final Stonefish mass. fishsim uses zero gravity
-      plus a surface constraint and does not constitute our final buoyancy
-      design.
+    warning: 'Do not use this as the final Stonefish mass. fishsim uses zero gravity plus a surface constraint and does
+      not constitute our final buoyancy design.
 
-# =============================================================================
-# System-identification / validation targets from the paper
-# =============================================================================
-
+      '
   validation_reference:
-    provenance: "source_exact"
-
+    provenance: source_exact
     passive_tail_natural_frequency_hz: 3.5
-
     actuation_identification_frequencies_hz:
-      low: 0.60
+      low: 0.6
       high: 1.19
-
     optimized_motor_arm_length_m: 0.0395
-    measured_motor_arm_length_m_approx: 0.040
-
+    measured_motor_arm_length_m_approx: 0.04
     identified_fluid_coefficients:
-      blunt_drag: 0.40
+      blunt_drag: 0.4
       slender_drag: 7.79
       angular_drag: 2.81
       kutta_lift: 3.84
       magnus_lift: 0.27
-
     fluid_identification_usage:
-      note: >
-        Preserve as a reference benchmark. Stonefish hydrodynamics uses a
-        different model, so validation should compare observed locomotion,
-        not raw coefficient equality.
+      note: 'Preserve as a reference benchmark. Stonefish hydrodynamics uses a different model, so validation should
+        compare observed locomotion, not raw coefficient equality.
 
-# =============================================================================
-# BionicFishV1: project architecture
-# =============================================================================
-
+        '
 bionic_fish_v1:
-
-  status: "reference skeleton frozen; project-specific 3D extensions partly TBD"
-
+  status: reference skeleton frozen; project-specific 3D extensions partly TBD
   nominal_length_m:
     value: 0.57
-    provenance: "project_decision_based_on_fishsim_hardware"
-
+    provenance: project_decision_based_on_fishsim_hardware
   motion_model:
-    provenance: "project_decision"
+    provenance: project_decision
     free_dof: 6
-    free_translation: ["X", "Y", "Z"]
-    free_rotation: ["roll", "pitch", "yaw"]
+    free_translation:
+    - X
+    - Y
+    - Z
+    free_rotation:
+    - roll
+    - pitch
+    - yaw
     artificial_z_constraint: false
     artificial_pitch_constraint: false
     artificial_roll_constraint: false
     fake_forward_force_allowed: false
     fake_vertical_force_allowed: false
-    locomotion_source: "actuator motion + Stonefish hydrodynamics"
-
+    locomotion_source: actuator motion + Stonefish hydrodynamics
   topology:
-    provenance: "project_decision"
+    provenance: project_decision
     links:
-      - "Body"
-      - "Tail0"
-      - "Tail1"
-      - "Tail2"
-      - "Tail3"
-      - "Tail4"
-      - "CaudalFin"
-      - "LeftPectoralFin"
-      - "RightPectoralFin"
-
+    - Body
+    - Tail0
+    - Tail1
+    - Tail2
+    - Tail3
+    - Tail4
+    - CaudalFin
+    - LeftPectoralFin
+    - RightPectoralFin
     tail_chain:
-      - "Body"
-      - "Joint0"
-      - "Tail0"
-      - "Joint1"
-      - "Tail1"
-      - "Joint2"
-      - "Tail2"
-      - "Joint3"
-      - "Tail3"
-      - "Joint4"
-      - "Tail4"
-      - "CaudalFin"
-
+    - Body
+    - Joint0
+    - Tail0
+    - Joint1
+    - Tail1
+    - Joint2
+    - Tail2
+    - Joint3
+    - Tail3
+    - Joint4
+    - Tail4
+    - CaudalFin
   body:
-    provenance: "project_tbd"
-    visual_style: "streamlined fish-shaped closed OBJ mesh"
-    physics_style: "simplified closed low-poly OBJ mesh"
-    reference_total_hardware_envelope_xyz_m:
-      length: 0.57
-      width: 0.17
-      height: 0.25
-    body_only_length_m: null
-    body_only_max_width_m: null
-    body_only_max_height_m: null
-    displaced_volume_m3: null
-    mass_kg: null
-    center_of_mass_body_xyz_m: null
-    center_of_buoyancy_body_xyz_m: null
-    note: >
-      Do not equate the paper's 0.57 x 0.17 x 0.25 m bulk hardware envelope
-      with a sealed displaced-water volume. Final body dimensions and volume
-      must be frozen together with the Stonefish buoyancy design.
-
+    provenance: project_decision_based_on_fishsim_geometry
+    geometry_frozen: true
+    frame_origin: midpoint between reference nose and Joint0
+    body_only_length_m: 0.362
+    x_extent_m:
+    - -0.181
+    - 0.181
+    body_only_max_width_m: 0.17
+    body_only_max_height_m: 0.145
+    cross_section_type: elliptical/superelliptical loft
+    cross_section_superellipse_exponent: 2.2
+    cross_sections:
+    - x_m: 0.181
+      width_y_m: 0.012
+      height_z_m: 0.02
+    - x_m: 0.155
+      width_y_m: 0.085
+      height_z_m: 0.075
+    - x_m: 0.12
+      width_y_m: 0.14
+      height_z_m: 0.115
+    - x_m: 0.07
+      width_y_m: 0.165
+      height_z_m: 0.14
+    - x_m: 0.02
+      width_y_m: 0.17
+      height_z_m: 0.145
+    - x_m: -0.04
+      width_y_m: 0.165
+      height_z_m: 0.145
+    - x_m: -0.1
+      width_y_m: 0.145
+      height_z_m: 0.132
+    - x_m: -0.145
+      width_y_m: 0.12
+      height_z_m: 0.112
+    - x_m: -0.181
+      width_y_m: 0.1
+      height_z_m: 0.1
+    displaced_volume_m3:
+      status: provisional_until_closed_physics_OBJ_is_generated
+      estimate: 0.005150034
+      method: trapezoidal integration of elliptical section areas
+    mass_kg:
+      status: provisional_until_all_link_volumes_and_inertias_are_generated
+      initial_total_vehicle_target_from_body_only_estimate: 5.0837
+      warning: Do not use as final vehicle mass; tail/fins/link masses must be included first.
+    center_of_mass_body_xyz_m:
+      status: initial_stability_target
+      value:
+      - 0.0
+      - 0.0
+      - 0.02
+      meaning: COM target 20 mm below COB in NED +Z
+    center_of_buoyancy_body_xyz_m:
+      status: initial_stability_target
+      value:
+      - 0.0
+      - 0.0
+      - 0.0
+      meaning: Initial geometric center target; recompute from closed submerged meshes.
+    visual_style: smooth streamlined closed OBJ
+    physics_style: simplified closed low-poly OBJ with same wetted envelope
   tail:
-    provenance: "project_decision_using_fishsim_reference"
+    provenance: project_decision_using_fishsim_reference
     segment_count: 5
     use_fishsim_segment_lengths_and_taper_as_initial_reference: true
     use_single_active_tail_motor: true
     use_passive_compliant_tail: true
     target_passive_natural_frequency_hz: 3.5
-    target_tendon_routing: [0, 0, 0, 1, 1]
-    exact_stonefish_joint_stiffness: null
-    exact_stonefish_joint_damping: null
-    note: >
-      Stonefish spring/damping values are to be calibrated so the free tail
-      reproduces ~3.5 Hz natural oscillation.
+    target_tendon_routing:
+    - 0
+    - 0
+    - 0
+    - 1
+    - 1
+    exact_stonefish_joint_stiffness:
+      status: calibration_required
+      initial_reference_value_from_fishsim: 0.65
+      do_not_assume_same_units: true
+      calibration_target_natural_frequency_hz: 3.5
+      procedure: bend passive tail, release, measure oscillation frequency, tune stiffness
+    exact_stonefish_joint_damping:
+      status: calibration_required
+      initial_reference_value_from_fishsim: 0.0
+      procedure: after stiffness calibration, fit free-decay envelope without shifting 3.5 Hz target materially
+    note: 'Stonefish spring/damping values are to be calibrated so the free tail reproduces ~3.5 Hz natural oscillation.
 
+      '
+    geometry_frozen: true
+    joint_axis_body_xyz:
+    - 0.0
+    - 0.0
+    - 1.0
+    joint_limit_deg:
+    - -80.0
+    - 80.0
+    joint_positions_body_xyz_m:
+      Joint0:
+      - -0.181
+      - 0.0
+      - 0.0
+      Joint1:
+      - -0.2105
+      - 0.0
+      - 0.0
+      Joint2:
+      - -0.2415
+      - 0.0
+      - 0.0
+      Joint3:
+      - -0.272
+      - 0.0
+      - 0.0
+      Joint4:
+      - -0.297
+      - 0.0
+      - 0.0
+    reference_segment_center_positions_body_xyz_m:
+      Tail0:
+      - -0.1955
+      - 0.0
+      - 0.0
+      Tail1:
+      - -0.2255
+      - 0.0
+      - 0.0
+      Tail2:
+      - -0.2575
+      - 0.0
+      - 0.0
+      Tail3:
+      - -0.2865
+      - 0.0
+      - 0.0
+      Tail4:
+      - -0.3075
+      - 0.0
+      - 0.0
+    smooth_mesh_envelope:
+      sections:
+      - name: Joint0
+        x_m: -0.181
+        width_y_m: 0.1
+        height_z_m: 0.1
+      - name: Joint1
+        x_m: -0.2105
+        width_y_m: 0.08
+        height_z_m: 0.095
+      - name: Joint2
+        x_m: -0.2415
+        width_y_m: 0.06
+        height_z_m: 0.09
+      - name: Joint3
+        x_m: -0.272
+        width_y_m: 0.04
+        height_z_m: 0.085
+      - name: Joint4
+        x_m: -0.297
+        width_y_m: 0.02
+        height_z_m: 0.08
+      - name: FinRoot
+        x_m: -0.31855
+        width_y_m: 0.012
+        height_z_m: 0.06
   caudal_fin:
-    provenance: "project_decision"
-    initial_mesh_source: "fishsim Geometry/Meshes/finTail.obj"
-    initial_dimensions_xyz_m: [0.059816, 0.002000, 0.202952]
-    final_visual_mesh: "robots/bionic_fish/visual/caudal_fin.obj"
-    final_physics_mesh: "robots/bionic_fish/physics/caudal_fin.obj"
-
+    provenance: project_decision
+    initial_mesh_source: fishsim Geometry/Meshes/finTail.obj
+    initial_dimensions_xyz_m:
+    - 0.059816
+    - 0.002
+    - 0.202952
+    final_visual_mesh: robots/bionic_fish/visual/caudal_fin.obj
+    final_physics_mesh: robots/bionic_fish/physics/caudal_fin.obj
+    geometry_frozen: true
+    source_vertex_count: 408
+    source_face_count: 812
+    source_local_bbox_min_xyz_m:
+    - 0.005554
+    - -0.001
+    - -0.101476
+    source_local_bbox_max_xyz_m:
+    - 0.06537
+    - 0.001
+    - 0.101476
+    bionic_mesh_origin_body_xyz_m:
+    - -0.313
+    - 0.0
+    - 0.0
+    mesh_orientation_from_fishsim_rpy_rad:
+    - 0.0
+    - 3.141592653589793
+    - 0.0
+    approx_tail_tip_x_m: -0.37837
   dorsal_fin:
-    provenance: "project_decision"
+    provenance: project_decision
     keep_reference_fin_initially: true
-    initial_mesh_source: "fishsim Geometry/Meshes/finTop.obj"
-    final_visual_mesh: "robots/bionic_fish/visual/dorsal_fin.obj"
-    final_physics_mesh: "robots/bionic_fish/physics/dorsal_fin.obj"
-
+    initial_mesh_source: fishsim Geometry/Meshes/finTop.obj
+    final_visual_mesh: robots/bionic_fish/visual/dorsal_fin.obj
+    final_physics_mesh: robots/bionic_fish/physics/dorsal_fin.obj
+    geometry_frozen: true
+    source_dimensions_xyz_m:
+    - 0.085455
+    - 0.003
+    - 0.095
+    source_vertex_count: 220
+    source_face_count: 436
+    bionic_mount_position_body_xyz_m:
+    - -0.156
+    - 0.0
+    - -0.04
+    mesh_orientation_from_fishsim_rpy_rad:
+    - 0.0
+    - 3.141592653589793
+    - 0.0
+    verification_required: false
   pectoral_fins:
-    provenance: "project_tbd"
+    provenance: project_decision_for_3D_control
+    geometry_frozen: true
     count: 2
-    purpose:
-      symmetric: "pitch / dive / rise"
-      differential: "roll / attitude control"
-
+    planform: tapered swept wing with rounded tip
+    span_m: 0.11
+    root_chord_m: 0.105
+    tip_chord_m: 0.055
+    thickness_m: 0.004
+    sweep_angle_deg: 20.0
+    planform_area_each_m2_approx: 0.0088
+    mechanical_joint_limit_deg:
+    - -35.0
+    - 35.0
+    initial_control_limit_deg:
+    - -20.0
+    - 20.0
     left:
-      link_name: "LeftPectoralFin"
-      span_m: null
-      root_chord_m: null
-      tip_chord_m: null
-      thickness_m: null
-      root_position_body_xyz_m: null
-      joint_axis_body_xyz: null
-      joint_limit_deg: null
-
+      link_name: LeftPectoralFin
+      span_m: 0.11
+      root_chord_m: 0.105
+      tip_chord_m: 0.055
+      thickness_m: 0.004
+      root_position_body_xyz_m:
+      - 0.06
+      - -0.08
+      - 0.01
+      joint_axis_body_xyz:
+      - 0.0
+      - 1.0
+      - 0.0
+      joint_limit_deg:
+      - -35.0
+      - 35.0
+      span_direction_body: -Y
     right:
-      link_name: "RightPectoralFin"
-      mirror_of: "LeftPectoralFin"
-      span_m: null
-      root_chord_m: null
-      tip_chord_m: null
-      thickness_m: null
-      root_position_body_xyz_m: null
-      joint_axis_body_xyz: null
-      joint_limit_deg: null
-
-    note: >
-      fishsim does not provide active pectoral fins. These parameters must be
-      deliberately designed for our 3D Stonefish robot and are intentionally
-      left null instead of being guessed.
-
+      link_name: RightPectoralFin
+      span_m: 0.11
+      root_chord_m: 0.105
+      tip_chord_m: 0.055
+      thickness_m: 0.004
+      root_position_body_xyz_m:
+      - 0.06
+      - 0.08
+      - 0.01
+      joint_axis_body_xyz:
+      - 0.0
+      - 1.0
+      - 0.0
+      joint_limit_deg:
+      - -35.0
+      - 35.0
+      span_direction_body: +Y
+      mirror_of: LeftPectoralFin
   actuators:
-    provenance: "project_decision"
-
+    provenance: project_decision
     M1_tail:
-      name: "TailMotor"
-      role: ["propulsion", "yaw steering"]
-      architecture: "single motor driving compliant tail"
-      reference_motor: "Dynamixel XW-540-T140-R"
-      reference_motor_position_fishsim_xyz_m: [0.1655, 0.0, 0.0]
-      bionic_fish_body_position_xyz_m: null
-      control_mode_v1: "motor-level command; exact Stonefish mode to be finalized"
+      name: TailMotor
+      role:
+      - propulsion
+      - yaw steering
+      architecture: single motor driving compliant tail
+      reference_motor: Dynamixel XW-540-T140-R
+      reference_motor_position_fishsim_xyz_m:
+      - 0.1655
+      - 0.0
+      - 0.0
+      bionic_fish_body_position_xyz_m:
+      - -0.0615
+      - 0.0
+      - 0.0
+      control_mode_v1: velocity
       max_reference_rotation_rate_hz: 5.0
-      real_torque_limit_nm: null
-      real_velocity_limit_rad_s: null
-
+      real_torque_limit_nm:
+        status: reference_hardware_spec_not_simulation_limit
+        motor: Dynamixel XW540-T140-R
+        stall_torque_at_12V_Nm: 6.9
+        simulation_policy: do_not_use_stall_torque_as_continuous torque limit
+      real_velocity_limit_rad_s:
+        status: reference_hardware_spec
+        motor: Dynamixel XW540-T140-R
+        no_load_speed_at_12V_rpm: 72.0
+        no_load_speed_at_12V_rad_s: 7.539822
+      joint_axis_body_xyz:
+      - 0.0
+      - 1.0
+      - 0.0
+      reference_crank_length_m: 0.0395
+      reference_shaft_span_y_m: 0.12
     M2_left_pectoral:
-      name: "LeftPectoralMotor"
-      role: ["pitch", "depth", "roll differential"]
-      bionic_fish_body_position_xyz_m: null
-      joint_axis_body_xyz: null
-      control_mode_v1: "position/angle servo"
-      joint_limit_deg: null
-      max_torque_nm: null
-      max_velocity_rad_s: null
-
+      name: LeftPectoralMotor
+      role:
+      - pitch
+      - depth
+      - roll differential
+      bionic_fish_body_position_xyz_m:
+      - 0.06
+      - -0.08
+      - 0.01
+      joint_axis_body_xyz:
+      - 0.0
+      - 1.0
+      - 0.0
+      control_mode_v1: position
+      joint_limit_deg:
+      - -35.0
+      - 35.0
+      max_torque_nm:
+        status: actuator_not_selected
+        initial_simulation_limit_nm: 1.5
+        reason: temporary V1 simulator limit; replace after physical pectoral servo selection
+      max_velocity_rad_s:
+        status: actuator_not_selected
+        initial_simulation_limit_rad_s: 4.0
+        reason: temporary V1 simulator limit; replace after physical pectoral servo selection
     M3_right_pectoral:
-      name: "RightPectoralMotor"
-      role: ["pitch", "depth", "roll differential"]
-      bionic_fish_body_position_xyz_m: null
-      joint_axis_body_xyz: null
-      control_mode_v1: "position/angle servo"
-      joint_limit_deg: null
-      max_torque_nm: null
-      max_velocity_rad_s: null
-
+      name: RightPectoralMotor
+      role:
+      - pitch
+      - depth
+      - roll differential
+      bionic_fish_body_position_xyz_m:
+      - 0.06
+      - 0.08
+      - 0.01
+      joint_axis_body_xyz:
+      - 0.0
+      - 1.0
+      - 0.0
+      control_mode_v1: position
+      joint_limit_deg:
+      - -35.0
+      - 35.0
+      max_torque_nm:
+        status: actuator_not_selected
+        initial_simulation_limit_nm: 1.5
+        reason: temporary V1 simulator limit; replace after physical pectoral servo selection
+      max_velocity_rad_s:
+        status: actuator_not_selected
+        initial_simulation_limit_rad_s: 4.0
+        reason: temporary V1 simulator limit; replace after physical pectoral servo selection
   sensors:
-    provenance: "project_decision_with_mount_positions_tbd"
-
+    provenance: project_decision_with_mount_positions_tbd
     imu:
       enabled: true
-      name: "IMU"
-      parent_link: "Body"
-      mount_position_body_xyz_m: null
-      mount_rpy_rad: [0.0, 0.0, 0.0]
-      desired_location: "near body COM, rigidly mounted"
+      name: IMU
+      parent_link: Body
+      mount_position_body_xyz_m:
+      - 0.075
+      - 0.0
+      - -0.015
+      mount_rpy_rad:
+      - 0.0
+      - 0.0
+      - 0.0
+      desired_location: near body COM, rigidly mounted
       outputs:
-        - "orientation"
-        - "angular_velocity"
-        - "linear_acceleration"
-
+      - orientation
+      - angular_velocity
+      - linear_acceleration
+      mount_position_frozen: true
     pressure:
       enabled: true
-      name: "Pressure"
-      parent_link: "Body"
-      mount_position_body_xyz_m: null
-      mount_rpy_rad: [0.0, 0.0, 0.0]
-      desired_location: "body exterior / pressure-accessible location"
+      name: Pressure
+      parent_link: Body
+      mount_position_body_xyz_m:
+      - 0.04
+      - 0.084
+      - 0.0
+      mount_rpy_rad:
+      - 0.0
+      - 0.0
+      - 0.0
+      desired_location: body exterior / pressure-accessible location
       outputs:
-        - "gauge_pressure"
-        - "derived_depth"
-
+      - gauge_pressure
+      - derived_depth
+      mount_position_frozen: true
     forward_sonar:
       enabled: true
-      name: "ForwardSonar"
-      type: "Stonefish forward multibeam sonar"
-      parent_link: "Body"
-      mount_position_body_xyz_m: null
-      mount_rpy_rad: [0.0, 0.0, 0.0]
-      pointing_direction_body: "+X"
-      desired_location: "nose/front centerline"
-      fov_deg: null
-      beam_count: null
-      minimum_range_m: null
-      maximum_range_m: null
-      update_rate_hz: null
-      note: >
-        Sonar geometry/rate should be frozen after the body nose geometry is
-        finalized, so the sensor origin is outside the physical mesh.
-
+      name: ForwardSonar
+      type: fls
+      parent_link: Body
+      mount_position_body_xyz_m:
+      - 0.187
+      - 0.0
+      - 0.0
+      mount_rpy_rad:
+      - 0.0
+      - 0.0
+      - 0.0
+      pointing_direction_body: +X
+      beams: 128
+      bins: 256
+      horizontal_fov_deg: 100.0
+      vertical_fov_deg: 30.0
+      minimum_range_m: 0.2
+      maximum_range_m: 6.0
+      gain: 1.0
+      output_format: uint16
+      initial_validation_noise:
+        multiplicative_stddev: 0.0
+        additive_stddev: 0.0
+      training_noise:
+        status: calibration_required_after_sensor_pipeline_is_working
+        recommended_start:
+          multiplicative_stddev: 0.01
+          additive_stddev: 0.02
     encoders:
       enabled: true
       channels:
-        - "TailMotor / tail state"
-        - "LeftPectoralMotor"
-        - "RightPectoralMotor"
-
+      - TailMotor / tail state
+      - LeftPectoralMotor
+      - RightPectoralMotor
   virtual_hardware_interface:
-    provenance: "project_decision"
-
+    provenance: project_decision
     actuator_command_channels:
-      - "tail_motor"
-      - "left_pectoral_motor"
-      - "right_pectoral_motor"
-
+    - tail_motor
+    - left_pectoral_motor
+    - right_pectoral_motor
     sensor_output_channels:
-      - "imu_orientation"
-      - "imu_angular_velocity"
-      - "imu_linear_acceleration"
-      - "pressure"
-      - "depth"
-      - "sonar_ranges"
-      - "tail_position"
-      - "tail_velocity"
-      - "tail_effort"
-      - "left_pectoral_position"
-      - "left_pectoral_velocity"
-      - "left_pectoral_effort"
-      - "right_pectoral_position"
-      - "right_pectoral_velocity"
-      - "right_pectoral_effort"
-
+    - imu_orientation
+    - imu_angular_velocity
+    - imu_linear_acceleration
+    - pressure
+    - depth
+    - sonar_ranges
+    - tail_position
+    - tail_velocity
+    - tail_effort
+    - left_pectoral_position
+    - left_pectoral_velocity
+    - left_pectoral_effort
+    - right_pectoral_position
+    - right_pectoral_velocity
+    - right_pectoral_effort
     rl_observation_policy:
       allow_virtual_sensor_outputs: true
       allow_motor_feedback: true
       allow_world_ground_truth_by_default: false
       allow_obstacle_world_coordinates_by_default: false
       allow_full_current_field_by_default: false
-
   buoyancy_and_stonefish_environment:
-    provenance: "project_decision_and_project_tbd"
-
+    provenance: project_decision_and_project_tbd
     stonefish_water_density_kg_m3: 997.0
-    target_buoyancy: "near-neutral, preferably slight positive buoyancy"
-    target_density_or_mass_offset_fraction: null
-    final_mass_kg: null
-    displaced_volume_m3: null
-    center_of_mass_body_xyz_m: null
-    center_of_buoyancy_body_xyz_m: null
+    target_buoyancy: near-neutral, preferably slight positive buoyancy
+    target_density_or_mass_offset_fraction: 0.01
+    final_mass_kg:
+      status: computed_after_all_closed_physics_meshes_are_generated
+      body_only_initial_estimate_kg: 5.0837
+      formula: total_mass = total_displaced_water_mass / 1.01
+    displaced_volume_m3:
+      status: computed_from_closed_physics_meshes
+      body_only_initial_estimate_m3: 0.005150034
+    center_of_mass_body_xyz_m:
+      status: initial_target_then_recomputed_from_per_link_masses
+      initial_target:
+      - 0.0
+      - 0.0
+      - 0.02
+    center_of_buoyancy_body_xyz_m:
+      status: computed_from_submerged_closed_mesh_volume
+      initial_target:
+      - 0.0
+      - 0.0
+      - 0.0
     waves_for_initial_static_pool_test: 0.0
-    current_for_initial_static_pool_test_m_s: [0.0, 0.0, 0.0]
-
+    current_for_initial_static_pool_test_m_s:
+    - 0.0
+    - 0.0
+    - 0.0
+    target_positive_buoyancy_fraction: 0.01
+    target_com_below_cob_z_separation_m: 0.02
   mesh_pipeline:
-    provenance: "project_decision"
-
+    provenance: project_decision
     visual_mesh:
-      format: "OBJ"
+      format: OBJ
       closed_body_required: true
-      intended_use: "rendering"
+      intended_use: rendering
       resolution_guideline:
-        longitudinal_sections_range: [50, 80]
-        points_per_section_range: [24, 32]
-
+        longitudinal_sections_range:
+        - 50
+        - 80
+        points_per_section_range:
+        - 24
+        - 32
     physics_mesh:
-      format: "OBJ"
+      format: OBJ
       closed_body_required: true
       intended_use:
-        - "hydrodynamics"
-        - "buoyancy"
-        - "collision"
+      - hydrodynamics
+      - buoyancy
+      - collision
       resolution_guideline:
-        longitudinal_sections_range: [10, 16]
-        points_per_section_range: [8, 12]
-
+        longitudinal_sections_range:
+        - 10
+        - 16
+        points_per_section_range:
+        - 8
+        - 12
     generated_parts:
-      - "body.obj"
-      - "tail_0.obj"
-      - "tail_1.obj"
-      - "tail_2.obj"
-      - "tail_3.obj"
-      - "tail_4.obj"
-      - "caudal_fin.obj"
-      - "dorsal_fin.obj"
-      - "left_pectoral.obj"
-      - "right_pectoral.obj"
-
+    - body.obj
+    - tail_0.obj
+    - tail_1.obj
+    - tail_2.obj
+    - tail_3.obj
+    - tail_4.obj
+    - caudal_fin.obj
+    - dorsal_fin.obj
+    - left_pectoral.obj
+    - right_pectoral.obj
   output_layout:
-    root: "simulation/data/robots/bionic_fish"
-    scenario: "simulation/data/robots/bionic_fish/bionic_fish.scn"
-
-    visual_dir: "simulation/data/robots/bionic_fish/visual"
-    physics_dir: "simulation/data/robots/bionic_fish/physics"
-
-    generator: "simulation/tools/generate_bionic_fish.py"
-
-# =============================================================================
-# Items that MUST be frozen before generate_bionic_fish.py becomes authoritative
-# =============================================================================
-
+    root: simulation/data/robots/bionic_fish
+    scenario: simulation/data/robots/bionic_fish/bionic_fish.scn
+    visual_dir: simulation/data/robots/bionic_fish/visual
+    physics_dir: simulation/data/robots/bionic_fish/physics
+    generator: simulation/tools/generate_bionic_fish.py
+  environment_integration:
+    static_pool:
+      interior_length_x_m: 12.0
+      interior_width_y_m: 6.0
+      water_depth_z_m: 4.0
+      water_density_kg_m3: 997.0
+      current_m_s:
+      - 0.0
+      - 0.0
+      - 0.0
+      initial_spawn_world_xyz_m:
+      - -3.5
+      - 0.0
+      - 2.0
+      initial_spawn_rpy_rad:
+      - 0.0
+      - 0.0
+      - 0.0
+    river:
+      width_y_m: 8.0
+      water_depth_z_m: 4.0
+      water_density_kg_m3: 997.0
+      public_reference_current_m_s:
+      - -1.0
+      - 0.0
+      - 0.0
+      initial_spawn_world_xyz_m:
+      - 0.0
+      - 0.0
+      - 2.0
 next_design_freeze:
-
-  required:
-    - "Body-only streamlined length"
-    - "Body maximum width"
-    - "Body maximum height"
-    - "Body longitudinal cross-section profile"
-    - "Left/right pectoral span"
-    - "Pectoral root/tip chord"
-    - "Pectoral thickness"
-    - "Pectoral root positions"
-    - "Pectoral joint axes and limits"
-    - "M2/M3 actuator locations"
-    - "M1 location after fishsim-to-our-body-frame conversion"
-    - "IMU mount position"
-    - "Pressure sensor mount position"
-    - "Sonar mount position"
-    - "Sonar FOV, beams, min/max range, update rate"
-    - "Stonefish passive-tail spring/damping calibration"
-    - "Final mass and displaced volume"
-    - "Center of mass and center of buoyancy"
-
-  rule: >
-    Keep these values null until deliberately selected or calculated. Do not
-    infer them silently from the rough 57 x 25 x 17 cm hardware envelope.
-
-# =============================================================================
-# End of BionicFishV1Config
-# =============================================================================
+  geometry_status: frozen_for_mesh_generator_v1
+  physics_status: calibration_required_after_mesh_generation
+  rule: No unresolved value is represented as YAML null in revision 0.2.1.
+design_freeze_revision: geometry-and-hardware-layout-v1
+artifact_note: Corrected downloadable artifact. All YAML null values have been removed. Unresolved physics/hardware quantities
+  are represented explicitly with status/method fields.
+remaining_calibration_tasks:
+  tail_stiffness: calibrate in Stonefish to 3.5 Hz free-tail natural frequency
+  tail_damping: fit free-decay envelope after stiffness calibration
+  vehicle_mass_and_inertia: calculate after all closed physics OBJ meshes are generated
+  M2_M3_real_actuator: not selected; V1 simulator temporary limits are stored above
+  FLS_training_noise: start from stored recommendation, then domain-randomize after clean validation
