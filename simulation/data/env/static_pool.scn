@@ -26,21 +26,24 @@
             Z = 4
 
         当前测试环境故意：
-
             无 current
             无 wave
             无 obstacle
 
-        目标：
+        Stage 1 目标：
 
-            只验证仿生鱼本体：
-            - propulsion
-            - steering
-            - dive/rise
-            - IMU
-            - pressure
-            - sonar
-            - motor feedback
+            只验证真实 BionicFish 的：
+            - visual mesh
+            - multi-link assembly
+            - fish orientation
+            - camera tracking
+            - sensor/actuator XML creation
+
+        Stage 1 不验证：
+            - swimming
+            - buoyancy dynamics
+            - passive tail spring
+            - motor control
     -->
 
 
@@ -49,7 +52,6 @@
          ========================================================== -->
 
     <environment>
-
         <ned
             latitude="0.0"
             longitude="0.0"/>
@@ -93,14 +95,12 @@
 
 
         <!--
-            第一版鱼体使用与水一致的密度。
+            Stage 1:
+            鱼被 fixed=true 固定，因此这个密度当前不会驱动鱼体运动。
 
-            这样整个多刚体机器人接近中性浮力，
-            先排除浮力失配对推进实验的干扰。
-
-            后面可以故意改成轻微正浮力。
+            仍保持和水一致的 997 kg/m^3，
+            为后续 Stage 2 自由浮力测试提供干净基线。
         -->
-
         <material
             name="FishNeutral"
             density="997.0"
@@ -123,7 +123,6 @@
                 static="0.30"
                 dynamic="0.20"/>
 
-
             <friction
                 material1="FishNeutral"
                 material2="FishNeutral"
@@ -140,61 +139,61 @@
          Looks
          ========================================================== -->
 
-    <looks>
+<looks>
+
+    <!-- ======================================================
+         Pool
+         ====================================================== -->
+
+    <look
+        name="PoolBottomLook"
+        rgb="0.25 0.45 0.55"
+        roughness="0.85"
+        metalness="0.0"/>
+
+    <look
+        name="PoolWallLook"
+        rgb="0.65 0.75 0.78"
+        roughness="0.75"
+        metalness="0.0"/>
 
 
-        <look
-            name="PoolBottomLook"
-            rgb="0.25 0.45 0.55"
-            roughness="0.85"
-            metalness="0.0"/>
+    <!-- ======================================================
+         BionicFish Stage-1 debug colors
+         ====================================================== -->
 
+    <look
+        name="BionicFishBodyLook"
+        rgb="0.95 0.35 0.08"
+        roughness="0.40"
+        metalness="0.00"/>
 
-        <look
-            name="PoolWallLook"
-            rgb="0.65 0.75 0.78"
-            roughness="0.75"
-            metalness="0.0"/>
+    <look
+        name="BionicFishTailLook"
+        rgb="0.85 0.12 0.08"
+        roughness="0.40"
+        metalness="0.00"/>
 
+    <look
+        name="BionicFishFinLook"
+        rgb="0.95 0.70 0.15"
+        roughness="0.40"
+        metalness="0.00"/>
 
-        <!-- Fish Body -->
+    <look
+        name="BionicFishLeftPectoralLook"
+        rgb="0.10 0.80 0.30"
+        roughness="0.40"
+        metalness="0.00"/>
 
-        <look
-            name="FishBodyLook"
-            rgb="0.95 0.35 0.08"
-            roughness="0.40"
-            metalness="0.0"/>
+    <look
+        name="BionicFishRightPectoralLook"
+        rgb="0.10 0.45 0.95"
+        roughness="0.40"
+        metalness="0.00"/>
 
+</looks>
 
-        <!-- Tail -->
-
-        <look
-            name="FishTailLook"
-            rgb="0.85 0.12 0.08"
-            roughness="0.40"
-            metalness="0.0"/>
-
-
-        <!--
-            两侧鳍故意使用不同颜色，
-            第一阶段方便判断关节方向。
-        -->
-
-        <look
-            name="FishLeftFinLook"
-            rgb="0.10 0.80 0.30"
-            roughness="0.40"
-            metalness="0.0"/>
-
-
-        <look
-            name="FishRightFinLook"
-            rgb="0.10 0.45 0.95"
-            roughness="0.40"
-            metalness="0.0"/>
-
-
-    </looks>
 
 
     <!-- ==========================================================
@@ -310,35 +309,37 @@
 
 
     <!-- ==========================================================
-         Bionic Fish
+         Real BionicFish V1
+
+         Stage 1:
+           - fixed robot
+           - controller disabled in StaticPoolSimulator
+           - no passive spring test
+           - geometry / rendering only
          ========================================================== -->
 
-    <!--
-        Stonefish include 路径相对于 SimulationApp data path。
-
-        当前程序的 data path 是：
-
-            ./data/
-
-        所以这里：
-
-            env/bionic_fish_v1.scn
-    -->
-
     <include
-        file="env/bionic_fish_v1.scn">
+        file="robots/bionic_fish/bionic_fish.scn">
 
         <arg
             name="robot_name"
             value="BionicFish"/>
 
-        <!--
-            从 X=-3.5 开始，
-            给 +X 前进实验留下较长距离。
-        -->
+        <arg
+            name="material_name"
+            value="FishNeutral"/>
+
         <arg
             name="robot_position"
             value="-3.5 0.0 2.0"/>
+
+        <arg
+            name="robot_rpy"
+            value="0.0 0.0 0.0"/>
+
+        <arg
+            name="robot_fixed"
+            value="true"/>
 
     </include>
 

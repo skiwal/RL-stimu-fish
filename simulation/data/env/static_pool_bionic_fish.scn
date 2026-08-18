@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+=============================================================================
+BionicFish V1 — dedicated static-pool integration test
+=============================================================================
+
+This is a NEW test scenario. It does not replace env/static_pool.scn.
+
+Purpose:
+  - parse/load the complete BionicFish robot
+  - verify mesh placement and kinematic tree
+  - verify near-neutral/slightly-positive buoyancy bootstrap
+  - verify IMU / Pressure / FLS creation
+  - verify M1/M2/M3 actuator creation
+
+No water current.
+No random obstacles.
+No river chunks.
+No RL.
+
+Bootstrap material:
+  Water density = 997 kg/m^3
+  Fish material = 997 / 1.01 = 987.128713 kg/m^3
+
+With all closed fish meshes using the same material this produces about 1%
+positive buoyancy. Based on the current generated physics meshes:
+  total closed volume ~= 0.00590375 m^3
+  displaced freshwater mass ~= 5.8860 kg
+  auto material mass ~= 5.8278 kg
+
+This is a stable V1 integration bootstrap, NOT the final sim-to-real
+mass/inertia distribution.
+=============================================================================
+-->
+
+<scenario>
+
+    <environment>
+        <ned
+            latitude="0.0"
+            longitude="0.0"/>
+
+        <ocean>
+            <water
+                density="997.0"
+                jerlov="0.05"
+                temperature="20.0"/>
+
+            <waves height="0.0"/>
+
+            <particles enabled="false"/>
+
+            <!-- Intentionally no current. -->
+        </ocean>
+    </environment>
+
+
+    <materials>
+
+        <material
+            name="PoolConcrete"
+            density="2400.0"
+            restitution="0.20"/>
+
+        <!--
+            1% positive-buoyancy bootstrap:
+              density = 997 / 1.01
+        -->
+        <material
+            name="BionicFishMaterial"
+            density="987.128713"
+            restitution="0.10"/>
+
+        <friction_table>
+
+            <friction
+                material1="PoolConcrete"
+                material2="PoolConcrete"
+                static="0.80"
+                dynamic="0.60"/>
+
+            <friction
+                material1="BionicFishMaterial"
+                material2="PoolConcrete"
+                static="0.25"
+                dynamic="0.15"/>
+
+            <friction
+                material1="BionicFishMaterial"
+                material2="BionicFishMaterial"
+                static="0.20"
+                dynamic="0.10"/>
+
+        </friction_table>
+    </materials>
+
+
+    <looks>
+
+        <look
+            name="PoolBottomLook"
+            rgb="0.25 0.45 0.55"
+            roughness="0.85"
+            metalness="0.0"/>
+
+        <look
+            name="PoolWallLook"
+            rgb="0.65 0.75 0.78"
+            roughness="0.75"
+            metalness="0.0"/>
+
+    </looks>
+
+
+    <!-- =============================================================
+         POOL
+         Internal dimensions:
+           X = -6 .. +6 m
+           Y = -3 .. +3 m
+           Z =  0 ..  4 m
+         ============================================================= -->
+
+    <static
+        name="PoolBottom"
+        type="box">
+
+        <dimensions xyz="12.6 6.6 0.30"/>
+        <material name="PoolConcrete"/>
+        <look name="PoolBottomLook"/>
+
+        <world_transform
+            xyz="0.0 0.0 4.15"
+            rpy="0.0 0.0 0.0"/>
+    </static>
+
+
+    <static
+        name="PoolWallPositiveY"
+        type="box">
+
+        <dimensions xyz="12.6 0.30 4.0"/>
+        <material name="PoolConcrete"/>
+        <look name="PoolWallLook"/>
+
+        <world_transform
+            xyz="0.0 3.15 2.0"
+            rpy="0.0 0.0 0.0"/>
+    </static>
+
+
+    <static
+        name="PoolWallNegativeY"
+        type="box">
+
+        <dimensions xyz="12.6 0.30 4.0"/>
+        <material name="PoolConcrete"/>
+        <look name="PoolWallLook"/>
+
+        <world_transform
+            xyz="0.0 -3.15 2.0"
+            rpy="0.0 0.0 0.0"/>
+    </static>
+
+
+    <static
+        name="PoolWallPositiveX"
+        type="box">
+
+        <dimensions xyz="0.30 6.0 4.0"/>
+        <material name="PoolConcrete"/>
+        <look name="PoolWallLook"/>
+
+        <world_transform
+            xyz="6.15 0.0 2.0"
+            rpy="0.0 0.0 0.0"/>
+    </static>
+
+
+    <static
+        name="PoolWallNegativeX"
+        type="box">
+
+        <dimensions xyz="0.30 6.0 4.0"/>
+        <material name="PoolConcrete"/>
+        <look name="PoolWallLook"/>
+
+        <world_transform
+            xyz="-6.15 0.0 2.0"
+            rpy="0.0 0.0 0.0"/>
+    </static>
+
+
+    <!-- =============================================================
+         BIONIC FISH
+         ============================================================= -->
+
+    <include file="robots/bionic_fish/bionic_fish.scn">
+
+        <arg
+            name="robot_name"
+            value="BionicFish"/>
+
+        <arg
+            name="material_name"
+            value="BionicFishMaterial"/>
+
+        <!-- Start near the negative-X end so straight-swim tests have room. -->
+        <arg
+            name="robot_position"
+            value="-3.5 0.0 2.0"/>
+
+        <arg
+            name="robot_rpy"
+            value="0.0 0.0 0.0"/>
+
+    </include>
+
+</scenario>

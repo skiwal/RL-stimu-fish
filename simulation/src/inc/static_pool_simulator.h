@@ -2,23 +2,26 @@
 
 #include <Stonefish/core/SimulationManager.h>
 
-#include "bionic_fish.h"
+
+namespace sf
+{
+class Robot;
+class SolidEntity;
+}
 
 
 /*
     ================================================================
-    Built-in test modes
+    Static-pool test modes
     ================================================================
 
-    这些不是最终控制器。
+    Stage 1 currently ignores these modes because:
 
-    目的只是验证：
+        robot is fixed
+        motors are disabled
+        passive tail springs are disabled
 
-        tail hydrodynamics
-        steering
-        pitch
-        roll
-        virtual sensors
+    We KEEP this interface because later stages will use it again.
 */
 enum class PoolTestMode
 {
@@ -38,19 +41,6 @@ enum class PoolTestMode
 
     RollRight,
 
-    /*
-        External 模式不会自动生成控制命令。
-
-        后面：
-
-            RL
-            Python bridge
-            ROS2
-            hardware interface
-
-        都可以通过 SetExternalMotorCommand()
-        写入三个 motor target。
-    */
     External
 };
 
@@ -60,6 +50,29 @@ PoolTestModeName(
     PoolTestMode mode);
 
 
+/*
+    ================================================================
+    StaticPoolSimulator
+    Stage 1 — Fixed BionicFish geometry test
+    ================================================================
+
+    Goal:
+
+        1. Load the original static_pool.scn.
+        2. Load the real mesh-based BionicFish.
+        3. Keep the whole robot fixed.
+        4. Disable all motor/spring control.
+        5. Verify:
+             - pool rendering
+             - fish rendering
+             - link assembly
+             - camera tracking
+
+    No propulsion.
+    No passive-tail spring.
+    No RL.
+    No ApplyForce().
+*/
 class StaticPoolSimulator final
     : public sf::SimulationManager
 {
@@ -73,60 +86,31 @@ public:
     void BuildScenario() override;
 
 
-    void SimulationStepCompleted(
-        sf::Scalar timeStep) override;
+    sf::Robot*
+    GetFishRobot() const;
 
 
-    /*
-        ============================================================
-        External control interface
-        ============================================================
-    */
-
-    void SetExternalMotorCommand(
-        const FishMotorCommand& command);
+    sf::SolidEntity*
+    GetFishBody() const;
 
 
-    FishSensorData
-    ReadFishSensors() const;
-
-
-    FishMotorFeedback
-    ReadFishMotorFeedback() const;
-
-
-    BionicFish&
-    GetFish();
-
-
-    const BionicFish&
-    GetFish() const;
+    PoolTestMode
+    GetTestMode() const;
 
 
 private:
 
-    FishMotorCommand
-    MakeScriptedCommand(
-        sf::Scalar testTime) const;
+    void BindBionicFish();
 
 
-    void PrintTelemetry();
+    PoolTestMode mode_ =
+        PoolTestMode::Neutral;
 
 
-    PoolTestMode mode_;
+    sf::Robot* fishRobot_ =
+        nullptr;
 
 
-    BionicFish fish_;
-
-
-    FishMotorCommand
-        externalCommand_;
-
-
-    sf::Scalar elapsedTime_ =
-        0.0;
-
-
-    sf::Scalar lastTelemetryTime_ =
-        -1.0;
+    sf::SolidEntity* fishBody_ =
+        nullptr;
 };
