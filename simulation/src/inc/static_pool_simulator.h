@@ -340,7 +340,7 @@ private:
 
 
     sf::Scalar csvPeriod_ =
-        0.01;       // 100 Hz
+        0.002;       // 100 Hz
 
 
     sf::Scalar lastCsvTime_ =

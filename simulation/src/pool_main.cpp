@@ -182,7 +182,7 @@ int main(
         // ========================================================
 
         StaticPoolSimulator simulator(
-            500.0,
+            2000.0,
             testMode);
 
 
