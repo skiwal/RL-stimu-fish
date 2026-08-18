@@ -796,7 +796,7 @@ M1 note:
             <controller
                 position_gain="20.0"
                 velocity_gain="2.0"
-                max_torque="6.0"
+                max_torque="0.0"
                 max_velocity="7.54"/>
 
             <joint
@@ -819,7 +819,7 @@ M1 note:
             <controller
                 position_gain="12.0"
                 velocity_gain="1.5"
-                max_torque="1.5"
+                max_torque="0.0"
                 max_velocity="4.0"/>
 
             <joint
@@ -842,7 +842,7 @@ M1 note:
             <controller
                 position_gain="12.0"
                 velocity_gain="1.5"
-                max_torque="1.5"
+                max_torque="0.0"
                 max_velocity="4.0"/>
 
             <joint

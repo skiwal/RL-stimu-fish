@@ -1,6 +1,10 @@
 generator: generate_bionic_fish.py
 config_name: BionicFishV1Config
 config_revision: 0.2.1
+obj_normals:
+  enabled: true
+  mode: area_weighted_smooth_vertex_normals
+  face_format: v//vn
 units: m
 coordinate_frame:
   x: forward/head
@@ -64,6 +68,7 @@ link_origins_body_xyz_m:
 visual_meshes:
   body.obj:
     vertices: 2018
+    normals: 2018
     faces: 4032
     boundary_edges: 0
     closed: true
@@ -82,6 +87,7 @@ visual_meshes:
     - 0.14561221146348519
   tail_0.obj:
     vertices: 198
+    normals: 198
     faces: 392
     boundary_edges: 0
     closed: true
@@ -100,6 +106,7 @@ visual_meshes:
     - 0.10042121727862736
   tail_1.obj:
     vertices: 198
+    normals: 198
     faces: 392
     boundary_edges: 0
     closed: true
@@ -118,6 +125,7 @@ visual_meshes:
     - 0.095400156414696
   tail_2.obj:
     vertices: 198
+    normals: 198
     faces: 392
     boundary_edges: 0
     closed: true
@@ -136,6 +144,7 @@ visual_meshes:
     - 0.09037909555076462
   tail_3.obj:
     vertices: 198
+    normals: 198
     faces: 392
     boundary_edges: 0
     closed: true
@@ -154,6 +163,7 @@ visual_meshes:
     - 0.08535803468683324
   tail_4.obj:
     vertices: 198
+    normals: 198
     faces: 392
     boundary_edges: 0
     closed: true
@@ -172,6 +182,7 @@ visual_meshes:
     - 0.08033697382290189
   caudal_fin.obj:
     vertices: 408
+    normals: 408
     faces: 812
     boundary_edges: 0
     closed: true
@@ -190,6 +201,7 @@ visual_meshes:
     - 0.202952
   dorsal_fin.obj:
     vertices: 220
+    normals: 220
     faces: 436
     boundary_edges: 0
     closed: true
@@ -208,6 +220,7 @@ visual_meshes:
     - 0.095
   left_pectoral.obj:
     vertices: 512
+    normals: 512
     faces: 1020
     boundary_edges: 0
     closed: true
@@ -226,6 +239,7 @@ visual_meshes:
     - 0.0039926319139690055
   right_pectoral.obj:
     vertices: 512
+    normals: 512
     faces: 1020
     boundary_edges: 0
     closed: true
@@ -245,6 +259,7 @@ visual_meshes:
 physics_meshes:
   body.obj:
     vertices: 202
+    normals: 202
     faces: 400
     boundary_edges: 0
     closed: true
@@ -263,6 +278,7 @@ physics_meshes:
     - 0.143210902705558
   tail_0.obj:
     vertices: 32
+    normals: 32
     faces: 60
     boundary_edges: 0
     closed: true
@@ -281,6 +297,7 @@ physics_meshes:
     - 0.09833019877160844
   tail_1.obj:
     vertices: 32
+    normals: 32
     faces: 60
     boundary_edges: 0
     closed: true
@@ -299,6 +316,7 @@ physics_meshes:
     - 0.09341368883302802
   tail_2.obj:
     vertices: 32
+    normals: 32
     faces: 60
     boundary_edges: 0
     closed: true
@@ -317,6 +335,7 @@ physics_meshes:
     - 0.0884971788944476
   tail_3.obj:
     vertices: 32
+    normals: 32
     faces: 60
     boundary_edges: 0
     closed: true
@@ -335,6 +354,7 @@ physics_meshes:
     - 0.08358066895586719
   tail_4.obj:
     vertices: 32
+    normals: 32
     faces: 60
     boundary_edges: 0
     closed: true
@@ -353,6 +373,7 @@ physics_meshes:
     - 0.07866415901728674
   caudal_fin.obj:
     vertices: 408
+    normals: 408
     faces: 812
     boundary_edges: 0
     closed: true
@@ -371,6 +392,7 @@ physics_meshes:
     - 0.202952
   dorsal_fin.obj:
     vertices: 220
+    normals: 220
     faces: 436
     boundary_edges: 0
     closed: true
@@ -389,6 +411,7 @@ physics_meshes:
     - 0.095
   left_pectoral.obj:
     vertices: 86
+    normals: 86
     faces: 168
     boundary_edges: 0
     closed: true
@@ -407,6 +430,7 @@ physics_meshes:
     - 0.003893408674976976
   right_pectoral.obj:
     vertices: 86
+    normals: 86
     faces: 168
     boundary_edges: 0
     closed: true
@@ -425,6 +449,7 @@ physics_meshes:
     - 0.003893408674976976
 assembly_preview:
   vertices: 4660
+  normals: 4660
   faces: 9280
   boundary_edges: 0
   closed: true
@@ -442,7 +467,7 @@ assembly_preview:
   - 0.38
   - 0.23647600000000002
 important:
-- assembly_preview.obj is only a neutral-pose visualization. The real Stonefish robot must use the separate link
-  meshes.
-- Tail link origins are their proximal joints, so the generated meshes are ready for an articulated kinematic chain.
-- Do not freeze vehicle mass/inertia until physics-mesh volumes and Stonefish link mass distribution are calculated.
+- OBJ files contain explicit smooth vertex normals.
+- assembly_preview.obj is only a neutral-pose visualization.
+- The real Stonefish robot must use the separate link meshes.
+- Tail link origins are their proximal joints.
