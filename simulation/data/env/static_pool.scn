@@ -4,46 +4,45 @@
 
     <!--
         ============================================================
-        Bionic Fish V1 - Static Pool Test Bench
+        BionicFish V1
+        Static Pool
+        Stage 4A Fixed-Base M1 Bench Test
         ============================================================
 
-        NED：
+        Coordinate convention:
 
-            X = 水池长度
-            Y = 水池宽度
-            Z = 向下
+            +X = pool length / fish forward
+            +Y = fish right
+            +Z = down
 
         Pool:
 
-            X = -6 ~ +6 m
-            Y = -3 ~ +3 m
-            Z =  0 ~  4 m
+            approximately 12 m x 6 m x 4 m
 
-        水面：
-            Z = 0
+        Water:
 
-        池底：
-            Z = 4
+            density = 997 kg/m^3
 
-        当前测试环境故意：
-            无 current
-            无 wave
-            无 obstacle
+        Current:
 
-        Stage 1 目标：
+            none
 
-            只验证真实 BionicFish 的：
-            - visual mesh
-            - multi-link assembly
-            - fish orientation
-            - camera tracking
-            - sensor/actuator XML creation
+        Waves:
 
-        Stage 1 不验证：
-            - swimming
-            - buoyancy dynamics
-            - passive tail spring
-            - motor control
+            none
+
+
+        IMPORTANT FOR STAGE 4A:
+
+            robot_fixed = true
+
+        This means the BionicFish base is anchored in world space.
+
+        Internal articulated joints remain available for actuator
+        testing.
+
+        Therefore M1 can move TailJoint0 while the Body itself
+        cannot accelerate or fly away.
     -->
 
 
@@ -52,6 +51,7 @@
          ========================================================== -->
 
     <environment>
+
         <ned
             latitude="0.0"
             longitude="0.0"/>
@@ -64,15 +64,13 @@
                 jerlov="0.05"
                 temperature="20.0"/>
 
+
             <waves
                 height="0.0"/>
 
+
             <particles
                 enabled="false"/>
-
-            <!--
-                故意没有 current。
-            -->
 
         </ocean>
 
@@ -80,13 +78,10 @@
 
 
     <!-- ==========================================================
-         Materials
+         Physical materials
          ========================================================== -->
 
     <materials>
-
-
-        <!-- 水池 -->
 
         <material
             name="PoolConcrete"
@@ -94,13 +89,6 @@
             restitution="0.20"/>
 
 
-        <!--
-            Stage 1:
-            鱼被 fixed=true 固定，因此这个密度当前不会驱动鱼体运动。
-
-            仍保持和水一致的 997 kg/m^3，
-            为后续 Stage 2 自由浮力测试提供干净基线。
-        -->
         <material
             name="FishNeutral"
             density="997.0"
@@ -108,7 +96,6 @@
 
 
         <friction_table>
-
 
             <friction
                 material1="PoolConcrete"
@@ -123,12 +110,12 @@
                 static="0.30"
                 dynamic="0.20"/>
 
+
             <friction
                 material1="FishNeutral"
                 material2="FishNeutral"
                 static="0.20"
                 dynamic="0.10"/>
-
 
         </friction_table>
 
@@ -137,67 +124,70 @@
 
     <!-- ==========================================================
          Looks
+
+         Fish looks are defined in the ROOT scenario for maximum
+         compatibility with the local Stonefish parser.
          ========================================================== -->
 
-<looks>
+    <looks>
 
-    <!-- ======================================================
-         Pool
-         ====================================================== -->
+        <!-- Pool -->
 
-    <look
-        name="PoolBottomLook"
-        rgb="0.25 0.45 0.55"
-        roughness="0.85"
-        metalness="0.0"/>
-
-    <look
-        name="PoolWallLook"
-        rgb="0.65 0.75 0.78"
-        roughness="0.75"
-        metalness="0.0"/>
+        <look
+            name="PoolBottomLook"
+            rgb="0.25 0.45 0.55"
+            roughness="0.85"
+            metalness="0.0"/>
 
 
-    <!-- ======================================================
-         BionicFish Stage-1 debug colors
-         ====================================================== -->
+        <look
+            name="PoolWallLook"
+            rgb="0.65 0.75 0.78"
+            roughness="0.75"
+            metalness="0.0"/>
 
-    <look
-        name="BionicFishBodyLook"
-        rgb="0.95 0.35 0.08"
-        roughness="0.40"
-        metalness="0.00"/>
 
-    <look
-        name="BionicFishTailLook"
-        rgb="0.85 0.12 0.08"
-        roughness="0.40"
-        metalness="0.00"/>
+        <!-- BionicFish debug colors -->
 
-    <look
-        name="BionicFishFinLook"
-        rgb="0.95 0.70 0.15"
-        roughness="0.40"
-        metalness="0.00"/>
+        <look
+            name="BionicFishBodyLook"
+            rgb="0.95 0.35 0.08"
+            roughness="0.40"
+            metalness="0.00"/>
 
-    <look
-        name="BionicFishLeftPectoralLook"
-        rgb="0.10 0.80 0.30"
-        roughness="0.40"
-        metalness="0.00"/>
 
-    <look
-        name="BionicFishRightPectoralLook"
-        rgb="0.10 0.45 0.95"
-        roughness="0.40"
-        metalness="0.00"/>
+        <look
+            name="BionicFishTailLook"
+            rgb="0.85 0.12 0.08"
+            roughness="0.40"
+            metalness="0.00"/>
 
-</looks>
 
+        <look
+            name="BionicFishFinLook"
+            rgb="0.95 0.70 0.15"
+            roughness="0.40"
+            metalness="0.00"/>
+
+
+        <look
+            name="BionicFishLeftPectoralLook"
+            rgb="0.10 0.80 0.30"
+            roughness="0.40"
+            metalness="0.00"/>
+
+
+        <look
+            name="BionicFishRightPectoralLook"
+            rgb="0.10 0.45 0.95"
+            roughness="0.40"
+            metalness="0.00"/>
+
+    </looks>
 
 
     <!-- ==========================================================
-         Pool Bottom
+         Pool bottom
          ========================================================== -->
 
     <static
@@ -207,11 +197,14 @@
         <dimensions
             xyz="12.6 6.6 0.30"/>
 
+
         <material
             name="PoolConcrete"/>
 
+
         <look
             name="PoolBottomLook"/>
+
 
         <world_transform
             xyz="0.0 0.0 4.15"
@@ -221,7 +214,7 @@
 
 
     <!-- ==========================================================
-         Side Walls
+         +Y wall
          ========================================================== -->
 
     <static
@@ -231,11 +224,14 @@
         <dimensions
             xyz="12.6 0.30 4.0"/>
 
+
         <material
             name="PoolConcrete"/>
 
+
         <look
             name="PoolWallLook"/>
+
 
         <world_transform
             xyz="0.0 3.15 2.0"
@@ -244,6 +240,10 @@
     </static>
 
 
+    <!-- ==========================================================
+         -Y wall
+         ========================================================== -->
+
     <static
         name="PoolWallNegativeY"
         type="box">
@@ -251,11 +251,14 @@
         <dimensions
             xyz="12.6 0.30 4.0"/>
 
+
         <material
             name="PoolConcrete"/>
 
+
         <look
             name="PoolWallLook"/>
+
 
         <world_transform
             xyz="0.0 -3.15 2.0"
@@ -265,7 +268,7 @@
 
 
     <!-- ==========================================================
-         End Walls
+         +X wall
          ========================================================== -->
 
     <static
@@ -275,11 +278,14 @@
         <dimensions
             xyz="0.30 6.0 4.0"/>
 
+
         <material
             name="PoolConcrete"/>
 
+
         <look
             name="PoolWallLook"/>
+
 
         <world_transform
             xyz="6.15 0.0 2.0"
@@ -288,6 +294,10 @@
     </static>
 
 
+    <!-- ==========================================================
+         -X wall
+         ========================================================== -->
+
     <static
         name="PoolWallNegativeX"
         type="box">
@@ -295,11 +305,14 @@
         <dimensions
             xyz="0.30 6.0 4.0"/>
 
+
         <material
             name="PoolConcrete"/>
 
+
         <look
             name="PoolWallLook"/>
+
 
         <world_transform
             xyz="-6.15 0.0 2.0"
@@ -309,13 +322,10 @@
 
 
     <!-- ==========================================================
-         Real BionicFish V1
+         BionicFish V1
 
-         Stage 1:
-           - fixed robot
-           - controller disabled in StaticPoolSimulator
-           - no passive spring test
-           - geometry / rendering only
+         STAGE 4A:
+             FIXED BASE
          ========================================================== -->
 
     <include
@@ -325,21 +335,30 @@
             name="robot_name"
             value="BionicFish"/>
 
+
         <arg
             name="material_name"
             value="FishNeutral"/>
+
 
         <arg
             name="robot_position"
             value="-3.5 0.0 2.0"/>
 
+
         <arg
             name="robot_rpy"
             value="0.0 0.0 0.0"/>
 
+
+        <!--
+            IMPORTANT:
+
+            Stage 4A actuator bench test.
+        -->
         <arg
             name="robot_fixed"
-            value="false"/>
+            value="true"/>
 
     </include>
 

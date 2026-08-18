@@ -1,125 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!--
-=============================================================================
-BionicFish V1 — Stonefish robot definition
-=============================================================================
-
-Reference:
-  - RL-stimu-fish BionicFishV1Config revision 0.2.1
-  - ETH Zürich srl-ethz/fishsim mechanical/tail reference
-
-IMPORTANT:
-  This is an INCLUDE file, not a standalone world.
-  The main scenario must define the physical material passed as:
-      $(arg material_name)
-
-Expected include arguments:
-  robot_name
-  material_name
-  robot_position
-  robot_rpy
-  robot_fixed
-
-Coordinate convention:
-  +X = forward / head
-  +Y = fish right
-  +Z = down (NED)
-  tail extends toward -X
-
-Mechanical architecture:
-  Body
-   ├─ TailJoint0 -> Tail0             [active M1]
-   │    └─ TailJoint1 -> Tail1        [passive compliant]
-   │         └─ TailJoint2 -> Tail2   [passive compliant]
-   │              └─ TailJoint3 -> Tail3
-   │                   └─ TailJoint4 -> Tail4
-   │                        └─ CaudalJoint -> CaudalFin [fixed]
-   ├─ LeftPectoralJoint  -> LeftPectoralFin   [active M2]
-   ├─ RightPectoralJoint -> RightPectoralFin  [active M3]
-   └─ DorsalJoint -> DorsalFin [fixed]
-
-Virtual hardware:
-  M1  TailMotor
-  M2  LeftPectoralMotor
-  M3  RightPectoralMotor
-
-  TailEncoder
-  LeftPectoralEncoder
-  RightPectoralEncoder
-
-  IMU
-  Pressure
-  ForwardSonar (FLS)
-
-Tail compliance:
-  Stonefish's scenario parser exposes joint damping, but not a torsional
-  spring stiffness parameter for standard revolute joints. Therefore J1-J4
-  are created here as passive revolute joints with small bootstrap damping.
-  The fishsim-equivalent restoring torque:
-
-      tau = -k * q - c * q_dot
-
-  will be added in the C++ BionicFish controller and calibrated so that the
-  free tail reproduces the fishsim/real-hardware ~3.5 Hz natural frequency.
-
-M1 note:
-  V1 uses an equivalent single active root joint. It does NOT claim to model
-  the full two-tendon S-bend mechanism yet. The public hardware interface
-  still exposes exactly one tail motor channel. A later tendon model can
-  replace the internal drive without changing the RL/action interface.
-
-=============================================================================
--->
-
 <scenario>
 
-    <!--
-        Stage 1 debug colors.
 
-        Body        = orange
-        Tail         = red
-        Fixed fins   = yellow
-        Left pec     = green
-        Right pec    = blue
-
-        These colors are deliberately high-contrast so assembly errors are
-        easy to see. They are not the final cosmetic appearance.
-    -->
-    <!-- <looks>
-
-        <look
-            name="BionicFishBodyLook"
-            rgb="0.95 0.35 0.08"
-            roughness="0.40"
-            metalness="0.00"/>
-
-        <look
-            name="BionicFishTailLook"
-            rgb="0.85 0.12 0.08"
-            roughness="0.40"
-            metalness="0.00"/>
-
-        <look
-            name="BionicFishFinLook"
-            rgb="0.95 0.70 0.15"
-            roughness="0.40"
-            metalness="0.00"/>
-
-        <look
-            name="BionicFishLeftPectoralLook"
-            rgb="0.10 0.80 0.30"
-            roughness="0.40"
-            metalness="0.00"/>
-
-        <look
-            name="BionicFishRightPectoralLook"
-            rgb="0.10 0.45 0.95"
-            roughness="0.40"
-            metalness="0.00"/>
-
-    </looks> -->
-
+    <!-- ==========================================================
+         Robot
+         ========================================================== -->
 
     <robot
         name="$(arg robot_name)"
@@ -127,9 +13,10 @@ M1 note:
         self_collisions="false"
         algorithm="featherstone">
 
-        <!-- =========================================================
-             BASE LINK — BODY
-             ========================================================= -->
+
+        <!-- ======================================================
+             BODY
+             ====================================================== -->
 
         <base_link
             name="Body"
@@ -138,57 +25,46 @@ M1 note:
             buoyant="true">
 
             <physical>
+
                 <mesh
                     filename="robots/bionic_fish/physics/body.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </physical>
 
 
             <visual>
+
                 <mesh
                     filename="robots/bionic_fish/visual/body.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </visual>
 
 
             <material
                 name="$(arg material_name)"/>
 
+
             <look
                 name="BionicFishBodyLook"/>
-
-
-            <!--
-                Stage 1:
-
-                Do NOT force our old custom CG offset here.
-
-                Let Stonefish use the physical mesh/material-derived
-                mass, CG and inertia automatically.
-
-                This removes one unnecessary variable before Stage 2.
-            -->
 
         </base_link>
 
 
-        <!-- =========================================================
-             TAIL LINKS
-
-             Every generated tail OBJ is link-local:
-
-                 local origin = proximal joint
-                 tail extends toward local -X
-
-             ========================================================= -->
+        <!-- ======================================================
+             TAIL 0
+             ====================================================== -->
 
         <link
             name="Tail0"
@@ -197,33 +73,46 @@ M1 note:
             buoyant="true">
 
             <physical>
+
                 <mesh
                     filename="robots/bionic_fish/physics/tail_0.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </physical>
 
+
             <visual>
+
                 <mesh
                     filename="robots/bionic_fish/visual/tail_0.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </visual>
+
 
             <material
                 name="$(arg material_name)"/>
+
 
             <look
                 name="BionicFishTailLook"/>
 
         </link>
 
+
+        <!-- ======================================================
+             TAIL 1
+             ====================================================== -->
 
         <link
             name="Tail1"
@@ -232,33 +121,46 @@ M1 note:
             buoyant="true">
 
             <physical>
+
                 <mesh
                     filename="robots/bionic_fish/physics/tail_1.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </physical>
 
+
             <visual>
+
                 <mesh
                     filename="robots/bionic_fish/visual/tail_1.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </visual>
+
 
             <material
                 name="$(arg material_name)"/>
+
 
             <look
                 name="BionicFishTailLook"/>
 
         </link>
 
+
+        <!-- ======================================================
+             TAIL 2
+             ====================================================== -->
 
         <link
             name="Tail2"
@@ -267,33 +169,46 @@ M1 note:
             buoyant="true">
 
             <physical>
+
                 <mesh
                     filename="robots/bionic_fish/physics/tail_2.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </physical>
 
+
             <visual>
+
                 <mesh
                     filename="robots/bionic_fish/visual/tail_2.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </visual>
+
 
             <material
                 name="$(arg material_name)"/>
+
 
             <look
                 name="BionicFishTailLook"/>
 
         </link>
 
+
+        <!-- ======================================================
+             TAIL 3
+             ====================================================== -->
 
         <link
             name="Tail3"
@@ -302,33 +217,46 @@ M1 note:
             buoyant="true">
 
             <physical>
+
                 <mesh
                     filename="robots/bionic_fish/physics/tail_3.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </physical>
 
+
             <visual>
+
                 <mesh
                     filename="robots/bionic_fish/visual/tail_3.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </visual>
+
 
             <material
                 name="$(arg material_name)"/>
+
 
             <look
                 name="BionicFishTailLook"/>
 
         </link>
 
+
+        <!-- ======================================================
+             TAIL 4
+             ====================================================== -->
 
         <link
             name="Tail4"
@@ -337,27 +265,36 @@ M1 note:
             buoyant="true">
 
             <physical>
+
                 <mesh
                     filename="robots/bionic_fish/physics/tail_4.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </physical>
 
+
             <visual>
+
                 <mesh
                     filename="robots/bionic_fish/visual/tail_4.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </visual>
+
 
             <material
                 name="$(arg material_name)"/>
+
 
             <look
                 name="BionicFishTailLook"/>
@@ -365,9 +302,9 @@ M1 note:
         </link>
 
 
-        <!-- =========================================================
+        <!-- ======================================================
              CAUDAL FIN
-             ========================================================= -->
+             ====================================================== -->
 
         <link
             name="CaudalFin"
@@ -376,27 +313,36 @@ M1 note:
             buoyant="true">
 
             <physical>
+
                 <mesh
                     filename="robots/bionic_fish/physics/caudal_fin.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </physical>
 
+
             <visual>
+
                 <mesh
                     filename="robots/bionic_fish/visual/caudal_fin.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </visual>
+
 
             <material
                 name="$(arg material_name)"/>
+
 
             <look
                 name="BionicFishFinLook"/>
@@ -404,9 +350,9 @@ M1 note:
         </link>
 
 
-        <!-- =========================================================
+        <!-- ======================================================
              DORSAL FIN
-             ========================================================= -->
+             ====================================================== -->
 
         <link
             name="DorsalFin"
@@ -415,27 +361,36 @@ M1 note:
             buoyant="true">
 
             <physical>
+
                 <mesh
                     filename="robots/bionic_fish/physics/dorsal_fin.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </physical>
 
+
             <visual>
+
                 <mesh
                     filename="robots/bionic_fish/visual/dorsal_fin.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </visual>
+
 
             <material
                 name="$(arg material_name)"/>
+
 
             <look
                 name="BionicFishFinLook"/>
@@ -443,9 +398,9 @@ M1 note:
         </link>
 
 
-        <!-- =========================================================
-             LEFT PECTORAL FIN
-             ========================================================= -->
+        <!-- ======================================================
+             LEFT PECTORAL
+             ====================================================== -->
 
         <link
             name="LeftPectoralFin"
@@ -454,27 +409,36 @@ M1 note:
             buoyant="true">
 
             <physical>
+
                 <mesh
                     filename="robots/bionic_fish/physics/left_pectoral.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </physical>
 
+
             <visual>
+
                 <mesh
                     filename="robots/bionic_fish/visual/left_pectoral.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </visual>
+
 
             <material
                 name="$(arg material_name)"/>
+
 
             <look
                 name="BionicFishLeftPectoralLook"/>
@@ -482,9 +446,9 @@ M1 note:
         </link>
 
 
-        <!-- =========================================================
-             RIGHT PECTORAL FIN
-             ========================================================= -->
+        <!-- ======================================================
+             RIGHT PECTORAL
+             ====================================================== -->
 
         <link
             name="RightPectoralFin"
@@ -493,27 +457,36 @@ M1 note:
             buoyant="true">
 
             <physical>
+
                 <mesh
                     filename="robots/bionic_fish/physics/right_pectoral.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </physical>
 
+
             <visual>
+
                 <mesh
                     filename="robots/bionic_fish/visual/right_pectoral.obj"
                     scale="1.0"/>
 
+
                 <origin
                     xyz="0.0 0.0 0.0"
                     rpy="0.0 0.0 0.0"/>
+
             </visual>
+
 
             <material
                 name="$(arg material_name)"/>
+
 
             <look
                 name="BionicFishRightPectoralLook"/>
@@ -521,9 +494,11 @@ M1 note:
         </link>
 
 
-        <!-- =========================================================
-             TAIL JOINT 0 — ACTIVE ROOT JOINT / M1
-             ========================================================= -->
+        <!-- ======================================================
+             TAIL JOINT 0
+
+             ACTIVE M1 JOINT
+             ====================================================== -->
 
         <joint
             name="TailJoint0"
@@ -532,19 +507,24 @@ M1 note:
             <parent
                 name="Body"/>
 
+
             <child
                 name="Tail0"/>
+
 
             <origin
                 xyz="-0.1810 0.0 0.0"
                 rpy="0.0 0.0 0.0"/>
 
+
             <axis
                 xyz="0.0 0.0 1.0"/>
+
 
             <limits
                 min="-1.3962634016"
                 max="1.3962634016"/>
+
 
             <damping
                 value="0.01"/>
@@ -552,9 +532,9 @@ M1 note:
         </joint>
 
 
-        <!-- =========================================================
+        <!-- ======================================================
              TAIL JOINT 1
-             ========================================================= -->
+             ====================================================== -->
 
         <joint
             name="TailJoint1"
@@ -563,29 +543,34 @@ M1 note:
             <parent
                 name="Tail0"/>
 
+
             <child
                 name="Tail1"/>
+
 
             <origin
                 xyz="-0.0295 0.0 0.0"
                 rpy="0.0 0.0 0.0"/>
 
+
             <axis
                 xyz="0.0 0.0 1.0"/>
+
 
             <limits
                 min="-1.3962634016"
                 max="1.3962634016"/>
 
+
             <damping
-                value="0.02"/>
+                value="0.0"/>
 
         </joint>
 
 
-        <!-- =========================================================
+        <!-- ======================================================
              TAIL JOINT 2
-             ========================================================= -->
+             ====================================================== -->
 
         <joint
             name="TailJoint2"
@@ -594,29 +579,34 @@ M1 note:
             <parent
                 name="Tail1"/>
 
+
             <child
                 name="Tail2"/>
+
 
             <origin
                 xyz="-0.0310 0.0 0.0"
                 rpy="0.0 0.0 0.0"/>
 
+
             <axis
                 xyz="0.0 0.0 1.0"/>
+
 
             <limits
                 min="-1.3962634016"
                 max="1.3962634016"/>
 
+
             <damping
-                value="0.02"/>
+                value="0.0"/>
 
         </joint>
 
 
-        <!-- =========================================================
+        <!-- ======================================================
              TAIL JOINT 3
-             ========================================================= -->
+             ====================================================== -->
 
         <joint
             name="TailJoint3"
@@ -625,29 +615,34 @@ M1 note:
             <parent
                 name="Tail2"/>
 
+
             <child
                 name="Tail3"/>
+
 
             <origin
                 xyz="-0.0305 0.0 0.0"
                 rpy="0.0 0.0 0.0"/>
 
+
             <axis
                 xyz="0.0 0.0 1.0"/>
+
 
             <limits
                 min="-1.3962634016"
                 max="1.3962634016"/>
 
+
             <damping
-                value="0.02"/>
+                value="0.0"/>
 
         </joint>
 
 
-        <!-- =========================================================
+        <!-- ======================================================
              TAIL JOINT 4
-             ========================================================= -->
+             ====================================================== -->
 
         <joint
             name="TailJoint4"
@@ -656,29 +651,34 @@ M1 note:
             <parent
                 name="Tail3"/>
 
+
             <child
                 name="Tail4"/>
+
 
             <origin
                 xyz="-0.0250 0.0 0.0"
                 rpy="0.0 0.0 0.0"/>
 
+
             <axis
                 xyz="0.0 0.0 1.0"/>
+
 
             <limits
                 min="-1.3962634016"
                 max="1.3962634016"/>
 
+
             <damping
-                value="0.02"/>
+                value="0.0"/>
 
         </joint>
 
 
-        <!-- =========================================================
-             CAUDAL FIN FIXED JOINT
-             ========================================================= -->
+        <!-- ======================================================
+             CAUDAL FIXED JOINT
+             ====================================================== -->
 
         <joint
             name="CaudalJoint"
@@ -687,8 +687,10 @@ M1 note:
             <parent
                 name="Tail4"/>
 
+
             <child
                 name="CaudalFin"/>
+
 
             <origin
                 xyz="-0.02155 0.0 0.0"
@@ -697,9 +699,9 @@ M1 note:
         </joint>
 
 
-        <!-- =========================================================
+        <!-- ======================================================
              LEFT PECTORAL JOINT
-             ========================================================= -->
+             ====================================================== -->
 
         <joint
             name="LeftPectoralJoint"
@@ -708,19 +710,24 @@ M1 note:
             <parent
                 name="Body"/>
 
+
             <child
                 name="LeftPectoralFin"/>
+
 
             <origin
                 xyz="0.060 -0.080 0.010"
                 rpy="0.0 0.0 0.0"/>
 
+
             <axis
                 xyz="0.0 1.0 0.0"/>
+
 
             <limits
                 min="-0.6108652382"
                 max="0.6108652382"/>
+
 
             <damping
                 value="0.02"/>
@@ -728,9 +735,9 @@ M1 note:
         </joint>
 
 
-        <!-- =========================================================
+        <!-- ======================================================
              RIGHT PECTORAL JOINT
-             ========================================================= -->
+             ====================================================== -->
 
         <joint
             name="RightPectoralJoint"
@@ -739,19 +746,24 @@ M1 note:
             <parent
                 name="Body"/>
 
+
             <child
                 name="RightPectoralFin"/>
+
 
             <origin
                 xyz="0.060 0.080 0.010"
                 rpy="0.0 0.0 0.0"/>
 
+
             <axis
                 xyz="0.0 1.0 0.0"/>
+
 
             <limits
                 min="-0.6108652382"
                 max="0.6108652382"/>
+
 
             <damping
                 value="0.02"/>
@@ -759,9 +771,9 @@ M1 note:
         </joint>
 
 
-        <!-- =========================================================
-             DORSAL FIN FIXED JOINT
-             ========================================================= -->
+        <!-- ======================================================
+             DORSAL FIXED JOINT
+             ====================================================== -->
 
         <joint
             name="DorsalJoint"
@@ -770,8 +782,10 @@ M1 note:
             <parent
                 name="Body"/>
 
+
             <child
                 name="DorsalFin"/>
+
 
             <origin
                 xyz="-0.156 0.0 -0.040"
@@ -780,27 +794,34 @@ M1 note:
         </joint>
 
 
-        <!-- =========================================================
-             M1 — TAIL SERVO
+        <!-- ======================================================
+             M1 — TAIL MOTOR
 
-             Stage 1:
-             C++ does not command it.
+             Stage 4A deliberately soft position controller.
 
-             Initial target remains exactly zero.
-             ========================================================= -->
+             XML torque = 0.
+
+             static_pool_simulator.cpp only enables 0.05 Nm when
+             running:
+
+                 straight
+
+             ====================================================== -->
 
         <actuator
             name="TailMotor"
             type="servo">
 
             <controller
-                position_gain="20.0"
-                velocity_gain="2.0"
+                position_gain="2.0"
+                velocity_gain="0.2"
                 max_torque="0.0"
-                max_velocity="7.54"/>
+                max_velocity="0.35"/>
+
 
             <joint
                 name="TailJoint0"/>
+
 
             <initial
                 position="0.0"/>
@@ -808,9 +829,11 @@ M1 note:
         </actuator>
 
 
-        <!-- =========================================================
-             M2 — LEFT PECTORAL SERVO
-             ========================================================= -->
+        <!-- ======================================================
+             M2 — LEFT PECTORAL
+
+             OFF
+             ====================================================== -->
 
         <actuator
             name="LeftPectoralMotor"
@@ -822,8 +845,10 @@ M1 note:
                 max_torque="0.0"
                 max_velocity="4.0"/>
 
+
             <joint
                 name="LeftPectoralJoint"/>
+
 
             <initial
                 position="0.0"/>
@@ -831,9 +856,11 @@ M1 note:
         </actuator>
 
 
-        <!-- =========================================================
-             M3 — RIGHT PECTORAL SERVO
-             ========================================================= -->
+        <!-- ======================================================
+             M3 — RIGHT PECTORAL
+
+             OFF
+             ====================================================== -->
 
         <actuator
             name="RightPectoralMotor"
@@ -845,8 +872,10 @@ M1 note:
                 max_torque="0.0"
                 max_velocity="4.0"/>
 
+
             <joint
                 name="RightPectoralJoint"/>
+
 
             <initial
                 position="0.0"/>
@@ -854,9 +883,9 @@ M1 note:
         </actuator>
 
 
-        <!-- =========================================================
-             ENCODERS
-             ========================================================= -->
+        <!-- ======================================================
+             TAIL ENCODER
+             ====================================================== -->
 
         <sensor
             name="TailEncoder"
@@ -866,11 +895,16 @@ M1 note:
             <history
                 samples="32"/>
 
+
             <joint
                 name="TailJoint0"/>
 
         </sensor>
 
+
+        <!-- ======================================================
+             LEFT PECTORAL ENCODER
+             ====================================================== -->
 
         <sensor
             name="LeftPectoralEncoder"
@@ -880,11 +914,16 @@ M1 note:
             <history
                 samples="32"/>
 
+
             <joint
                 name="LeftPectoralJoint"/>
 
         </sensor>
 
+
+        <!-- ======================================================
+             RIGHT PECTORAL ENCODER
+             ====================================================== -->
 
         <sensor
             name="RightPectoralEncoder"
@@ -894,15 +933,16 @@ M1 note:
             <history
                 samples="32"/>
 
+
             <joint
                 name="RightPectoralJoint"/>
 
         </sensor>
 
 
-        <!-- =========================================================
+        <!-- ======================================================
              IMU
-             ========================================================= -->
+             ====================================================== -->
 
         <sensor
             name="IMU"
@@ -913,12 +953,15 @@ M1 note:
                 angular_velocity="20.0 20.0 20.0"
                 linear_acceleration="50.0 50.0 50.0"/>
 
+
             <history
                 samples="32"/>
+
 
             <origin
                 xyz="0.075 0.0 -0.015"
                 rpy="0.0 0.0 0.0"/>
+
 
             <link
                 name="Body"/>
@@ -926,9 +969,9 @@ M1 note:
         </sensor>
 
 
-        <!-- =========================================================
-             PRESSURE
-             ========================================================= -->
+        <!-- ======================================================
+             PRESSURE SENSOR
+             ====================================================== -->
 
         <sensor
             name="Pressure"
@@ -938,12 +981,15 @@ M1 note:
             <range
                 pressure="60000.0"/>
 
+
             <history
                 samples="32"/>
+
 
             <origin
                 xyz="0.040 0.084 0.000"
                 rpy="0.0 0.0 0.0"/>
+
 
             <link
                 name="Body"/>
@@ -951,9 +997,9 @@ M1 note:
         </sensor>
 
 
-        <!-- =========================================================
-             FORWARD-LOOKING SONAR
-             ========================================================= -->
+        <!-- ======================================================
+             FORWARD LOOKING SONAR
+             ====================================================== -->
 
         <sensor
             name="ForwardSonar"
@@ -966,21 +1012,26 @@ M1 note:
                 vertical_fov="30.0"
                 output_format="uint16"/>
 
+
             <settings
                 range_min="0.20"
                 range_max="6.0"
                 gain="1.0"/>
 
+
             <noise
                 multiplicative="0.0"
                 additive="0.0"/>
 
+
             <display
                 colormap="hot"/>
+
 
             <origin
                 xyz="0.187 0.0 0.0"
                 rpy="0.0 0.0 0.0"/>
+
 
             <link
                 name="Body"/>
@@ -988,9 +1039,9 @@ M1 note:
         </sensor>
 
 
-        <!-- =========================================================
+        <!-- ======================================================
              INITIAL WORLD POSE
-             ========================================================= -->
+             ====================================================== -->
 
         <world_transform
             xyz="$(arg robot_position)"

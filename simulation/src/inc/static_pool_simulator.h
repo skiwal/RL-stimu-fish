@@ -2,10 +2,16 @@
 
 #include <Stonefish/core/SimulationManager.h>
 
+#include <array>
+#include <cstddef>
+#include <fstream>
+
 
 namespace sf
 {
 class Robot;
+class FeatherstoneRobot;
+class FeatherstoneEntity;
 class SolidEntity;
 class Servo;
 }
@@ -47,47 +53,69 @@ PoolTestModeName(
     ================================================================
     StaticPoolSimulator
 
-    Stage 4 — M1 tail propulsion smoke test
+    Stage 4C — Passive Tail Free-Decay Calibration
     ================================================================
 
-    Straight mode:
+    PURPOSE
 
-        M1 / TailMotor:
-            ON
+        Measure the actual dynamic response of:
 
-        command:
-            q_des(t) = A * sin(2*pi*f*t)
+            TailJoint1
+            TailJoint2
+            TailJoint3
+            TailJoint4
 
-        A:
-            20 deg
+        under the real Stonefish multibody + underwater physics.
 
-        f:
-            1.2 Hz
+    BOUNDARY CONDITION
 
-        M2:
-            OFF
+        Body:
+            fixed=true
 
-        M3:
-            OFF
+        TailJoint0 / M1:
+            position hold at 0 deg
 
+        M1 does NOT oscillate.
 
-    Neutral mode:
+        This makes TailJoint0 approximately a fixed root boundary
+        for the passive tail.
 
-        M1 = OFF
-        M2 = OFF
-        M3 = OFF
+    PASSIVE JOINT MODEL
 
+        For TailJoint1~4:
 
-    IMPORTANT:
+            tau = -k*q - c*qDot
 
-        No body-level propulsion force.
-        No ApplyForce().
-        No fake thrust.
+        Initial bootstrap values:
 
-        Any translation of the fish must arise from:
-            articulated tail motion
-            +
-            Stonefish hydrodynamics
+            k = 0.02 Nm/rad
+            c = 0.001 Nms/rad
+
+    INITIAL CONDITION
+
+        TailJoint1 = +8 deg
+        TailJoint2 = +6 deg
+        TailJoint3 = +4 deg
+        TailJoint4 = +2 deg
+
+        all initial angular velocities = 0
+
+    DATA OUTPUT
+
+        tail_decay_stage4c.csv
+
+        CSV rate:
+            100 Hz
+
+        Console rate:
+            20 Hz
+
+    IMPORTANT
+
+        No Body ApplyForce().
+        No fake propulsion.
+        No periodic motor command.
+        M2/M3 remain disabled.
 */
 class StaticPoolSimulator final
     : public sf::SimulationManager
@@ -120,38 +148,62 @@ public:
 
 private:
 
-    /*
-        Find BionicFish and M1.
-    */
+    // ============================================================
+    // Binding
+    // ============================================================
+
     void BindBionicFish();
 
 
-    /*
-        Automatically frame the fish in the GUI.
-    */
-    void ConfigureCamera();
-
-
-    /*
-        Configure motor state according to PoolTestMode.
-    */
-    void ConfigureMotorTest();
-
-
-    /*
-        Generate continuous M1 sinusoidal command.
-    */
-    void UpdateTailMotorCommand();
-
-
-    /*
-        Print M1 command and feedback.
-    */
-    void PrintMotorTelemetry();
+    int FindDynamicsJointIndex(
+        const char* shortJointName) const;
 
 
     // ============================================================
-    // Test mode
+    // Camera
+    // ============================================================
+
+    void ConfigureCamera();
+
+
+    // ============================================================
+    // Passive tail
+    // ============================================================
+
+    void RegisterPassiveTailSpringActuator();
+
+
+    void ApplyInitialTailDeflection();
+
+
+    // ============================================================
+    // M1 root clamp
+    // ============================================================
+
+    void ConfigureTailRootHold();
+
+
+    // ============================================================
+    // Data
+    // ============================================================
+
+    void OpenDecayCsv();
+
+
+    void RecordDecaySample();
+
+
+    void PrintDecayTelemetry();
+
+
+    void ReadPassiveTailState(
+        std::array<sf::Scalar, 4>& position,
+        std::array<sf::Scalar, 4>& velocity,
+        std::array<sf::Scalar, 4>& torque) const;
+
+
+    // ============================================================
+    // Mode
     // ============================================================
 
     PoolTestMode mode_ =
@@ -166,101 +218,147 @@ private:
         nullptr;
 
 
+    sf::FeatherstoneRobot* fishFeatherstoneRobot_ =
+        nullptr;
+
+
+    sf::FeatherstoneEntity* fishDynamics_ =
+        nullptr;
+
+
     sf::SolidEntity* fishBody_ =
         nullptr;
 
 
     // ============================================================
     // M1
+    //
+    // Stage 4C:
+    //
+    // M1 is NOT generating a waveform.
+    //
+    // It only holds TailJoint0 at zero.
     // ============================================================
 
     sf::Servo* tailMotor_ =
         nullptr;
 
 
+    sf::Scalar rootHoldTorqueNm_ =
+        0.05;
+
+
+    sf::Scalar rootHoldMaxVelocityRadS_ =
+        0.35;
+
+
     // ============================================================
-    // M1 test parameters
+    // Passive tail indices
     //
-    // These are intentionally conservative compared with the
-    // available actuator capability.
+    // [0] TailJoint1
+    // [1] TailJoint2
+    // [2] TailJoint3
+    // [3] TailJoint4
     // ============================================================
 
-    /*
-        ±20 degrees
-
-        20 deg =
-        0.3490658503988659 rad
-    */
-    sf::Scalar tailAmplitudeRad_ =
-        0.3490658503988659;
-
-
-    /*
-        Tail oscillation frequency.
-    */
-    sf::Scalar tailFrequencyHz_ =
-        1.2;
-
-
-    /*
-        Temporary Stage-4 torque limit.
-
-        This is NOT the final hardware limit.
-
-        We deliberately start much lower than the full motor
-        capability.
-    */
-    sf::Scalar tailMaxTorqueNm_ =
-        1.0;
-
-
-    /*
-        Maximum servo angular velocity.
-    */
-    sf::Scalar tailMaxVelocityRadS_ =
-        3.5;
-
-
-    /*
-        Let physics settle for one second before starting motion.
-    */
-    sf::Scalar driveStartTime_ =
-        1.0;
-
-
-    /*
-        Increase amplitude gradually over one second.
-    */
-    sf::Scalar driveRampTime_ =
-        1.0;
+    std::array<int, 4>
+        passiveTailJointIndices_ =
+        {
+            -1,
+            -1,
+            -1,
+            -1
+        };
 
 
     // ============================================================
-    // Simulation time
+    // Passive tail parameters
+    //
+    // NOT final calibrated values.
+    // ============================================================
+
+    sf::Scalar passiveTailStiffness_ =
+        22.0;
+
+
+    sf::Scalar passiveTailDamping_ =
+        0.001;
+
+
+    /*
+        Numerical safety clamp.
+
+        This is not intended to define the final mechanical system.
+    */
+    sf::Scalar passiveTailMaxTorqueNm_ =
+        0.05;
+
+
+    // ============================================================
+    // Initial deflection
+    //
+    // degrees
+    // ============================================================
+
+    std::array<sf::Scalar, 4>
+        initialTailDeflectionDeg_ =
+        {
+            0.0727,
+            0.0545,
+            0.0364,
+            0.0182
+        };
+
+
+    // ============================================================
+    // Time
     // ============================================================
 
     sf::Scalar elapsedTime_ =
         0.0;
 
 
+    /*
+        Around 6 seconds is already plenty for the first
+        calibration experiment.
+
+        The simulator itself will continue running after that.
+    */
+    sf::Scalar decayMeasurementDuration_ =
+        6.0;
+
+
+    bool decayCompletionAnnounced_ =
+        false;
+
+
     // ============================================================
-    // Telemetry
+    // CSV
     // ============================================================
 
-    sf::Scalar lastTelemetryTime_ =
+    std::ofstream decayCsv_;
+
+
+    sf::Scalar csvPeriod_ =
+        0.01;       // 100 Hz
+
+
+    sf::Scalar lastCsvTime_ =
         -1.0;
 
 
-    /*
-        20 Hz terminal output.
-    */
-    sf::Scalar telemetryPeriod_ =
-        0.05;
+    std::size_t csvSampleCount_ =
+        0;
 
 
-    /*
-        Last commanded M1 angle.
-    */
-    sf::Scalar lastTailCommandRad_ =
-        0.0;
+    // ============================================================
+    // Console telemetry
+    // ============================================================
+
+    sf::Scalar consolePeriod_ =
+        0.05;       // 20 Hz
+
+
+    sf::Scalar lastConsoleTime_ =
+        -1.0;
 };
