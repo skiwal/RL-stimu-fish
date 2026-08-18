@@ -854,7 +854,7 @@ void StaticPoolSimulator::ConfigureTailDrive()
 
     tailMotor_
         ->setMaxVelocity(
-            tailMaxVelocityRadS_);
+            -1.0);
 
 
     lastTailCommandRad_ =

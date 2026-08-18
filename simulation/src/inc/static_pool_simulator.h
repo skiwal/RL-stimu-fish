@@ -261,28 +261,28 @@ private:
         +/-5 degrees
     */
     sf::Scalar tailAmplitudeRad_ =
-        0.08726646259971647;
+        0.13962634015954636;
 
 
     /*
         First free-swimming test frequency.
     */
     sf::Scalar tailFrequencyHz_ =
-        0.4;
+        1;
 
 
     /*
         Conservative first-test torque limit.
     */
     sf::Scalar tailMaxTorqueNm_ =
-        0.05;
+        0.20;
 
 
     /*
         M1 maximum angular velocity.
     */
     sf::Scalar tailMaxVelocityRadS_ =
-        0.35;
+        1.2;
 
 
     /*
@@ -340,7 +340,7 @@ private:
 
 
     sf::Scalar passiveTailMaxTorqueNm_ =
-        0.05;
+        0.2;
 
 
     // ============================================================
