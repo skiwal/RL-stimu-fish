@@ -5,11 +5,10 @@
     <!--
         ============================================================
         BionicFish V1
-        Static Pool
-        Stage 4A Fixed-Base M1 Bench Test
+        Stage 5A Free-Swimming Static Pool
         ============================================================
 
-        Coordinate convention:
+        NED:
 
             +X = pool length / fish forward
             +Y = fish right
@@ -19,30 +18,23 @@
 
             approximately 12 m x 6 m x 4 m
 
-        Water:
+        Surface:
+            z = 0
 
-            density = 997 kg/m^3
+        Bottom:
+            z ~= 4
 
-        Current:
+        Stage 5A:
 
-            none
+            BionicFish base is FREE.
 
-        Waves:
+            No current.
+            No waves.
+            No obstacles.
+            M2/M3 disabled.
 
-            none
-
-
-        IMPORTANT FOR STAGE 4A:
-
-            robot_fixed = true
-
-        This means the BionicFish base is anchored in world space.
-
-        Internal articulated joints remain available for actuator
-        testing.
-
-        Therefore M1 can move TailJoint0 while the Body itself
-        cannot accelerate or fly away.
+            Propulsion must arise from articulated tail
+            hydrodynamics only.
     -->
 
 
@@ -78,7 +70,7 @@
 
 
     <!-- ==========================================================
-         Physical materials
+         Materials
          ========================================================== -->
 
     <materials>
@@ -88,6 +80,12 @@
             density="2400.0"
             restitution="0.20"/>
 
+
+        <!--
+            Bootstrap near-neutral material.
+
+            Final buoyancy calibration comes later.
+        -->
 
         <material
             name="FishNeutral"
@@ -124,9 +122,6 @@
 
     <!-- ==========================================================
          Looks
-
-         Fish looks are defined in the ROOT scenario for maximum
-         compatibility with the local Stonefish parser.
          ========================================================== -->
 
     <looks>
@@ -147,41 +142,41 @@
             metalness="0.0"/>
 
 
-        <!-- BionicFish debug colors -->
+        <!-- BionicFish -->
 
         <look
             name="BionicFishBodyLook"
             rgb="0.95 0.35 0.08"
             roughness="0.40"
-            metalness="0.00"/>
+            metalness="0.0"/>
 
 
         <look
             name="BionicFishTailLook"
             rgb="0.85 0.12 0.08"
             roughness="0.40"
-            metalness="0.00"/>
+            metalness="0.0"/>
 
 
         <look
             name="BionicFishFinLook"
             rgb="0.95 0.70 0.15"
             roughness="0.40"
-            metalness="0.00"/>
+            metalness="0.0"/>
 
 
         <look
             name="BionicFishLeftPectoralLook"
             rgb="0.10 0.80 0.30"
             roughness="0.40"
-            metalness="0.00"/>
+            metalness="0.0"/>
 
 
         <look
             name="BionicFishRightPectoralLook"
             rgb="0.10 0.45 0.95"
             roughness="0.40"
-            metalness="0.00"/>
+            metalness="0.0"/>
 
     </looks>
 
@@ -324,8 +319,10 @@
     <!-- ==========================================================
          BionicFish V1
 
-         STAGE 4A:
-             FIXED BASE
+         STAGE 5A:
+
+             robot_fixed = false
+
          ========================================================== -->
 
     <include
@@ -341,6 +338,12 @@
             value="FishNeutral"/>
 
 
+        <!--
+            Start toward the -X side of the pool.
+
+            Fish forward axis is +X.
+        -->
+
         <arg
             name="robot_position"
             value="-3.5 0.0 2.0"/>
@@ -352,13 +355,14 @@
 
 
         <!--
-            IMPORTANT:
+            CRITICAL:
 
-            Stage 4A actuator bench test.
+            Stage 5A first FREE-SWIMMING experiment.
         -->
+
         <arg
             name="robot_fixed"
-            value="true"/>
+            value="false"/>
 
     </include>
 

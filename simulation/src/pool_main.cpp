@@ -13,15 +13,19 @@ namespace
 std::string NormalizeDataDirectory(
     std::string path)
 {
-    if (path.empty())
+    if (
+        path.empty())
     {
         return "../data/";
     }
 
 
-    if (path.back() != '/')
+    if (
+        path.back()
+        != '/')
     {
-        path.push_back('/');
+        path.push_back(
+            '/');
     }
 
 
@@ -32,57 +36,75 @@ std::string NormalizeDataDirectory(
 PoolTestMode ParseTestMode(
     const std::string& name)
 {
-    if (name == "neutral")
+    if (
+        name == "neutral")
     {
-        return PoolTestMode::Neutral;
+        return
+            PoolTestMode::Neutral;
     }
 
 
-    if (name == "straight")
+    if (
+        name == "straight")
     {
-        return PoolTestMode::Straight;
+        return
+            PoolTestMode::Straight;
     }
 
 
-    if (name == "turn_left")
+    if (
+        name == "turn_left")
     {
-        return PoolTestMode::TurnLeft;
+        return
+            PoolTestMode::TurnLeft;
     }
 
 
-    if (name == "turn_right")
+    if (
+        name == "turn_right")
     {
-        return PoolTestMode::TurnRight;
+        return
+            PoolTestMode::TurnRight;
     }
 
 
-    if (name == "dive")
+    if (
+        name == "dive")
     {
-        return PoolTestMode::Dive;
+        return
+            PoolTestMode::Dive;
     }
 
 
-    if (name == "rise")
+    if (
+        name == "rise")
     {
-        return PoolTestMode::Rise;
+        return
+            PoolTestMode::Rise;
     }
 
 
-    if (name == "roll_left")
+    if (
+        name == "roll_left")
     {
-        return PoolTestMode::RollLeft;
+        return
+            PoolTestMode::RollLeft;
     }
 
 
-    if (name == "roll_right")
+    if (
+        name == "roll_right")
     {
-        return PoolTestMode::RollRight;
+        return
+            PoolTestMode::RollRight;
     }
 
 
-    if (name == "external")
+    if (
+        name == "external")
     {
-        return PoolTestMode::External;
+        return
+            PoolTestMode::External;
     }
 
 
@@ -101,14 +123,23 @@ void PrintUsage(
         << executable
         << " <data-dir> <test-mode>\n\n"
 
-        << "Example:\n\n"
+        << "Examples:\n\n"
+
+        << "  "
+        << executable
+        << " ./data/ neutral\n\n"
+
         << "  "
         << executable
         << " ./data/ straight\n\n"
 
-        << "Available modes:\n"
-        << "  neutral\n"
-        << "  straight\n"
+        << "Stage 5A modes:\n"
+
+        << "  neutral   : free fish, M1 OFF\n"
+        << "  straight  : free fish, M1 sine drive ON\n\n"
+
+        << "Other parsed modes are currently motor-off in Stage 5A:\n"
+
         << "  turn_left\n"
         << "  turn_right\n"
         << "  dive\n"
@@ -129,7 +160,6 @@ int main(
     {
         const std::string dataDirectory =
             NormalizeDataDirectory(
-
                 argc > 1
                     ? argv[1]
                     : "../data/");
@@ -155,14 +185,10 @@ int main(
 
 
         /*
-            使用你本机 Stonefish API：
+            Local Stonefish API:
 
                 windowW
                 windowH
-
-            而不是：
-                windowWidth
-                windowHeight
         */
 
         renderSettings.windowW =
@@ -179,22 +205,39 @@ int main(
 
         // ========================================================
         // Simulation
+        //
+        // IMPORTANT:
+        //
+        // k = 22 Nm/rad was stable at 2000 Hz during Stage 4C.
+        //
+        // Do NOT return to 500 Hz for Stage 5A.
         // ========================================================
 
+        constexpr sf::Scalar
+            physicsStepsPerSecond =
+            2000.0;
+
+
         StaticPoolSimulator simulator(
-            2000.0,
+            physicsStepsPerSecond,
             testMode);
 
 
         std::cout
-            << "Starting Bionic Fish V1 test: "
+            << "\n"
+            << "Starting BionicFish Stage 5A\n"
+            << "  mode        = "
             << PoolTestModeName(
                    testMode)
-            << '\n';
+            << "\n"
+            << "  physics SPS = "
+            << physicsStepsPerSecond
+            << "\n"
+            << std::endl;
 
 
         sf::GraphicalSimulationApp app(
-            "Bionic Fish V1 - Static Pool",
+            "BionicFish V1 - Stage 5A Free Swimming",
             dataDirectory,
             renderSettings,
             helperSettings,

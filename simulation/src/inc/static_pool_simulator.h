@@ -19,7 +19,7 @@ class Servo;
 
 /*
     ================================================================
-    Static-pool test modes
+    Pool test modes
     ================================================================
 */
 enum class PoolTestMode
@@ -53,69 +53,76 @@ PoolTestModeName(
     ================================================================
     StaticPoolSimulator
 
-    Stage 4C — Passive Tail Free-Decay Calibration
+    Stage 5A
+    First free-swimming test
     ================================================================
 
-    PURPOSE
+    PHYSICS
 
-        Measure the actual dynamic response of:
+        2000 Hz
+        configured in pool_main.cpp
 
-            TailJoint1
-            TailJoint2
-            TailJoint3
-            TailJoint4
+    BODY
 
-        under the real Stonefish multibody + underwater physics.
+        robot_fixed = false
 
-    BOUNDARY CONDITION
+    M1 / TailJoint0
 
-        Body:
-            fixed=true
+        neutral:
+            disabled
 
-        TailJoint0 / M1:
-            position hold at 0 deg
+        straight:
+            sinusoidal position command
 
-        M1 does NOT oscillate.
+            amplitude:
+                +/-5 deg
 
-        This makes TailJoint0 approximately a fixed root boundary
-        for the passive tail.
+            frequency:
+                0.4 Hz
 
-    PASSIVE JOINT MODEL
+            max torque:
+                0.05 Nm
 
-        For TailJoint1~4:
+            max velocity:
+                0.35 rad/s
+
+            first 1 s:
+                command = 0
+
+            second 1 s:
+                amplitude ramp 0 -> 100%
+
+    PASSIVE TAIL
+
+        TailJoint1~4
 
             tau = -k*q - c*qDot
 
-        Initial bootstrap values:
+        k:
+            22 Nm/rad
 
-            k = 0.02 Nm/rad
-            c = 0.001 Nms/rad
+        c:
+            0.001 Nms/rad
 
-    INITIAL CONDITION
+        torque safety clamp:
+            +/-0.05 Nm
 
-        TailJoint1 = +8 deg
-        TailJoint2 = +6 deg
-        TailJoint3 = +4 deg
-        TailJoint4 = +2 deg
+    M2/M3
 
-        all initial angular velocities = 0
-
-    DATA OUTPUT
-
-        tail_decay_stage4c.csv
-
-        CSV rate:
-            100 Hz
-
-        Console rate:
-            20 Hz
+        disabled
 
     IMPORTANT
 
-        No Body ApplyForce().
+        No body-level ApplyForce().
         No fake propulsion.
-        No periodic motor command.
-        M2/M3 remain disabled.
+
+        Any swimming motion must arise from:
+
+            M1
+            +
+            articulated tail
+            +
+            Stonefish hydrodynamics
 */
 class StaticPoolSimulator final
     : public sf::SimulationManager
@@ -149,7 +156,7 @@ public:
 private:
 
     // ============================================================
-    // Binding
+    // Robot binding
     // ============================================================
 
     void BindBionicFish();
@@ -167,39 +174,51 @@ private:
 
 
     // ============================================================
-    // Passive tail
+    // Passive elastic tail
     // ============================================================
 
     void RegisterPassiveTailSpringActuator();
 
 
-    void ApplyInitialTailDeflection();
-
-
-    // ============================================================
-    // M1 root clamp
-    // ============================================================
-
-    void ConfigureTailRootHold();
-
-
-    // ============================================================
-    // Data
-    // ============================================================
-
-    void OpenDecayCsv();
-
-
-    void RecordDecaySample();
-
-
-    void PrintDecayTelemetry();
-
-
     void ReadPassiveTailState(
         std::array<sf::Scalar, 4>& position,
         std::array<sf::Scalar, 4>& velocity,
-        std::array<sf::Scalar, 4>& torque) const;
+        std::array<sf::Scalar, 4>& rawTorque,
+        std::array<sf::Scalar, 4>& appliedTorque) const;
+
+
+    // ============================================================
+    // M1 active tail drive
+    // ============================================================
+
+    void ConfigureTailDrive();
+
+
+    void UpdateTailDriveCommand();
+
+
+    // ============================================================
+    // Safety
+    // ============================================================
+
+    void CheckSafety();
+
+
+    void EmergencyDisableTailMotor(
+        const char* reason);
+
+
+    // ============================================================
+    // Telemetry / CSV
+    // ============================================================
+
+    void OpenSwimCsv();
+
+
+    void RecordSwimSample();
+
+
+    void PrintTelemetry();
 
 
     // ============================================================
@@ -232,24 +251,61 @@ private:
 
     // ============================================================
     // M1
-    //
-    // Stage 4C:
-    //
-    // M1 is NOT generating a waveform.
-    //
-    // It only holds TailJoint0 at zero.
     // ============================================================
 
     sf::Servo* tailMotor_ =
         nullptr;
 
 
-    sf::Scalar rootHoldTorqueNm_ =
+    /*
+        +/-5 degrees
+    */
+    sf::Scalar tailAmplitudeRad_ =
+        0.08726646259971647;
+
+
+    /*
+        First free-swimming test frequency.
+    */
+    sf::Scalar tailFrequencyHz_ =
+        0.4;
+
+
+    /*
+        Conservative first-test torque limit.
+    */
+    sf::Scalar tailMaxTorqueNm_ =
         0.05;
 
 
-    sf::Scalar rootHoldMaxVelocityRadS_ =
+    /*
+        M1 maximum angular velocity.
+    */
+    sf::Scalar tailMaxVelocityRadS_ =
         0.35;
+
+
+    /*
+        First second:
+            M1 stays at zero.
+    */
+    sf::Scalar driveStartTime_ =
+        1.0;
+
+
+    /*
+        Next second:
+            amplitude ramps from 0 to full.
+    */
+    sf::Scalar driveRampTime_ =
+        1.0;
+
+
+    /*
+        Latest M1 desired position.
+    */
+    sf::Scalar lastTailCommandRad_ =
+        0.0;
 
 
     // ============================================================
@@ -272,9 +328,7 @@ private:
 
 
     // ============================================================
-    // Passive tail parameters
-    //
-    // NOT final calibrated values.
+    // Calibrated passive-tail parameters
     // ============================================================
 
     sf::Scalar passiveTailStiffness_ =
@@ -285,62 +339,124 @@ private:
         0.001;
 
 
-    /*
-        Numerical safety clamp.
-
-        This is not intended to define the final mechanical system.
-    */
     sf::Scalar passiveTailMaxTorqueNm_ =
         0.05;
 
 
     // ============================================================
-    // Initial deflection
+    // Safety
+    // ============================================================
+
+    bool motorSafetyTripped_ =
+        false;
+
+
+    /*
+        M1 command is only +/-5 deg.
+
+        25 deg therefore indicates something is seriously wrong.
+    */
+    sf::Scalar safetyMaxM1PositionRad_ =
+        0.4363323129985824;   // 25 deg
+
+
+    sf::Scalar safetyMaxM1VelocityRadS_ =
+        2.0;
+
+
+    sf::Scalar safetyMaxM1TrackingErrorRad_ =
+        0.3490658503988659;   // 20 deg
+
+
+    /*
+        Passive joint emergency limits.
+    */
+    sf::Scalar safetyMaxPassivePositionRad_ =
+        0.3490658503988659;   // 20 deg
+
+
+    sf::Scalar safetyMaxPassiveVelocityRadS_ =
+        30.0;
+
+
+    /*
+        Whole-fish emergency velocity.
+    */
+    sf::Scalar safetyMaxBodySpeedMS_ =
+        2.0;
+
+
+    /*
+        Maximum acceptable roll/pitch during Stage 5A.
+    */
+    sf::Scalar safetyMaxRollPitchRad_ =
+        1.0471975511965976;   // 60 deg
+
+
+    /*
+        Pool uses NED:
+
+            surface approximately z = 0
+            bottom approximately z = 4
+
+        These are only emergency limits.
+    */
+    sf::Scalar safetyMinBodyZ_ =
+        0.10;
+
+
+    sf::Scalar safetyMaxBodyZ_ =
+        3.90;
+
+
+    // ============================================================
+    // Initial free-swim reference
     //
-    // degrees
+    // IMPORTANT:
+    //
+    // DO NOT capture this from BuildScenario().
+    //
+    // It is captured after the first completed physics step.
     // ============================================================
 
-    std::array<sf::Scalar, 4>
-        initialTailDeflectionDeg_ =
-        {
-            0.0727,
-            0.0545,
-            0.0364,
-            0.0182
-        };
+    sf::Scalar initialBodyX_ =
+        0.0;
+
+
+    sf::Scalar initialBodyY_ =
+        0.0;
+
+
+    sf::Scalar initialBodyZ_ =
+        0.0;
+
+
+    bool initialBodyStateCaptured_ =
+        false;
 
 
     // ============================================================
-    // Time
+    // Simulation time
     // ============================================================
 
     sf::Scalar elapsedTime_ =
         0.0;
 
 
-    /*
-        Around 6 seconds is already plenty for the first
-        calibration experiment.
-
-        The simulator itself will continue running after that.
-    */
-    sf::Scalar decayMeasurementDuration_ =
-        6.0;
-
-
-    bool decayCompletionAnnounced_ =
-        false;
-
-
     // ============================================================
     // CSV
     // ============================================================
 
-    std::ofstream decayCsv_;
+    std::ofstream swimCsv_;
 
 
+    /*
+        200 Hz telemetry.
+
+        Physics is 2000 Hz.
+    */
     sf::Scalar csvPeriod_ =
-        0.002;       // 100 Hz
+        0.005;
 
 
     sf::Scalar lastCsvTime_ =
@@ -355,8 +471,11 @@ private:
     // Console telemetry
     // ============================================================
 
+    /*
+        10 Hz console output.
+    */
     sf::Scalar consolePeriod_ =
-        0.05;       // 20 Hz
+        0.10;
 
 
     sf::Scalar lastConsoleTime_ =
