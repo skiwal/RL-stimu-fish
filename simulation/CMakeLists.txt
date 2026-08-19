@@ -117,3 +117,44 @@ target_compile_options(
         -Wextra
         -Wpedantic
 )
+
+# ================================================================
+# Bionic Fish V1 - Stage R2-A Tendon Drive Test
+# ================================================================
+
+add_executable(
+    BionicFishTendonR2Test
+
+    src/tendon_stage_r2_main.cpp
+    src/tendon_stage_r2_simulator.cpp
+    src/tendon_tail_actuator.cpp
+)
+
+
+target_include_directories(
+    BionicFishTendonR2Test
+
+    PRIVATE
+
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+
+target_link_libraries(
+    BionicFishTendonR2Test
+
+    PRIVATE
+
+        Stonefish::Stonefish
+)
+
+
+target_compile_options(
+    BionicFishTendonR2Test
+
+    PRIVATE
+
+        -Wall
+        -Wextra
+        -Wpedantic
+)
