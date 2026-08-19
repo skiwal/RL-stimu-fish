@@ -7,12 +7,6 @@
 #include <string>
 
 
-namespace sf
-{
-class Servo;
-}
-
-
 struct TendonTailParameters
 {
     // ============================================================
@@ -20,75 +14,50 @@ struct TendonTailParameters
     // ============================================================
 
     sf::Scalar passiveStiffnessNmRad = 0.65;
+
     sf::Scalar passiveDampingNmsRad = 0.0;
 
 
     // ============================================================
-    // Tendon model
+    // Direct tendon force diagnostic
     //
-    // First R2-B implementation:
+    // No motor.
+    // No crank dynamics.
+    // No tendon elasticity -> tension conversion.
     //
-    //     extension = L - L_free
-    //
-    //     if extension <= 0:
-    //         tension = 0
-    //
-    //     if extension > 0:
-    //         tension = max(
-    //             0,
-    //             k * extension
-    //             +
-    //             c * length_rate)
-    //
-    // The cable can pull but cannot push.
+    // We directly prescribe tendon tension.
     // ============================================================
 
-    sf::Scalar tendonStiffnessNPerM = 20000.0;
-    sf::Scalar tendonDampingNsPerM = 10.0;
+    sf::Scalar directTestTensionN = 1.0;
 
-    // Initial cable pre-tension.
+
+    // Timeline:
     //
-    // Keep zero for the first diagnostic.
-    // It can be changed later after the geometry is verified.
-    sf::Scalar initialPretensionN = 0.0;
-
-
-    // ============================================================
-    // Diagnostic cable strain safety
+    // 0 ~ 1 s     neutral
     //
-    // The project reference records approximately 3% extension.
+    // 1 ~ 2 s     right tendon ramp 0 -> 1 N
+    // 2 ~ 3 s     right tendon hold 1 N
+    // 3 ~ 4 s     right tendon ramp 1 -> 0 N
     //
-    // We do NOT interpret this as a measured breaking strain.
-    // For R2-B it is only a "we have left the trusted region"
-    // diagnostic threshold.
-    // ============================================================
+    // 4 ~ 5 s     neutral
+    //
+    // 5 ~ 6 s     left tendon ramp 0 -> 1 N
+    // 6 ~ 7 s     left tendon hold 1 N
+    // 7 ~ 8 s     left tendon ramp 1 -> 0 N
+    //
+    // > 8 s       neutral
 
-    sf::Scalar maxDiagnosticStrain = 0.03;
+    sf::Scalar initialSettleTimeS = 1.0;
+
+    sf::Scalar rampTimeS = 1.0;
+
+    sf::Scalar holdTimeS = 1.0;
+
+    sf::Scalar centerPauseTimeS = 1.0;
 
 
     // ============================================================
-    // M1 diagnostic command
-    // ============================================================
-
-    sf::Scalar motorTargetFrequencyHz = 0.05;
-
-    sf::Scalar motorStartTimeS = 1.0;
-    sf::Scalar motorRampTimeS = 1.0;
-
-
-    // XW540-T140-R reference at 12 V.
-    //
-    // This is a momentary maximum/stall reference, not a continuous
-    // operating torque recommendation.
-    sf::Scalar motorMaxTorqueNm = 6.9;
-
-    // 72 rpm at 12 V ~= 7.5398 rad/s.
-    sf::Scalar motorMaxVelocityRadS =
-        7.5398223686155035;
-
-
-    // ============================================================
-    // Tail safety
+    // Tail diagnostic safety
     // ============================================================
 
     sf::Scalar jointSafetyLimitRad =
@@ -105,47 +74,50 @@ public:
     {
         sf::Scalar timeS = 0.0;
 
-        sf::Scalar motorCommandVelocityRadS = 0.0;
-        sf::Scalar motorAngleRad = 0.0;
-        sf::Scalar motorVelocityRadS = 0.0;
-        sf::Scalar motorEffortTorqueNm = 0.0;
 
-        bool motorSaturated = false;
+        // --------------------------------------------------------
+        // Test phase
+        //
+        // 0 = initial neutral
+        // 1 = right ramp up
+        // 2 = right hold
+        // 3 = right ramp down
+        // 4 = center pause
+        // 5 = left ramp up
+        // 6 = left hold
+        // 7 = left ramp down
+        // 8 = finished / neutral
+        // --------------------------------------------------------
+
+        unsigned int testPhase = 0;
 
 
         // [0] = left
         // [1] = right
 
         std::array<sf::Scalar, 2>
+            commandedTensionN {};
+
+
+        std::array<sf::Scalar, 2>
             tendonLengthM {};
 
-        std::array<sf::Scalar, 2>
-            tendonFreeLengthM {};
 
         std::array<sf::Scalar, 2>
-            tendonExtensionM {};
+            initialTendonLengthM {};
+
 
         std::array<sf::Scalar, 2>
-            tendonStrain {};
-
-        std::array<sf::Scalar, 2>
-            tendonLengthRateMS {};
-
-        std::array<sf::Scalar, 2>
-            tendonTensionN {};
-
-        std::array<bool, 2>
-            tendonOverstretch {
-                false,
-                false
-            };
+            tendonLengthChangeM {};
 
 
         std::array<sf::Scalar, 5>
             jointPositionRad {};
 
+
         std::array<sf::Scalar, 5>
             jointVelocityRadS {};
+
 
         std::array<sf::Scalar, 5>
             passiveTorqueNm {};
@@ -158,8 +130,7 @@ public:
     TendonTailActuator(
         const std::string& name,
         sf::FeatherstoneEntity* dynamics,
-        sf::Servo* motorServo,
-        unsigned int motorShaftLinkIndex,
+        unsigned int bodyLinkIndex,
         const std::array<unsigned int, 5>& tailLinkIndices,
         const std::array<unsigned int, 5>& tailJointIndices,
         const TendonTailParameters& parameters);
@@ -183,6 +154,7 @@ private:
     struct PathPoint
     {
         unsigned int linkIndex = 0;
+
         sf::Vector3 world =
             sf::Vector3(
                 0.0,
@@ -213,6 +185,17 @@ private:
         const std::array<PathPoint, 6>& path);
 
 
+    static sf::Scalar
+    SmoothStep01(
+        sf::Scalar x);
+
+
+    std::array<sf::Scalar, 2>
+    ComputeDirectTestTensions(
+        sf::Scalar timeS,
+        unsigned int& phase) const;
+
+
     void
     ApplyTendonForces(
         const std::array<PathPoint, 6>& path,
@@ -238,13 +221,8 @@ private:
             nullptr;
 
 
-    sf::Servo*
-        motorServo_ =
-            nullptr;
-
-
     unsigned int
-        motorShaftLinkIndex_ =
+        bodyLinkIndex_ =
             0;
 
 
@@ -270,16 +248,7 @@ private:
 
 
     std::array<sf::Scalar, 2>
-        freeLengthM_ {};
-
-
-    std::array<sf::Scalar, 2>
-        previousLengthM_ {};
-
-
-    bool
-        previousLengthValid_ =
-            false;
+        initialTendonLengthM_ {};
 
 
     bool

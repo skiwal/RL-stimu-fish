@@ -906,9 +906,9 @@
 
             <controller
                 position_gain="0.0"
-                velocity_gain=".5"
-                max_torque="0.05"
-                max_velocity="0.5"/>
+                velocity_gain="0.0"
+                max_torque="0.0"
+                max_velocity="0.0"/>
 
             <joint
                 name="M1Joint"/>

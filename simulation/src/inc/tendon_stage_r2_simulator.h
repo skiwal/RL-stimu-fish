@@ -14,7 +14,6 @@ class Robot;
 class FeatherstoneRobot;
 class FeatherstoneEntity;
 class SolidEntity;
-class Servo;
 }
 
 
@@ -98,18 +97,8 @@ private:
             nullptr;
 
 
-    sf::Servo*
-        m1Servo_ =
-            nullptr;
-
-
     int
-        m1JointIndex_ =
-            -1;
-
-
-    int
-        motorShaftLinkIndex_ =
+        bodyLinkIndex_ =
             -1;
 
 

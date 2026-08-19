@@ -1,8 +1,6 @@
 #include "inc/tendon_stage_r2_simulator.h"
 #include "inc/tendon_tail_actuator.h"
 
-#include <Stonefish/actuators/Servo.h>
-
 #include <Stonefish/core/FeatherstoneRobot.h>
 #include <Stonefish/core/Robot.h>
 #include <Stonefish/core/ScenarioParser.h>
@@ -13,7 +11,6 @@
 
 #include <Stonefish/graphics/OpenGLTrackball.h>
 
-#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
@@ -84,11 +81,15 @@ TendonStageR2Simulator::BuildScenario()
 
     BindFish();
 
+
     SetNeutralInitialCondition();
+
 
     RegisterTendonActuator();
 
+
     OpenCsv();
+
 
     ConfigureCamera();
 
@@ -101,32 +102,28 @@ TendonStageR2Simulator::BuildScenario()
     std::cout
         << "\n"
         << "============================================================\n"
-        << " BionicFish Stage R2-B\n"
-        << " Real M1 + Spatial Pull-Only Tendon Drive\n"
+        << " BionicFish Direct Tendon Force Test\n"
         << "============================================================\n"
         << "Body fixed                 YES\n"
-        << "M1                          Stonefish Servo\n"
-        << "M1 mode                     velocity\n"
-        << "Motor shaft                 real Featherstone link\n"
-        << "Crank                       virtual geometry\n"
-        << "Tendon                      virtual elastic cable\n"
-        << "Tendon can push             NO\n"
-        << "Tendon forces               physical link forces\n"
-        << "Manual tendon joint torque  NO\n"
-        << "Routing                     0,0,0,1,1\n"
-        << "Tendon stiffness            20000 N/m\n"
-        << "Tendon damping              10 N*s/m\n"
-        << "Initial pretension          0 N\n"
-        << "Diagnostic strain limit     3 %\n"
-        << "Passive joint stiffness     0.65 Nm/rad\n"
-        << "Motor diagnostic freq       0.05 Hz\n"
-        << "Left free length            "
-        << snapshot.tendonFreeLengthM[0]
+        << "M1 motor                    DISABLED\n"
+        << "Motor shaft                 NOT USED\n"
+        << "Crank dynamics              NOT USED\n"
+        << "Tendon elasticity           NOT USED\n"
+        << "Tendon damping              NOT USED\n"
+        << "Length -> tension            NO\n"
+        << "Direct tendon tension        YES\n"
+        << "Test tension                 1.0 N\n"
+        << "Routing                      0,0,0,1,1\n"
+        << "Passive joint stiffness      0.65 Nm/rad\n"
+        << "Passive joint damping        0\n"
+        << "Joint safety                 60 deg\n"
+        << "Left initial path length     "
+        << snapshot.initialTendonLengthM[0]
         << " m\n"
-        << "Right free length           "
-        << snapshot.tendonFreeLengthM[1]
+        << "Right initial path length    "
+        << snapshot.initialTendonLengthM[1]
         << " m\n"
-        << "CSV                         tendon_stage_r2b.csv\n"
+        << "CSV                          direct_tendon_force_test.csv\n"
         << "============================================================\n"
         << std::endl;
 }
@@ -180,65 +177,24 @@ TendonStageR2Simulator::BindFish()
 
 
     // ============================================================
-    // Bind real M1
+    // Body link
     // ============================================================
 
-    m1JointIndex_ =
-        FindJointIndex(
-            "M1Joint");
-
-
-    if (
-        m1JointIndex_ < 0)
-    {
-        throw std::runtime_error(
-            "Cannot find M1Joint.");
-    }
-
-
-    motorShaftLinkIndex_ =
+    bodyLinkIndex_ =
         FindLinkIndex(
-            "MotorShaft");
+            "Body");
 
 
     if (
-        motorShaftLinkIndex_ < 0)
+        bodyLinkIndex_ < 0)
     {
         throw std::runtime_error(
-            "Cannot find MotorShaft.");
-    }
-
-
-    sf::Actuator*
-        rawM1 =
-            fishRobot_->getActuator(
-                "M1Servo");
-
-
-    if (
-        rawM1 == nullptr)
-    {
-        rawM1 =
-            fishRobot_->getActuator(
-                "BionicFish/M1Servo");
-    }
-
-
-    m1Servo_ =
-        dynamic_cast<sf::Servo*>(
-            rawM1);
-
-
-    if (
-        m1Servo_ == nullptr)
-    {
-        throw std::runtime_error(
-            "Cannot find/convert M1Servo.");
+            "Cannot find Body link.");
     }
 
 
     // ============================================================
-    // Bind tail joints and links
+    // Tail joints and links
     // ============================================================
 
     for (
@@ -294,12 +250,9 @@ TendonStageR2Simulator::BindFish()
 
 
     std::cout
-        << "\nR2-B binding:\n"
-        << "  M1Joint    -> joint index "
-        << m1JointIndex_
-        << "\n"
-        << "  MotorShaft -> link index "
-        << motorShaftLinkIndex_
+        << "\nDirect tendon test binding:\n"
+        << "  Body -> link index "
+        << bodyLinkIndex_
         << "\n";
 
 
@@ -415,19 +368,13 @@ TendonStageR2Simulator::FindLinkIndex(
 
     // IMPORTANT:
     //
-    // Do NOT use FeatherstoneRobot::getLinkIndex() here.
+    // Search the FeatherstoneEntity link array directly.
     //
-    // That public Robot function uses Bullet-style indexing and
-    // returns i-1 for non-base links.
+    // These are the indices expected by:
     //
-    // AddLinkForce() / getLinkTransform() require FeatherstoneEntity
-    // indices:
-    //
-    //     Body = 0
-    //     first child = 1
-    //     ...
-    //
-    // Therefore search the FeatherstoneEntity link array directly.
+    //     AddLinkForce()
+    //     AddLinkTorque()
+    //     getLinkTransform()
 
     for (
         unsigned int i = 0;
@@ -471,13 +418,6 @@ TendonStageR2Simulator::FindLinkIndex(
 void
 TendonStageR2Simulator::SetNeutralInitialCondition()
 {
-    fishDynamics_->setJointIC(
-        static_cast<unsigned int>(
-            m1JointIndex_),
-        0.0,
-        0.0);
-
-
     for (
         int index
         : tailJointIndices_)
@@ -499,8 +439,7 @@ TendonStageR2Simulator::RegisterTendonActuator()
 
 
     // ============================================================
-    // Keep the baseline mechanical parameters unchanged for the
-    // first R2-B geometry test.
+    // Passive tail
     // ============================================================
 
     parameters.passiveStiffnessNmRad =
@@ -511,69 +450,33 @@ TendonStageR2Simulator::RegisterTendonActuator()
         0.0;
 
 
-    parameters.tendonStiffnessNPerM =
-        20000.0;
+    // ============================================================
+    // Direct tendon experiment
+    // ============================================================
 
-
-    parameters.tendonDampingNsPerM =
-        10.0;
-
-
-    parameters.initialPretensionN =
-        0.0;
-
-
-    parameters.maxDiagnosticStrain =
-        0.03;
-
-
-    parameters.motorTargetFrequencyHz =
-        0.05;
-
-
-    parameters.motorStartTimeS =
+    parameters.directTestTensionN =
         1.0;
 
 
-    parameters.motorRampTimeS =
+    parameters.initialSettleTimeS =
         1.0;
 
 
-    parameters.motorMaxTorqueNm =
-        0.05;
+    parameters.rampTimeS =
+        1.0;
 
 
-    parameters.motorMaxVelocityRadS =
-        0.5;
+    parameters.holdTimeS =
+        1.0;
+
+
+    parameters.centerPauseTimeS =
+        1.0;
 
 
     parameters.jointSafetyLimitRad =
         1.0471975511965976;
 
-
-    // ============================================================
-    // Configure real Stonefish M1 Servo.
-    // ============================================================
-
-    m1Servo_->setControlMode(
-        sf::ServoControlMode::VELOCITY);
-
-
-    m1Servo_->setMaxTorque(
-        parameters.motorMaxTorqueNm);
-
-
-    m1Servo_->setMaxVelocity(
-        parameters.motorMaxVelocityRadS);
-
-
-    m1Servo_->setDesiredVelocity(
-        0.0);
-
-
-    // ============================================================
-    // Convert indices to FeatherstoneEntity indices.
-    // ============================================================
 
     std::array<unsigned int, 5>
         jointIndices {};
@@ -601,11 +504,10 @@ TendonStageR2Simulator::RegisterTendonActuator()
 
     tendonActuator_ =
         new TendonTailActuator(
-            "BionicFish/R2SpatialTendonDrive",
+            "BionicFish/DirectTendonForceTest",
             fishDynamics_,
-            m1Servo_,
             static_cast<unsigned int>(
-                motorShaftLinkIndex_),
+                bodyLinkIndex_),
             linkIndices,
             jointIndices,
             parameters);
@@ -652,7 +554,7 @@ void
 TendonStageR2Simulator::OpenCsv()
 {
     csv_.open(
-        "tendon_stage_r2b.csv",
+        "direct_tendon_force_test.csv",
         std::ios::out
         |
         std::ios::trunc);
@@ -662,39 +564,21 @@ TendonStageR2Simulator::OpenCsv()
         !csv_.is_open())
     {
         throw std::runtime_error(
-            "Cannot create tendon_stage_r2b.csv");
+            "Cannot create direct_tendon_force_test.csv");
     }
 
 
     csv_
         << "time_s,"
-        << "motor_cmd_rad_s,"
-        << "motor_angle_rad,"
-        << "motor_angle_deg,"
-        << "motor_velocity_rad_s,"
-        << "motor_effort_nm,"
-        << "motor_saturated,"
-
+        << "phase,"
+        << "left_tension_cmd_n,"
+        << "right_tension_cmd_n,"
         << "left_length_m,"
         << "right_length_m,"
-
-        << "left_free_length_m,"
-        << "right_free_length_m,"
-
-        << "left_extension_m,"
-        << "right_extension_m,"
-
-        << "left_strain,"
-        << "right_strain,"
-
-        << "left_length_rate_m_s,"
-        << "right_length_rate_m_s,"
-
-        << "left_tension_n,"
-        << "right_tension_n,"
-
-        << "left_overstretch,"
-        << "right_overstretch,";
+        << "left_initial_length_m,"
+        << "right_initial_length_m,"
+        << "left_length_change_m,"
+        << "right_length_change_m,";
 
 
     for (
@@ -752,28 +636,13 @@ TendonStageR2Simulator::RecordSample()
         << s.timeS
         << ","
 
-        << s.motorCommandVelocityRadS
+        << s.testPhase
         << ","
 
-        << s.motorAngleRad
+        << s.commandedTensionN[0]
         << ","
 
-        << s.motorAngleRad
-            *
-            kRadToDeg
-        << ","
-
-        << s.motorVelocityRadS
-        << ","
-
-        << s.motorEffortTorqueNm
-        << ","
-
-        << (s.motorSaturated
-                ?
-            1
-                :
-            0)
+        << s.commandedTensionN[1]
         << ","
 
         << s.tendonLengthM[0]
@@ -782,48 +651,16 @@ TendonStageR2Simulator::RecordSample()
         << s.tendonLengthM[1]
         << ","
 
-        << s.tendonFreeLengthM[0]
+        << s.initialTendonLengthM[0]
         << ","
 
-        << s.tendonFreeLengthM[1]
+        << s.initialTendonLengthM[1]
         << ","
 
-        << s.tendonExtensionM[0]
+        << s.tendonLengthChangeM[0]
         << ","
 
-        << s.tendonExtensionM[1]
-        << ","
-
-        << s.tendonStrain[0]
-        << ","
-
-        << s.tendonStrain[1]
-        << ","
-
-        << s.tendonLengthRateMS[0]
-        << ","
-
-        << s.tendonLengthRateMS[1]
-        << ","
-
-        << s.tendonTensionN[0]
-        << ","
-
-        << s.tendonTensionN[1]
-        << ","
-
-        << (s.tendonOverstretch[0]
-                ?
-            1
-                :
-            0)
-        << ","
-
-        << (s.tendonOverstretch[1]
-                ?
-            1
-                :
-            0)
+        << s.tendonLengthChangeM[1]
         << ",";
 
 
@@ -850,11 +687,13 @@ TendonStageR2Simulator::RecordSample()
 
 
     csv_
-        << (s.safetyTripped
+        << (
+            s.safetyTripped
                 ?
             1
                 :
-            0)
+            0
+        )
         << "\n";
 }
 
@@ -877,52 +716,29 @@ TendonStageR2Simulator::PrintTelemetry()
     std::cout
         << std::fixed
         << std::setprecision(
-               3)
+            3)
 
-        << "[R2B] t="
+        << "[DIRECT] t="
         << s.timeS
 
-        << " | M1="
-        << s.motorAngleRad
-            *
-            kRadToDeg
-        << "deg"
+        << " phase="
+        << s.testPhase
 
-        << " cmd="
-        << s.motorCommandVelocityRadS
+        << " | T=("
+        << s.commandedTensionN[0]
+        << ","
+        << s.commandedTensionN[1]
+        << ")N"
 
-        << " w="
-        << s.motorVelocityRadS
-
-        << " tau="
-        << s.motorEffortTorqueNm
-        << "Nm"
-
-        << " | L=("
-        << s.tendonLengthM[0]
+        << " | dL=("
+        << s.tendonLengthChangeM[0]
             *
             1000.0
         << ","
-        << s.tendonLengthM[1]
+        << s.tendonLengthChangeM[1]
             *
             1000.0
         << ")mm"
-
-        << " | T=("
-        << s.tendonTensionN[0]
-        << ","
-        << s.tendonTensionN[1]
-        << ")N"
-
-        << " | strain=("
-        << s.tendonStrain[0]
-            *
-            100.0
-        << "%,"
-        << s.tendonStrain[1]
-            *
-            100.0
-        << "%)"
 
         << " | J=(";
 
@@ -950,19 +766,14 @@ TendonStageR2Simulator::PrintTelemetry()
     std::cout
         << ")deg"
 
-        << " | sat="
-        << (s.motorSaturated
-                ?
-            "YES"
-                :
-            "NO")
-
-        << " safety="
-        << (s.safetyTripped
+        << " | safety="
+        << (
+            s.safetyTripped
                 ?
             "TRIPPED"
                 :
-            "OK")
+            "OK"
+        )
 
         << std::endl;
 }
