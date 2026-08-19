@@ -454,7 +454,7 @@ TendonTailActuator::ComputeDirectTestTensions(
 
     constexpr sf::Scalar
         frequencyHz =
-            0.20;
+            0.6;
 
 
     constexpr sf::Scalar

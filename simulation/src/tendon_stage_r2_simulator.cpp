@@ -1,5 +1,4 @@
 #include "inc/tendon_stage_r2_simulator.h"
-#include "inc/tendon_tail_actuator.h"
 
 #include <Stonefish/core/FeatherstoneRobot.h>
 #include <Stonefish/core/Robot.h>
@@ -8,7 +7,6 @@
 
 #include <Stonefish/entities/FeatherstoneEntity.h>
 #include <Stonefish/entities/SolidEntity.h>
-
 #include <Stonefish/graphics/OpenGLTrackball.h>
 
 #include <iomanip>
@@ -16,807 +14,388 @@
 #include <stdexcept>
 #include <string>
 
-
-namespace
-{
-
-constexpr sf::Scalar kRadToDeg =
-    57.2957795130823208768;
-
+namespace {
+constexpr sf::Scalar kRadToDeg = 57.29577951308232;
 }
 
-
-TendonStageR2Simulator::TendonStageR2Simulator(
-    sf::Scalar stepsPerSecond)
-    : sf::SimulationManager(
-          stepsPerSecond)
+TendonStageR2Simulator::TendonStageR2Simulator(sf::Scalar stepsPerSecond)
+    : sf::SimulationManager(stepsPerSecond)
 {
-    setCallSimulationStepCompleted(
-        true);
+    setCallSimulationStepCompleted(true);
 }
 
-
-void
-TendonStageR2Simulator::BuildScenario()
+void TendonStageR2Simulator::BuildScenario()
 {
-    sf::SimulationApp*
-        app =
-            sf::SimulationApp::getApp();
+    auto* app = sf::SimulationApp::getApp();
+    if (!app)
+        throw std::runtime_error("SimulationApp unavailable.");
 
+    const std::string scenario = app->getDataPath() + "env/static_pool.scn";
 
-    if (
-        app == nullptr)
-    {
-        throw std::runtime_error(
-            "TendonStageR2Simulator: SimulationApp unavailable.");
-    }
+    std::cout << "\nLoading:\n  " << scenario << "\n";
 
-
-    const std::string
-        scenario =
-            app->getDataPath()
-            +
-            "env/static_pool.scn";
-
-
-    std::cout
-        << "\nLoading:\n  "
-        << scenario
-        << "\n";
-
-
-    sf::ScenarioParser
-        parser(
-            this);
-
-
-    if (
-        !parser.Parse(
-            scenario))
-    {
-        throw std::runtime_error(
-            "Failed to parse static_pool.scn");
-    }
-
+    sf::ScenarioParser parser(this);
+    if (!parser.Parse(scenario))
+        throw std::runtime_error("Failed to parse static_pool.scn");
 
     BindFish();
-
-
     SetNeutralInitialCondition();
-
-
     RegisterTendonActuator();
-
-
     OpenCsv();
-
-
     ConfigureCamera();
 
-
-    const auto
-        snapshot =
-            tendonActuator_->GetSnapshot();
-
-
     std::cout
-        << "\n"
+        << "\n============================================================\n"
+        << " BionicFish Tethered Thrust Test\n"
         << "============================================================\n"
-        << " BionicFish Direct Tendon Force Test\n"
-        << "============================================================\n"
-        << "Body fixed                 YES\n"
-        << "M1 motor                    DISABLED\n"
-        << "Motor shaft                 NOT USED\n"
-        << "Crank dynamics              NOT USED\n"
-        << "Tendon elasticity           NOT USED\n"
-        << "Tendon damping              NOT USED\n"
-        << "Length -> tension            NO\n"
-        << "Direct tendon tension        YES\n"
-        << "Test tension                 1.0 N\n"
-        << "Routing                      0,0,0,1,1\n"
-        << "Passive joint stiffness      0.65 Nm/rad\n"
-        << "Passive joint damping        0\n"
-        << "Joint safety                 60 deg\n"
-        << "Left initial path length     "
-        << snapshot.initialTendonLengthM[0]
-        << " m\n"
-        << "Right initial path length    "
-        << snapshot.initialTendonLengthM[1]
-        << " m\n"
-        << "CSV                          direct_tendon_force_test.csv\n"
-        << "============================================================\n"
-        << std::endl;
+        << "Body fixed              YES\n"
+        << "Motor                    DISABLED\n"
+        << "Direct tendon tension    3 N peak\n"
+        << "Tendon frequency         1.25 Hz\n"
+        << "Routing                   0,0,0,1,1\n"
+        << "Passive stiffness         0.65 Nm/rad\n"
+        << "Hydro thrust              Fd + Ff\n"
+        << "Forward direction         +X\n"
+        << "Mean-thrust start         5.0 s\n"
+        << "CSV                       tethered_thrust_test.csv\n"
+        << "============================================================\n\n";
 }
 
-
-void
-TendonStageR2Simulator::BindFish()
+void TendonStageR2Simulator::BindFish()
 {
-    fishRobot_ =
-        getRobot(
-            "BionicFish");
-
-
-    if (
-        fishRobot_ == nullptr)
-    {
-        throw std::runtime_error(
-            "BionicFish not found.");
-    }
-
+    fishRobot_ = getRobot("BionicFish");
+    if (!fishRobot_)
+        throw std::runtime_error("BionicFish not found.");
 
     fishFeatherstoneRobot_ =
-        dynamic_cast<sf::FeatherstoneRobot*>(
-            fishRobot_);
+        dynamic_cast<sf::FeatherstoneRobot*>(fishRobot_);
 
+    if (!fishFeatherstoneRobot_)
+        throw std::runtime_error("BionicFish is not FeatherstoneRobot.");
 
-    if (
-        fishFeatherstoneRobot_ == nullptr)
+    fishDynamics_ = fishFeatherstoneRobot_->getDynamics();
+    fishBody_ = fishRobot_->getBaseLink();
+
+    if (!fishDynamics_ || !fishBody_)
+        throw std::runtime_error("Fish dynamics/base unavailable.");
+
+    bodyLinkIndex_ = FindLinkIndex("Body");
+    if (bodyLinkIndex_ < 0)
+        throw std::runtime_error("Body link not found.");
+
+    for (std::size_t i = 0; i < 5; ++i)
     {
-        throw std::runtime_error(
-            "BionicFish is not a FeatherstoneRobot.");
+        const std::string joint = "TailJoint" + std::to_string(i);
+        const std::string link = "Tail" + std::to_string(i);
+
+        tailJointIndices_[i] = FindJointIndex(joint.c_str());
+        tailLinkIndices_[i] = FindLinkIndex(link.c_str());
+
+        if (tailJointIndices_[i] < 0 || tailLinkIndices_[i] < 0)
+            throw std::runtime_error("Cannot bind " + joint + "/" + link);
+
+        tailSolids_[i] =
+            fishDynamics_->getLink(
+                static_cast<unsigned int>(tailLinkIndices_[i])).solid;
+
+        if (!tailSolids_[i])
+            throw std::runtime_error(link + " SolidEntity unavailable.");
     }
 
+    caudalLinkIndex_ = FindLinkIndex("CaudalFin");
+    if (caudalLinkIndex_ < 0)
+        throw std::runtime_error("CaudalFin not found.");
 
-    fishDynamics_ =
-        fishFeatherstoneRobot_->getDynamics();
+    caudalFin_ =
+        fishDynamics_->getLink(
+            static_cast<unsigned int>(caudalLinkIndex_)).solid;
 
+    if (!caudalFin_)
+        throw std::runtime_error("CaudalFin SolidEntity unavailable.");
 
-    fishBody_ =
-        fishRobot_->getBaseLink();
+    std::cout << "\nThrust-test binding:\n";
+    for (std::size_t i = 0; i < 5; ++i)
+        std::cout << "  Tail" << i
+                  << ": joint=" << tailJointIndices_[i]
+                  << " link=" << tailLinkIndices_[i] << "\n";
 
-
-    if (
-        fishDynamics_ == nullptr
-        ||
-        fishBody_ == nullptr)
-    {
-        throw std::runtime_error(
-            "BionicFish dynamics/base unavailable.");
-    }
-
-
-    // ============================================================
-    // Body link
-    // ============================================================
-
-    bodyLinkIndex_ =
-        FindLinkIndex(
-            "Body");
-
-
-    if (
-        bodyLinkIndex_ < 0)
-    {
-        throw std::runtime_error(
-            "Cannot find Body link.");
-    }
-
-
-    // ============================================================
-    // Tail joints and links
-    // ============================================================
-
-    for (
-        std::size_t i = 0;
-        i < 5;
-        ++i)
-    {
-        const std::string
-            jointName =
-                "TailJoint"
-                +
-                std::to_string(
-                    i);
-
-
-        const std::string
-            linkName =
-                "Tail"
-                +
-                std::to_string(
-                    i);
-
-
-        tailJointIndices_[i] =
-            FindJointIndex(
-                jointName.c_str());
-
-
-        tailLinkIndices_[i] =
-            FindLinkIndex(
-                linkName.c_str());
-
-
-        if (
-            tailJointIndices_[i] < 0)
-        {
-            throw std::runtime_error(
-                "Cannot find "
-                +
-                jointName);
-        }
-
-
-        if (
-            tailLinkIndices_[i] < 0)
-        {
-            throw std::runtime_error(
-                "Cannot find "
-                +
-                linkName);
-        }
-    }
-
-
-    std::cout
-        << "\nDirect tendon test binding:\n"
-        << "  Body -> link index "
-        << bodyLinkIndex_
-        << "\n";
-
-
-    for (
-        std::size_t i = 0;
-        i < 5;
-        ++i)
-    {
-        std::cout
-            << "  TailJoint"
-            << i
-            << " -> joint index "
-            << tailJointIndices_[i]
-            << " | Tail"
-            << i
-            << " -> link index "
-            << tailLinkIndices_[i]
-            << "\n";
-    }
-
-
-    std::cout
-        << std::endl;
+    std::cout << "  CaudalFin: link=" << caudalLinkIndex_ << "\n\n";
 }
 
-
-int
-TendonStageR2Simulator::FindJointIndex(
-    const char* jointName) const
+int TendonStageR2Simulator::FindJointIndex(const char* name) const
 {
-    if (
-        fishDynamics_ == nullptr
-        ||
-        jointName == nullptr)
-    {
+    if (!fishDynamics_ || !name)
         return -1;
-    }
 
+    const std::string shortName(name);
+    const std::string fullName = "BionicFish/" + shortName;
 
-    const std::string
-        shortName(
-            jointName);
-
-
-    const std::string
-        fullName =
-            "BionicFish/"
-            +
-            shortName;
-
-
-    const unsigned int
-        count =
-            fishDynamics_->getNumOfJoints();
-
-
-    for (
-        unsigned int i = 0;
-        i < count;
-        ++i)
+    for (unsigned int i = 0; i < fishDynamics_->getNumOfJoints(); ++i)
     {
-        const std::string
-            actual =
-                fishDynamics_->getJointName(
-                    i);
-
-
-        if (
-            actual == shortName
-            ||
-            actual == fullName)
-        {
-            return
-                static_cast<int>(
-                    i);
-        }
+        const std::string actual = fishDynamics_->getJointName(i);
+        if (actual == shortName || actual == fullName)
+            return static_cast<int>(i);
     }
-
 
     return -1;
 }
 
-
-int
-TendonStageR2Simulator::FindLinkIndex(
-    const char* linkName) const
+int TendonStageR2Simulator::FindLinkIndex(const char* name) const
 {
-    if (
-        fishDynamics_ == nullptr
-        ||
-        linkName == nullptr)
-    {
+    if (!fishDynamics_ || !name)
         return -1;
-    }
 
+    const std::string shortName(name);
+    const std::string fullName = "BionicFish/" + shortName;
 
-    const std::string
-        shortName(
-            linkName);
-
-
-    const std::string
-        fullName =
-            "BionicFish/"
-            +
-            shortName;
-
-
-    const unsigned int
-        count =
-            fishDynamics_->getNumOfLinks();
-
-
-    // IMPORTANT:
-    //
-    // Search the FeatherstoneEntity link array directly.
-    //
-    // These are the indices expected by:
-    //
-    //     AddLinkForce()
-    //     AddLinkTorque()
-    //     getLinkTransform()
-
-    for (
-        unsigned int i = 0;
-        i < count;
-        ++i)
+    for (unsigned int i = 0; i < fishDynamics_->getNumOfLinks(); ++i)
     {
-        const sf::FeatherstoneLink
-            link =
-                fishDynamics_->getLink(
-                    i);
-
-
-        if (
-            link.solid == nullptr)
-        {
+        const auto link = fishDynamics_->getLink(i);
+        if (!link.solid)
             continue;
-        }
 
+        const std::string actual = link.solid->getName();
 
-        const std::string
-            actual =
-                link.solid->getName();
-
-
-        if (
-            actual == shortName
-            ||
-            actual == fullName)
-        {
-            return
-                static_cast<int>(
-                    i);
-        }
+        if (actual == shortName || actual == fullName)
+            return static_cast<int>(i);
     }
-
 
     return -1;
 }
 
-
-void
-TendonStageR2Simulator::SetNeutralInitialCondition()
+void TendonStageR2Simulator::SetNeutralInitialCondition()
 {
-    for (
-        int index
-        : tailJointIndices_)
-    {
+    for (int index : tailJointIndices_)
         fishDynamics_->setJointIC(
-            static_cast<unsigned int>(
-                index),
+            static_cast<unsigned int>(index),
             0.0,
             0.0);
-    }
 }
 
-
-void
-TendonStageR2Simulator::RegisterTendonActuator()
+void TendonStageR2Simulator::RegisterTendonActuator()
 {
-    TendonTailParameters
-        parameters;
+    TendonTailParameters p;
 
+    p.passiveStiffnessNmRad = 0.65;
+    p.passiveDampingNmsRad = 0.0;
+    p.jointSafetyLimitRad = 1.0471975511965976; // 60 deg
 
-    // ============================================================
-    // Passive tail
-    // ============================================================
+    std::array<unsigned int,5> joints{};
+    std::array<unsigned int,5> links{};
 
-    parameters.passiveStiffnessNmRad =
-        0.65;
-
-
-    parameters.passiveDampingNmsRad =
-        0.0;
-
-
-    // ============================================================
-    // Direct tendon experiment
-    // ============================================================
-
-    parameters.directTestTensionN =
-        1.0;
-
-
-    parameters.initialSettleTimeS =
-        1.0;
-
-
-    parameters.rampTimeS =
-        1.0;
-
-
-    parameters.holdTimeS =
-        1.0;
-
-
-    parameters.centerPauseTimeS =
-        1.0;
-
-
-    parameters.jointSafetyLimitRad =
-        1.0471975511965976;
-
-
-    std::array<unsigned int, 5>
-        jointIndices {};
-
-
-    std::array<unsigned int, 5>
-        linkIndices {};
-
-
-    for (
-        std::size_t i = 0;
-        i < 5;
-        ++i)
+    for (std::size_t i = 0; i < 5; ++i)
     {
-        jointIndices[i] =
-            static_cast<unsigned int>(
-                tailJointIndices_[i]);
-
-
-        linkIndices[i] =
-            static_cast<unsigned int>(
-                tailLinkIndices_[i]);
+        joints[i] = static_cast<unsigned int>(tailJointIndices_[i]);
+        links[i] = static_cast<unsigned int>(tailLinkIndices_[i]);
     }
 
+    tendonActuator_ = new TendonTailActuator(
+        "BionicFish/DirectTendonForceTest",
+        fishDynamics_,
+        static_cast<unsigned int>(bodyLinkIndex_),
+        links,
+        joints,
+        p);
 
-    tendonActuator_ =
-        new TendonTailActuator(
-            "BionicFish/DirectTendonForceTest",
-            fishDynamics_,
-            static_cast<unsigned int>(
-                bodyLinkIndex_),
-            linkIndices,
-            jointIndices,
-            parameters);
-
-
-    AddActuator(
-        tendonActuator_);
+    AddActuator(tendonActuator_);
 }
 
-
-void
-TendonStageR2Simulator::ConfigureCamera()
+void TendonStageR2Simulator::ConfigureCamera()
 {
-    sf::OpenGLTrackball*
-        trackball =
-            getTrackball();
-
-
-    if (
-        trackball == nullptr
-        ||
-        fishBody_ == nullptr)
-    {
+    auto* trackball = getTrackball();
+    if (!trackball || !fishBody_)
         return;
-    }
 
-
-    trackball->GlueToMoving(
-        fishBody_);
-
-
+    trackball->GlueToMoving(fishBody_);
     trackball->UpdateCenterPos();
-
-
-    trackball->MouseScroll(
-        -10.5f);
-
-
+    trackball->MouseScroll(-10.5f);
     trackball->UpdateTransform();
 }
 
-
-void
-TendonStageR2Simulator::OpenCsv()
+sf::Vector3 TendonStageR2Simulator::GetHydroForce(
+    sf::SolidEntity* solid) const
 {
-    csv_.open(
-        "direct_tendon_force_test.csv",
-        std::ios::out
-        |
-        std::ios::trunc);
+    if (!solid)
+        return sf::Vector3(0.0, 0.0, 0.0);
 
+    sf::Vector3 Fb, Tb, Fd, Td, Ff, Tf;
 
-    if (
-        !csv_.is_open())
-    {
-        throw std::runtime_error(
-            "Cannot create direct_tendon_force_test.csv");
-    }
+    solid->getHydrodynamicForces(
+        Fb, Tb,
+        Fd, Td,
+        Ff, Tf);
 
-
-    csv_
-        << "time_s,"
-        << "phase,"
-        << "left_tension_cmd_n,"
-        << "right_tension_cmd_n,"
-        << "left_length_m,"
-        << "right_length_m,"
-        << "left_initial_length_m,"
-        << "right_initial_length_m,"
-        << "left_length_change_m,"
-        << "right_length_change_m,";
-
-
-    for (
-        int i = 0;
-        i < 5;
-        ++i)
-    {
-        csv_
-            << "j"
-            << i
-            << "_q_rad,"
-
-            << "j"
-            << i
-            << "_q_deg,"
-
-            << "j"
-            << i
-            << "_qdot_rad_s,"
-
-            << "j"
-            << i
-            << "_passive_tau_nm,";
-    }
-
-
-    csv_
-        << "safety_tripped\n";
-
-
-    csv_
-        << std::setprecision(
-            10);
+    // Propulsive hydrodynamic force:
+    // form drag + skin friction.
+    // Buoyancy is intentionally excluded.
+    return Fd + Ff;
 }
 
-
-void
-TendonStageR2Simulator::RecordSample()
+sf::Vector3 TendonStageR2Simulator::GetPropulsorForce() const
 {
-    if (
-        !csv_.is_open()
-        ||
-        tendonActuator_ == nullptr)
-    {
+    sf::Vector3 total(0.0, 0.0, 0.0);
+
+    for (auto* tail : tailSolids_)
+        total += GetHydroForce(tail);
+
+    total += GetHydroForce(caudalFin_);
+
+    return total;
+}
+
+void TendonStageR2Simulator::OpenCsv()
+{
+    csv_.open("tethered_thrust_test.csv",
+              std::ios::out | std::ios::trunc);
+
+    if (!csv_.is_open())
+        throw std::runtime_error("Cannot create tethered_thrust_test.csv");
+
+    csv_
+        << "time_s,phase,"
+        << "left_tension_n,right_tension_n,"
+        << "left_length_m,right_length_m,";
+
+    for (int i = 0; i < 5; ++i)
+        csv_ << "j" << i << "_deg,"
+             << "j" << i << "_qdot_rad_s,";
+
+    for (int i = 0; i < 5; ++i)
+        csv_ << "tail" << i << "_hydro_fx_n,";
+
+    csv_
+        << "caudal_hydro_fx_n,"
+        << "propulsor_fx_n,"
+        << "propulsor_fy_n,"
+        << "propulsor_fz_n,"
+        << "mean_propulsor_fx_n,"
+        << "mean_propulsor_fy_n,"
+        << "mean_propulsor_fz_n,"
+        << "safety_tripped\n";
+
+    csv_ << std::setprecision(10);
+}
+
+void TendonStageR2Simulator::RecordSample()
+{
+    if (!csv_.is_open() || !tendonActuator_)
         return;
-    }
 
+    const auto s = tendonActuator_->GetSnapshot();
 
-    const auto
-        s =
-            tendonActuator_->GetSnapshot();
+    std::array<sf::Vector3,5> tailF;
+    sf::Vector3 prop(0.0,0.0,0.0);
 
-
-    csv_
-        << s.timeS
-        << ","
-
-        << s.testPhase
-        << ","
-
-        << s.commandedTensionN[0]
-        << ","
-
-        << s.commandedTensionN[1]
-        << ","
-
-        << s.tendonLengthM[0]
-        << ","
-
-        << s.tendonLengthM[1]
-        << ","
-
-        << s.initialTendonLengthM[0]
-        << ","
-
-        << s.initialTendonLengthM[1]
-        << ","
-
-        << s.tendonLengthChangeM[0]
-        << ","
-
-        << s.tendonLengthChangeM[1]
-        << ",";
-
-
-    for (
-        std::size_t i = 0;
-        i < 5;
-        ++i)
+    for (std::size_t i = 0; i < 5; ++i)
     {
-        csv_
-            << s.jointPositionRad[i]
-            << ","
-
-            << s.jointPositionRad[i]
-                *
-                kRadToDeg
-            << ","
-
-            << s.jointVelocityRadS[i]
-            << ","
-
-            << s.passiveTorqueNm[i]
-            << ",";
+        tailF[i] = GetHydroForce(tailSolids_[i]);
+        prop += tailF[i];
     }
 
+    const sf::Vector3 caudalF = GetHydroForce(caudalFin_);
+    prop += caudalF;
+
+    const sf::Scalar meanFx =
+        meanAccumTimeS_ > 0.0 ? impulseFxNs_ / meanAccumTimeS_ : 0.0;
+
+    const sf::Scalar meanFy =
+        meanAccumTimeS_ > 0.0 ? impulseFyNs_ / meanAccumTimeS_ : 0.0;
+
+    const sf::Scalar meanFz =
+        meanAccumTimeS_ > 0.0 ? impulseFzNs_ / meanAccumTimeS_ : 0.0;
 
     csv_
-        << (
-            s.safetyTripped
-                ?
-            1
-                :
-            0
-        )
+        << s.timeS << ","
+        << s.testPhase << ","
+        << s.commandedTensionN[0] << ","
+        << s.commandedTensionN[1] << ","
+        << s.tendonLengthM[0] << ","
+        << s.tendonLengthM[1] << ",";
+
+    for (std::size_t i = 0; i < 5; ++i)
+        csv_
+            << s.jointPositionRad[i] * kRadToDeg << ","
+            << s.jointVelocityRadS[i] << ",";
+
+    for (std::size_t i = 0; i < 5; ++i)
+        csv_ << tailF[i].x() << ",";
+
+    csv_
+        << caudalF.x() << ","
+        << prop.x() << ","
+        << prop.y() << ","
+        << prop.z() << ","
+        << meanFx << ","
+        << meanFy << ","
+        << meanFz << ","
+        << (s.safetyTripped ? 1 : 0)
         << "\n";
 }
 
-
-void
-TendonStageR2Simulator::PrintTelemetry()
+void TendonStageR2Simulator::PrintTelemetry()
 {
-    if (
-        tendonActuator_ == nullptr)
-    {
+    if (!tendonActuator_)
         return;
-    }
 
+    const auto s = tendonActuator_->GetSnapshot();
+    const sf::Vector3 F = GetPropulsorForce();
 
-    const auto
-        s =
-            tendonActuator_->GetSnapshot();
+    const sf::Scalar meanFx =
+        meanAccumTimeS_ > 0.0 ? impulseFxNs_ / meanAccumTimeS_ : 0.0;
 
+    const sf::Scalar meanFy =
+        meanAccumTimeS_ > 0.0 ? impulseFyNs_ / meanAccumTimeS_ : 0.0;
 
     std::cout
-        << std::fixed
-        << std::setprecision(
-            3)
+        << std::fixed << std::setprecision(3)
+        << "[THRUST] t=" << s.timeS
+        << " T=(" << s.commandedTensionN[0]
+        << "," << s.commandedTensionN[1] << ")N"
+        << " F=(" << F.x()
+        << "," << F.y()
+        << "," << F.z() << ")N"
+        << " meanFx=" << meanFx
+        << " meanFy=" << meanFy
+        << " J=(";
 
-        << "[DIRECT] t="
-        << s.timeS
-
-        << " phase="
-        << s.testPhase
-
-        << " | T=("
-        << s.commandedTensionN[0]
-        << ","
-        << s.commandedTensionN[1]
-        << ")N"
-
-        << " | dL=("
-        << s.tendonLengthChangeM[0]
-            *
-            1000.0
-        << ","
-        << s.tendonLengthChangeM[1]
-            *
-            1000.0
-        << ")mm"
-
-        << " | J=(";
-
-
-    for (
-        std::size_t i = 0;
-        i < 5;
-        ++i)
+    for (std::size_t i = 0; i < 5; ++i)
     {
-        if (
-            i != 0)
-        {
-            std::cout
-                << ",";
-        }
-
-
-        std::cout
-            << s.jointPositionRad[i]
-                *
-                kRadToDeg;
+        if (i) std::cout << ",";
+        std::cout << s.jointPositionRad[i] * kRadToDeg;
     }
 
-
     std::cout
-        << ")deg"
-
-        << " | safety="
-        << (
-            s.safetyTripped
-                ?
-            "TRIPPED"
-                :
-            "OK"
-        )
-
+        << ")deg safety="
+        << (s.safetyTripped ? "TRIPPED" : "OK")
         << std::endl;
 }
 
-
-void
-TendonStageR2Simulator::SimulationStepCompleted(
-    sf::Scalar timeStep)
+void TendonStageR2Simulator::SimulationStepCompleted(sf::Scalar timeStep)
 {
-    elapsedTimeS_ +=
-        timeStep;
+    elapsedTimeS_ += timeStep;
 
-
-    if (
-        lastCsvTimeS_ < 0.0
-        ||
-        elapsedTimeS_
-            -
-        lastCsvTimeS_
-            >=
-        csvPeriodS_)
+    // Running average after startup transient.
+    if (elapsedTimeS_ >= meanStartTimeS_)
     {
-        RecordSample();
+        const sf::Vector3 F = GetPropulsorForce();
 
-
-        lastCsvTimeS_ =
-            elapsedTimeS_;
+        impulseFxNs_ += F.x() * timeStep;
+        impulseFyNs_ += F.y() * timeStep;
+        impulseFzNs_ += F.z() * timeStep;
+        meanAccumTimeS_ += timeStep;
     }
 
+    if (lastCsvTimeS_ < 0.0 ||
+        elapsedTimeS_ - lastCsvTimeS_ >= csvPeriodS_)
+    {
+        RecordSample();
+        lastCsvTimeS_ = elapsedTimeS_;
+    }
 
-    if (
-        lastConsoleTimeS_ < 0.0
-        ||
-        elapsedTimeS_
-            -
-        lastConsoleTimeS_
-            >=
-        consolePeriodS_)
+    if (lastConsoleTimeS_ < 0.0 ||
+        elapsedTimeS_ - lastConsoleTimeS_ >= consolePeriodS_)
     {
         PrintTelemetry();
-
-
-        lastConsoleTimeS_ =
-            elapsedTimeS_;
+        lastConsoleTimeS_ = elapsedTimeS_;
     }
 }
