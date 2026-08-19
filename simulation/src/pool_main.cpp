@@ -121,32 +121,14 @@ void PrintUsage(
         << "\nUsage:\n\n"
         << "  "
         << executable
-        << " <data-dir> <test-mode>\n\n"
+        << " <data-dir> neutral\n\n"
 
-        << "Examples:\n\n"
-
-        << "  "
-        << executable
-        << " ./data/ neutral\n\n"
+        << "Stage R1-A is a passive free-decay experiment.\n"
+        << "Use:\n\n"
 
         << "  "
         << executable
-        << " ./data/ straight\n\n"
-
-        << "Stage 5A modes:\n"
-
-        << "  neutral   : free fish, M1 OFF\n"
-        << "  straight  : free fish, M1 sine drive ON\n\n"
-
-        << "Other parsed modes are currently motor-off in Stage 5A:\n"
-
-        << "  turn_left\n"
-        << "  turn_right\n"
-        << "  dive\n"
-        << "  rise\n"
-        << "  roll_left\n"
-        << "  roll_right\n"
-        << "  external\n\n";
+        << " ./data/ neutral\n\n";
 }
 
 } // namespace
@@ -168,7 +150,7 @@ int main(
         const std::string testModeName =
             argc > 2
                 ? argv[2]
-                : "straight";
+                : "neutral";
 
 
         const PoolTestMode testMode =
@@ -176,20 +158,9 @@ int main(
                 testModeName);
 
 
-        // ========================================================
-        // Rendering
-        // ========================================================
-
         sf::RenderSettings
             renderSettings;
 
-
-        /*
-            Local Stonefish API:
-
-                windowW
-                windowH
-        */
 
         renderSettings.windowW =
             1920;
@@ -204,13 +175,11 @@ int main(
 
 
         // ========================================================
-        // Simulation
+        // Stage R1
         //
-        // IMPORTANT:
-        //
-        // k = 22 Nm/rad was stable at 2000 Hz during Stage 4C.
-        //
-        // Do NOT return to 500 Hz for Stage 5A.
+        // Keep 2000 Hz because the previous stiff-tail tests
+        // demonstrated that 500 Hz could excite nonphysical
+        // high-frequency modes.
         // ========================================================
 
         constexpr sf::Scalar
@@ -225,11 +194,11 @@ int main(
 
         std::cout
             << "\n"
-            << "Starting BionicFish Stage 5A\n"
-            << "  mode        = "
-            << PoolTestModeName(
-                   testMode)
-            << "\n"
+            << "Starting BionicFish Stage R1-A\n"
+            << "  experiment  = five-passive-joint free decay\n"
+            << "  M1          = absent / disabled\n"
+            << "  tendons     = absent\n"
+            << "  body        = fixed\n"
             << "  physics SPS = "
             << physicsStepsPerSecond
             << "\n"
@@ -237,7 +206,7 @@ int main(
 
 
         sf::GraphicalSimulationApp app(
-            "BionicFish V1 - Stage 5A Free Swimming",
+            "BionicFish - Stage R1-A Five Passive Joints",
             dataDirectory,
             renderSettings,
             helperSettings,

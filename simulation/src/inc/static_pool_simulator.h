@@ -13,13 +13,16 @@ class Robot;
 class FeatherstoneRobot;
 class FeatherstoneEntity;
 class SolidEntity;
-class Servo;
 }
 
 
 /*
     ================================================================
     Pool test modes
+
+    Kept for compatibility with pool_main.cpp and later stages.
+
+    Stage R1 itself is always a passive-tail experiment.
     ================================================================
 */
 enum class PoolTestMode
@@ -53,76 +56,88 @@ PoolTestModeName(
     ================================================================
     StaticPoolSimulator
 
-    Stage 5A
-    First free-swimming test
+    Stage R1-A
+    Five-passive-joint tail topology validation
     ================================================================
+
+    PURPOSE
+
+        Rebuild the tail topology before implementing tendons.
+
+    BODY
+
+        fixed = true
+
+    MOTOR
+
+        M1 is NOT part of this experiment.
+
+        There must be no active actuator on TailJoint0.
+
+    TENDONS
+
+        absent
+
+    FLEXIBLE SPINE SURROGATE
+
+        TailJoint0
+        TailJoint1
+        TailJoint2
+        TailJoint3
+        TailJoint4
+
+        are ALL passive revolute joints.
+
+        For every joint i:
+
+            tau_i =
+                -k * q_i
+                -c * qDot_i
+
+    INITIAL R1-A PARAMETERS
+
+        k = 0.65 Nm/rad
+
+            This is the fishsim reference value.
+            It is NOT yet accepted as the final Stonefish value.
+
+        c = 0.0 Nms/rad
+
+        emergency torque clamp = +/-0.20 Nm
+
+    INITIAL DEFLECTION
+
+        J0 = 2.0 deg
+        J1 = 1.6 deg
+        J2 = 1.2 deg
+        J3 = 0.8 deg
+        J4 = 0.4 deg
+
+        qDot = 0 for all joints
 
     PHYSICS
 
         2000 Hz
-        configured in pool_main.cpp
 
-    BODY
+    CSV
 
-        robot_fixed = false
-
-    M1 / TailJoint0
-
-        neutral:
-            disabled
-
-        straight:
-            sinusoidal position command
-
-            amplitude:
-                +/-5 deg
-
-            frequency:
-                0.4 Hz
-
-            max torque:
-                0.05 Nm
-
-            max velocity:
-                0.35 rad/s
-
-            first 1 s:
-                command = 0
-
-            second 1 s:
-                amplitude ramp 0 -> 100%
-
-    PASSIVE TAIL
-
-        TailJoint1~4
-
-            tau = -k*q - c*qDot
-
-        k:
-            22 Nm/rad
-
-        c:
-            0.001 Nms/rad
-
-        torque safety clamp:
-            +/-0.05 Nm
-
-    M2/M3
-
-        disabled
+        tail_decay_stage_r1.csv
+        500 Hz logging
 
     IMPORTANT
 
-        No body-level ApplyForce().
-        No fake propulsion.
+        Stage R1-A is NOT yet the final stiffness calibration.
 
-        Any swimming motion must arise from:
+        First we verify:
 
-            M1
-            +
-            articulated tail
-            +
-            Stonefish hydrodynamics
+            1. TailJoint0 is really passive.
+            2. All five joints participate.
+            3. No active motor remains in the mechanical chain.
+            4. The system is numerically stable.
+            5. We obtain a baseline natural response for k = 0.65.
+
+        Tail mass/inertia distribution will be checked before the
+        final 3.5 Hz stiffness calibration.
 */
 class StaticPoolSimulator final
     : public sf::SimulationManager
@@ -167,6 +182,23 @@ private:
 
 
     // ============================================================
+    // Passive five-joint flexible-spine surrogate
+    // ============================================================
+
+    void RegisterPassiveTailSpringActuator();
+
+
+    void ApplyInitialTailDeflection();
+
+
+    void ReadTailState(
+        std::array<sf::Scalar, 5>& position,
+        std::array<sf::Scalar, 5>& velocity,
+        std::array<sf::Scalar, 5>& rawTorque,
+        std::array<sf::Scalar, 5>& appliedTorque) const;
+
+
+    // ============================================================
     // Camera
     // ============================================================
 
@@ -174,48 +206,13 @@ private:
 
 
     // ============================================================
-    // Passive elastic tail
+    // Telemetry
     // ============================================================
 
-    void RegisterPassiveTailSpringActuator();
+    void OpenDecayCsv();
 
 
-    void ReadPassiveTailState(
-        std::array<sf::Scalar, 4>& position,
-        std::array<sf::Scalar, 4>& velocity,
-        std::array<sf::Scalar, 4>& rawTorque,
-        std::array<sf::Scalar, 4>& appliedTorque) const;
-
-
-    // ============================================================
-    // M1 active tail drive
-    // ============================================================
-
-    void ConfigureTailDrive();
-
-
-    void UpdateTailDriveCommand();
-
-
-    // ============================================================
-    // Safety
-    // ============================================================
-
-    void CheckSafety();
-
-
-    void EmergencyDisableTailMotor(
-        const char* reason);
-
-
-    // ============================================================
-    // Telemetry / CSV
-    // ============================================================
-
-    void OpenSwimCsv();
-
-
-    void RecordSwimSample();
+    void RecordDecaySample();
 
 
     void PrintTelemetry();
@@ -250,76 +247,19 @@ private:
 
 
     // ============================================================
-    // M1
-    // ============================================================
-
-    sf::Servo* tailMotor_ =
-        nullptr;
-
-
-    /*
-        +/-5 degrees
-    */
-    sf::Scalar tailAmplitudeRad_ =
-        0.13962634015954636;
-
-
-    /*
-        First free-swimming test frequency.
-    */
-    sf::Scalar tailFrequencyHz_ =
-        1;
-
-
-    /*
-        Conservative first-test torque limit.
-    */
-    sf::Scalar tailMaxTorqueNm_ =
-        0.20;
-
-
-    /*
-        M1 maximum angular velocity.
-    */
-    sf::Scalar tailMaxVelocityRadS_ =
-        1.2;
-
-
-    /*
-        First second:
-            M1 stays at zero.
-    */
-    sf::Scalar driveStartTime_ =
-        1.0;
-
-
-    /*
-        Next second:
-            amplitude ramps from 0 to full.
-    */
-    sf::Scalar driveRampTime_ =
-        1.0;
-
-
-    /*
-        Latest M1 desired position.
-    */
-    sf::Scalar lastTailCommandRad_ =
-        0.0;
-
-
-    // ============================================================
-    // Passive tail indices
+    // Passive tail joint indices
     //
-    // [0] TailJoint1
-    // [1] TailJoint2
-    // [2] TailJoint3
-    // [3] TailJoint4
+    // [0] TailJoint0
+    // [1] TailJoint1
+    // [2] TailJoint2
+    // [3] TailJoint3
+    // [4] TailJoint4
     // ============================================================
 
-    std::array<int, 4>
+    std::array<int, 5>
         passiveTailJointIndices_ =
         {
+            -1,
             -1,
             -1,
             -1,
@@ -328,115 +268,72 @@ private:
 
 
     // ============================================================
-    // Calibrated passive-tail parameters
-    // ============================================================
-
-    sf::Scalar passiveTailStiffness_ =
-        22.0;
-
-
-    sf::Scalar passiveTailDamping_ =
-        0.001;
-
-
-    sf::Scalar passiveTailMaxTorqueNm_ =
-        0.2;
-
-
-    // ============================================================
-    // Safety
-    // ============================================================
-
-    bool motorSafetyTripped_ =
-        false;
-
-
-    /*
-        M1 command is only +/-5 deg.
-
-        25 deg therefore indicates something is seriously wrong.
-    */
-    sf::Scalar safetyMaxM1PositionRad_ =
-        0.4363323129985824;   // 25 deg
-
-
-    sf::Scalar safetyMaxM1VelocityRadS_ =
-        2.0;
-
-
-    sf::Scalar safetyMaxM1TrackingErrorRad_ =
-        0.3490658503988659;   // 20 deg
-
-
-    /*
-        Passive joint emergency limits.
-    */
-    sf::Scalar safetyMaxPassivePositionRad_ =
-        0.3490658503988659;   // 20 deg
-
-
-    sf::Scalar safetyMaxPassiveVelocityRadS_ =
-        30.0;
-
-
-    /*
-        Whole-fish emergency velocity.
-    */
-    sf::Scalar safetyMaxBodySpeedMS_ =
-        2.0;
-
-
-    /*
-        Maximum acceptable roll/pitch during Stage 5A.
-    */
-    sf::Scalar safetyMaxRollPitchRad_ =
-        1.0471975511965976;   // 60 deg
-
-
-    /*
-        Pool uses NED:
-
-            surface approximately z = 0
-            bottom approximately z = 4
-
-        These are only emergency limits.
-    */
-    sf::Scalar safetyMinBodyZ_ =
-        0.10;
-
-
-    sf::Scalar safetyMaxBodyZ_ =
-        3.90;
-
-
-    // ============================================================
-    // Initial free-swim reference
+    // Stage R1-A baseline passive parameters
     //
     // IMPORTANT:
     //
-    // DO NOT capture this from BuildScenario().
+    // 0.65 is the reference fishsim hinge stiffness.
     //
-    // It is captured after the first completed physics step.
+    // We are deliberately starting here instead of copying the old
+    // k = 22 value, because:
+    //
+    //     old Stage 4C:
+    //         J0 locked
+    //         J1~J4 passive
+    //
+    //     Stage R1:
+    //         J0~J4 all passive
+    //
+    // These are different mechanical systems.
     // ============================================================
 
-    sf::Scalar initialBodyX_ =
+    sf::Scalar passiveTailStiffness_ =
+        0.65;
+
+
+    /*
+        Start at the fishsim reference damping.
+
+        Damping will be identified only AFTER stiffness/mass
+        consistency is established.
+    */
+    sf::Scalar passiveTailDamping_ =
         0.0;
 
 
-    sf::Scalar initialBodyY_ =
-        0.0;
+    /*
+        Numerical emergency protection only.
 
-
-    sf::Scalar initialBodyZ_ =
-        0.0;
-
-
-    bool initialBodyStateCaptured_ =
-        false;
+        This must NOT be active during normal free decay.
+    */
+    sf::Scalar passiveTailMaxTorqueNm_ =
+        0.20;
 
 
     // ============================================================
-    // Simulation time
+    // Initial passive-tail deflection
+    //
+    // Smooth cantilever-like curvature:
+    //
+    // root curvature larger,
+    // distal curvature smaller.
+    //
+    // At k = 0.65 these values are far below the torque clamp.
+    // ============================================================
+
+    std::array<sf::Scalar, 5>
+        initialTailDeflectionDeg_ =
+        {
+            2.0,
+            1.6,
+            1.2,
+            0.8,
+            0.4
+        };
+
+
+    // ============================================================
+    // Time
     // ============================================================
 
     sf::Scalar elapsedTime_ =
@@ -447,16 +344,19 @@ private:
     // CSV
     // ============================================================
 
-    std::ofstream swimCsv_;
+    std::ofstream decayCsv_;
 
 
     /*
-        200 Hz telemetry.
+        500 Hz logging.
 
-        Physics is 2000 Hz.
+        Physics:
+            2000 Hz
+
+        So one CSV row every 4 physics steps.
     */
     sf::Scalar csvPeriod_ =
-        0.005;
+        0.002;
 
 
     sf::Scalar lastCsvTime_ =
@@ -468,14 +368,14 @@ private:
 
 
     // ============================================================
-    // Console telemetry
+    // Console
     // ============================================================
 
     /*
-        10 Hz console output.
+        20 Hz console telemetry.
     */
     sf::Scalar consolePeriod_ =
-        0.10;
+        0.05;
 
 
     sf::Scalar lastConsoleTime_ =

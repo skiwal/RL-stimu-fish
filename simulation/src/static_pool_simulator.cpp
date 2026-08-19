@@ -9,7 +9,6 @@
 #include <Stonefish/entities/SolidEntity.h>
 
 #include <Stonefish/actuators/Actuator.h>
-#include <Stonefish/actuators/Servo.h>
 
 #include <Stonefish/graphics/OpenGLTrackball.h>
 
@@ -23,35 +22,43 @@
 
 
 // ============================================================================
-// PassiveTailSpringActuator
+// PassiveFiveJointTailActuator
 // ============================================================================
 //
-// Passive spring forces MUST be applied from Actuator::Update().
+// Stage R1:
 //
-// Stonefish clears multibody forces before actuator updates during
-// each physics tick, so this is the correct place for:
+//     TailJoint0
+//     TailJoint1
+//     TailJoint2
+//     TailJoint3
+//     TailJoint4
 //
-//     tau = -k*q - c*qDot
+// are ALL passive.
 //
-// SimulationStepCompleted() is used only for:
-//     commands
-//     safety
-//     logging
+// This is the discrete surrogate for the continuously flexible
+// Nitinol spine.
+//
+// IMPORTANT:
+//
+// The torque must be applied from Actuator::Update().
+//
+// Applying DriveJoint() from SimulationStepCompleted() is incorrect,
+// because Stonefish clears multibody forces before actuator updates.
 //
 // ============================================================================
 
 namespace
 {
 
-class PassiveTailSpringActuator final
+class PassiveFiveJointTailActuator final
     : public sf::Actuator
 {
 public:
 
-    PassiveTailSpringActuator(
+    PassiveFiveJointTailActuator(
         const std::string& name,
         sf::FeatherstoneEntity* dynamics,
-        const std::array<unsigned int, 4>& jointIndices,
+        const std::array<unsigned int, 5>& jointIndices,
         sf::Scalar stiffness,
         sf::Scalar damping,
         sf::Scalar maxAbsTorque)
@@ -76,11 +83,13 @@ public:
     getType() const override
     {
         /*
-            Stonefish has no dedicated passive-spring actuator type.
+            Stonefish does not provide a dedicated passive torsional
+            spring actuator type.
 
-            MOTOR is used only as the generic actuator category.
+            MOTOR is only used as the generic actuator category here.
+
+            This class does NOT represent M1.
         */
-
         return
             sf::ActuatorType::MOTOR;
     }
@@ -89,10 +98,6 @@ public:
     void Update(
         sf::Scalar timeStep) override
     {
-        /*
-            Preserve Stonefish Actuator base bookkeeping.
-        */
-
         sf::Actuator::Update(
             timeStep);
 
@@ -165,7 +170,7 @@ public:
 
 
             // ====================================================
-            // Passive torsional spring-damper
+            // Passive flexible-spine joint torque
             //
             //     tau = -k*q - c*qDot
             // ====================================================
@@ -179,7 +184,9 @@ public:
 
 
             // ====================================================
-            // Safety clamp
+            // Numerical emergency clamp.
+            //
+            // It should remain inactive during this experiment.
             // ====================================================
 
             torque =
@@ -191,9 +198,9 @@ public:
 
 
             // ====================================================
-            // Real Featherstone joint torque.
+            // Internal generalized joint torque.
             //
-            // This is NOT a body propulsion force.
+            // No body-level force is applied.
             // ====================================================
 
             dynamics_
@@ -210,7 +217,7 @@ private:
         nullptr;
 
 
-    std::array<unsigned int, 4>
+    std::array<unsigned int, 5>
         jointIndices_;
 
 
@@ -293,7 +300,10 @@ StaticPoolSimulator::StaticPoolSimulator(
           mode)
 {
     /*
-        Required for Stage-5A command generation and telemetry.
+        Stage R1 needs the post-step callback only for telemetry.
+
+        All physical spring torques are applied earlier from
+        PassiveFiveJointTailActuator::Update().
     */
 
     setCallSimulationStepCompleted(
@@ -350,150 +360,151 @@ void StaticPoolSimulator::BuildScenario()
 
 
     // ========================================================================
-    // Bind articulated BionicFish.
+    // Bind Featherstone fish and ALL five tail joints.
     // ========================================================================
 
     BindBionicFish();
 
 
     // ========================================================================
-    // Register calibrated passive tail.
+    // Register passive spine actuator.
+    //
+    // TailJoint0 is included.
     // ========================================================================
 
     RegisterPassiveTailSpringActuator();
 
 
     // ========================================================================
-    // Configure M1.
-    //
-    // neutral:
-    //     torque = 0
-    //
-    // straight:
-    //     sine command enabled
+    // CSV
     // ========================================================================
 
-    ConfigureTailDrive();
+    OpenDecayCsv();
 
 
     // ========================================================================
-    // Camera.
+    // Initial free-decay shape.
     //
-    // Camera setup has already been proven stable in previous stages.
+    // No motor is used.
+    // ========================================================================
+
+    ApplyInitialTailDeflection();
+
+
+    // ========================================================================
+    // Exact t=0 joint-state sample.
+    //
+    // We only read joint position/velocity here.
+    // No Servo solver state is accessed.
+    // ========================================================================
+
+    elapsedTime_ =
+        0.0;
+
+
+    RecordDecaySample();
+
+
+    lastCsvTime_ =
+        0.0;
+
+
+    PrintTelemetry();
+
+
+    lastConsoleTime_ =
+        0.0;
+
+
+    // ========================================================================
+    // Camera
     // ========================================================================
 
     ConfigureCamera();
 
 
     // ========================================================================
-    // Open CSV.
-    //
-    // IMPORTANT:
-    //
-    // DO NOT call RecordSwimSample() here.
-    //
-    // BuildScenario() happens before the first completed physics step.
-    // All dynamic-state telemetry starts later from
-    // SimulationStepCompleted().
-    // ========================================================================
-
-    OpenSwimCsv();
-
-
-    initialBodyStateCaptured_ =
-        false;
-
-
-    // ========================================================================
-    // Startup summary.
-    //
-    // Do NOT query dynamic body/motor state here.
+    // Summary
     // ========================================================================
 
     std::cout
         << "\n"
         << "================================================================\n"
-        << " BionicFish V1 - Stage 5A First Free-Swimming Test\n"
+        << " BionicFish - Stage R1-A\n"
+        << " Five-Passive-Joint Tail Free Decay\n"
         << "================================================================\n"
         << "\n"
-        << "Mode:\n"
-        << "  "
-        << PoolTestModeName(
-               mode_)
-        << "\n"
+        << "Purpose:\n"
+        << "  Correct tail topology before tendon implementation.\n"
         << "\n"
         << "Robot base:\n"
-        << "  fixed                         NO\n"
-        << "  free swimming                 YES\n"
+        << "  fixed                         YES\n"
         << "\n"
-        << "Physics:\n"
-        << "  required SPS                  2000 Hz\n"
+        << "M1 motor:\n"
+        << "  active                        NO\n"
+        << "  TailJoint0 motor              NONE\n"
         << "\n"
-        << "Passive tail:\n"
-        << "  stiffness k                   "
+        << "Tendons:\n"
+        << "  installed                     NO\n"
+        << "\n"
+        << "Passive flexible-spine joints:\n"
+        << "  TailJoint0                    "
+        << passiveTailJointIndices_[0]
+        << "\n"
+        << "  TailJoint1                    "
+        << passiveTailJointIndices_[1]
+        << "\n"
+        << "  TailJoint2                    "
+        << passiveTailJointIndices_[2]
+        << "\n"
+        << "  TailJoint3                    "
+        << passiveTailJointIndices_[3]
+        << "\n"
+        << "  TailJoint4                    "
+        << passiveTailJointIndices_[4]
+        << "\n"
+        << "\n"
+        << "Baseline passive parameters:\n"
+        << "  k                             "
         << passiveTailStiffness_
         << " Nm/rad\n"
-        << "  damping c                     "
+        << "  c                             "
         << passiveTailDamping_
         << " Nms/rad\n"
-        << "  torque clamp                  +/-"
+        << "  emergency torque clamp        +/-"
         << passiveTailMaxTorqueNm_
         << " Nm\n"
-        << "\n";
-
-
-    if (
-        mode_
-        == PoolTestMode::Straight)
-    {
-        std::cout
-            << "M1 TailMotor:\n"
-            << "  enabled                       YES\n"
-            << "  control                       POSITION\n"
-            << "  waveform                      sine\n"
-            << "  amplitude                     +/-5 deg\n"
-            << "  frequency                     "
-            << tailFrequencyHz_
-            << " Hz\n"
-            << "  max torque                    "
-            << tailMaxTorqueNm_
-            << " Nm\n"
-            << "  max velocity                  "
-            << tailMaxVelocityRadS_
-            << " rad/s\n"
-            << "  start delay                   "
-            << driveStartTime_
-            << " s\n"
-            << "  ramp duration                 "
-            << driveRampTime_
-            << " s\n";
-    }
-    else
-    {
-        std::cout
-            << "M1 TailMotor:\n"
-            << "  enabled                       NO\n";
-    }
-
-
-    std::cout
         << "\n"
-        << "M2 LeftPectoralMotor:\n"
-        << "  enabled                       NO\n"
+        << "Initial deflection:\n"
+        << "  J0                            "
+        << initialTailDeflectionDeg_[0]
+        << " deg\n"
+        << "  J1                            "
+        << initialTailDeflectionDeg_[1]
+        << " deg\n"
+        << "  J2                            "
+        << initialTailDeflectionDeg_[2]
+        << " deg\n"
+        << "  J3                            "
+        << initialTailDeflectionDeg_[3]
+        << " deg\n"
+        << "  J4                            "
+        << initialTailDeflectionDeg_[4]
+        << " deg\n"
         << "\n"
-        << "M3 RightPectoralMotor:\n"
-        << "  enabled                       NO\n"
+        << "Initial joint velocity:\n"
+        << "  all                           0 rad/s\n"
         << "\n"
-        << "Body-level propulsion:\n"
-        << "  ApplyForce                    NOT USED\n"
+        << "Physics:\n"
+        << "  target                        2000 Hz\n"
         << "\n"
-        << "Telemetry:\n"
-        << "  CSV                           free_swim_stage5a.csv\n"
-        << "  CSV rate                      200 Hz\n"
-        << "  console rate                  10 Hz\n"
+        << "CSV:\n"
+        << "  file                          tail_decay_stage_r1.csv\n"
+        << "  sample rate                   500 Hz\n"
         << "\n"
-        << "Initial body reference:\n"
-        << "  captured after first completed physics step\n"
+        << "IMPORTANT:\n"
+        << "  Do NOT tune k to 3.5 Hz yet.\n"
+        << "  First verify topology and tail mass/inertia consistency.\n"
         << "================================================================\n"
         << std::endl;
 }
@@ -563,68 +574,34 @@ void StaticPoolSimulator::BindBionicFish()
 
 
     // ========================================================================
-    // M1 TailMotor
-    // ========================================================================
-
-    sf::Actuator* actuator =
-        fishRobot_
-            ->getActuator(
-                "BionicFish/TailMotor");
-
-
-    if (
-        actuator == nullptr)
-    {
-        actuator =
-            fishRobot_
-                ->getActuator(
-                    "TailMotor");
-    }
-
-
-    if (
-        actuator == nullptr)
-    {
-        throw std::runtime_error(
-            "StaticPoolSimulator: "
-            "TailMotor actuator was not found.");
-    }
-
-
-    tailMotor_ =
-        dynamic_cast<sf::Servo*>(
-            actuator);
-
-
-    if (
-        tailMotor_ == nullptr)
-    {
-        throw std::runtime_error(
-            "StaticPoolSimulator: "
-            "TailMotor is not sf::Servo.");
-    }
-
-
-    // ========================================================================
-    // Passive tail joints
+    // Stage R1:
+    //
+    // Bind ALL FIVE passive tail joints.
+    //
+    // TailJoint0 is no longer treated as M1.
     // ========================================================================
 
     passiveTailJointIndices_[0] =
         FindDynamicsJointIndex(
-            "TailJoint1");
+            "TailJoint0");
 
 
     passiveTailJointIndices_[1] =
         FindDynamicsJointIndex(
-            "TailJoint2");
+            "TailJoint1");
 
 
     passiveTailJointIndices_[2] =
         FindDynamicsJointIndex(
-            "TailJoint3");
+            "TailJoint2");
 
 
     passiveTailJointIndices_[3] =
+        FindDynamicsJointIndex(
+            "TailJoint3");
+
+
+    passiveTailJointIndices_[4] =
         FindDynamicsJointIndex(
             "TailJoint4");
 
@@ -642,7 +619,7 @@ void StaticPoolSimulator::BindBionicFish()
                 "StaticPoolSimulator: "
                 "failed to locate TailJoint"
                 + std::to_string(
-                      i + 1)
+                      i)
                 + ".");
         }
     }
@@ -650,22 +627,24 @@ void StaticPoolSimulator::BindBionicFish()
 
     std::cout
         << "\n"
-        << "BionicFish binding complete:\n"
+        << "BionicFish Stage-R1 binding complete:\n"
         << "  Robot       = OK\n"
         << "  Body        = OK\n"
         << "  Dynamics    = OK\n"
-        << "  TailMotor   = OK\n"
-        << "  TailJoint1  = "
+        << "  TailJoint0  = "
         << passiveTailJointIndices_[0]
         << "\n"
-        << "  TailJoint2  = "
+        << "  TailJoint1  = "
         << passiveTailJointIndices_[1]
         << "\n"
-        << "  TailJoint3  = "
+        << "  TailJoint2  = "
         << passiveTailJointIndices_[2]
         << "\n"
-        << "  TailJoint4  = "
+        << "  TailJoint3  = "
         << passiveTailJointIndices_[3]
+        << "\n"
+        << "  TailJoint4  = "
+        << passiveTailJointIndices_[4]
         << "\n"
         << std::endl;
 }
@@ -726,7 +705,7 @@ int StaticPoolSimulator::FindDynamicsJointIndex(
 
     std::cerr
         << "\n"
-        << "Unable to locate joint:\n"
+        << "Unable to locate Featherstone joint:\n"
         << "  "
         << shortName
         << "\n"
@@ -759,7 +738,7 @@ int StaticPoolSimulator::FindDynamicsJointIndex(
 
 
 // ============================================================================
-// Register passive elastic tail
+// Register passive five-joint tail
 // ============================================================================
 
 void StaticPoolSimulator::RegisterPassiveTailSpringActuator()
@@ -768,12 +747,12 @@ void StaticPoolSimulator::RegisterPassiveTailSpringActuator()
         fishDynamics_ == nullptr)
     {
         throw std::runtime_error(
-            "Cannot register passive tail actuator: "
+            "Cannot register Stage-R1 passive tail actuator: "
             "fish dynamics are unavailable.");
     }
 
 
-    const std::array<unsigned int, 4>
+    const std::array<unsigned int, 5>
         indices =
         {
             static_cast<unsigned int>(
@@ -786,13 +765,16 @@ void StaticPoolSimulator::RegisterPassiveTailSpringActuator()
                 passiveTailJointIndices_[2]),
 
             static_cast<unsigned int>(
-                passiveTailJointIndices_[3])
+                passiveTailJointIndices_[3]),
+
+            static_cast<unsigned int>(
+                passiveTailJointIndices_[4])
         };
 
 
-    PassiveTailSpringActuator* passiveActuator =
-        new PassiveTailSpringActuator(
-            "BionicFish/PassiveTailSpring",
+    PassiveFiveJointTailActuator* passiveActuator =
+        new PassiveFiveJointTailActuator(
+            "BionicFish/PassiveFiveJointSpine",
             fishDynamics_,
             indices,
             passiveTailStiffness_,
@@ -801,7 +783,7 @@ void StaticPoolSimulator::RegisterPassiveTailSpringActuator()
 
 
     /*
-        SimulationManager owns registered actuators.
+        SimulationManager owns the registered actuator.
     */
 
     AddActuator(
@@ -809,7 +791,8 @@ void StaticPoolSimulator::RegisterPassiveTailSpringActuator()
 
 
     std::cout
-        << "Passive tail actuator registered:\n"
+        << "Stage-R1 passive spine actuator registered:\n"
+        << "  joints  = TailJoint0~TailJoint4\n"
         << "  k       = "
         << passiveTailStiffness_
         << " Nm/rad\n"
@@ -824,227 +807,89 @@ void StaticPoolSimulator::RegisterPassiveTailSpringActuator()
 
 
 // ============================================================================
-// Configure M1
+// Apply initial deflection
 // ============================================================================
 
-void StaticPoolSimulator::ConfigureTailDrive()
+void StaticPoolSimulator::ApplyInitialTailDeflection()
 {
     if (
-        tailMotor_ == nullptr)
+        fishDynamics_ == nullptr)
     {
         throw std::runtime_error(
-            "ConfigureTailDrive: "
-            "TailMotor is unavailable.");
+            "ApplyInitialTailDeflection: "
+            "fish dynamics are unavailable.");
     }
-
-
-    // ========================================================================
-    // Position control.
-    // ========================================================================
-
-    tailMotor_
-        ->setControlMode(
-            sf::ServoControlMode::POSITION);
-
-
-    tailMotor_
-        ->setDesiredPosition(
-            0.0);
-
-
-    tailMotor_
-        ->setMaxVelocity(
-            -1.0);
-
-
-    lastTailCommandRad_ =
-        0.0;
-
-
-    motorSafetyTripped_ =
-        false;
-
-
-    // ========================================================================
-    // Straight:
-    //
-    // enable real M1 torque.
-    // ========================================================================
-
-    if (
-        mode_
-        == PoolTestMode::Straight)
-    {
-        tailMotor_
-            ->setMaxTorque(
-                tailMaxTorqueNm_);
-
-
-        std::cout
-            << "M1 Stage-5A free-swim drive ENABLED.\n"
-            << std::endl;
-    }
-    else
-    {
-        /*
-            Neutral and all currently unsupported modes:
-            motor completely off.
-        */
-
-        tailMotor_
-            ->setMaxTorque(
-                0.0);
-
-
-        tailMotor_
-            ->setDesiredPosition(
-                0.0);
-
-
-        std::cout
-            << "M1 disabled for mode: "
-            << PoolTestModeName(
-                   mode_)
-            << "\n"
-            << std::endl;
-    }
-}
-
-
-// ============================================================================
-// Update M1 sinusoidal command
-// ============================================================================
-
-void StaticPoolSimulator::UpdateTailDriveCommand()
-{
-    if (
-        tailMotor_ == nullptr)
-    {
-        return;
-    }
-
-
-    // ========================================================================
-    // Safety latch or non-straight mode.
-    // ========================================================================
-
-    if (
-        motorSafetyTripped_
-        ||
-        mode_
-        != PoolTestMode::Straight)
-    {
-        lastTailCommandRad_ =
-            0.0;
-
-
-        tailMotor_
-            ->setDesiredPosition(
-                0.0);
-
-
-        return;
-    }
-
-
-    // ========================================================================
-    // First second:
-    //
-    // fish settles freely with M1 at zero.
-    // ========================================================================
-
-    if (
-        elapsedTime_
-        < driveStartTime_)
-    {
-        lastTailCommandRad_ =
-            0.0;
-
-
-        tailMotor_
-            ->setDesiredPosition(
-                0.0);
-
-
-        return;
-    }
-
-
-    const sf::Scalar driveTime =
-        elapsedTime_
-        - driveStartTime_;
-
-
-    // ========================================================================
-    // Linear amplitude ramp.
-    // ========================================================================
-
-    sf::Scalar ramp =
-        1.0;
-
-
-    if (
-        driveRampTime_
-        > 0.0)
-    {
-        ramp =
-            driveTime
-            / driveRampTime_;
-    }
-
-
-    ramp =
-        std::max(
-            sf::Scalar(0.0),
-            std::min(
-                sf::Scalar(1.0),
-                ramp));
 
 
     constexpr sf::Scalar pi =
         3.14159265358979323846;
 
 
-    const sf::Scalar omega =
-        2.0
-        * pi
-        * tailFrequencyHz_;
+    constexpr sf::Scalar degToRad =
+        pi
+        / 180.0;
 
 
-    const sf::Scalar phase =
-        omega
-        * driveTime;
+    std::cout
+        << "Applying Stage-R1 five-joint initial deflection:\n";
 
 
-    lastTailCommandRad_ =
-        ramp
-        * tailAmplitudeRad_
-        * std::sin(
-            phase);
+    for (
+        std::size_t i = 0;
+        i < passiveTailJointIndices_.size();
+        ++i)
+    {
+        const sf::Scalar q =
+            initialTailDeflectionDeg_[i]
+            * degToRad;
 
 
-    /*
-        Persistent Servo setpoint.
+        const unsigned int jointIndex =
+            static_cast<unsigned int>(
+                passiveTailJointIndices_[i]);
 
-        No joint teleportation.
-        No Body force.
-    */
 
-    tailMotor_
-        ->setDesiredPosition(
-            lastTailCommandRad_);
+        /*
+            Official Featherstone initial-condition API.
+
+            Position:
+                specified bend
+
+            Velocity:
+                zero
+        */
+
+        fishDynamics_
+            ->setJointIC(
+                jointIndex,
+                q,
+                0.0);
+
+
+        std::cout
+            << "  J"
+            << i
+            << " = "
+            << initialTailDeflectionDeg_[i]
+            << " deg"
+            << "  qDot = 0 rad/s\n";
+    }
+
+
+    std::cout
+        << std::endl;
 }
 
 
 // ============================================================================
-// Read passive tail
+// Read tail state
 // ============================================================================
 
-void StaticPoolSimulator::ReadPassiveTailState(
-    std::array<sf::Scalar, 4>& position,
-    std::array<sf::Scalar, 4>& velocity,
-    std::array<sf::Scalar, 4>& rawTorque,
-    std::array<sf::Scalar, 4>& appliedTorque) const
+void StaticPoolSimulator::ReadTailState(
+    std::array<sf::Scalar, 5>& position,
+    std::array<sf::Scalar, 5>& velocity,
+    std::array<sf::Scalar, 5>& rawTorque,
+    std::array<sf::Scalar, 5>& appliedTorque) const
 {
     position.fill(
         0.0);
@@ -1152,370 +997,6 @@ void StaticPoolSimulator::ReadPassiveTailState(
 
 
 // ============================================================================
-// Safety
-// ============================================================================
-
-void StaticPoolSimulator::CheckSafety()
-{
-    /*
-        Neutral mode has no active M1 propulsion.
-
-        Stage-5A active safety is needed only during straight mode.
-    */
-
-    if (
-        motorSafetyTripped_
-        ||
-        mode_
-            != PoolTestMode::Straight
-        ||
-        tailMotor_
-            == nullptr
-        ||
-        fishBody_
-            == nullptr)
-    {
-        return;
-    }
-
-
-    // ========================================================================
-    // M1
-    // ========================================================================
-
-    const sf::Scalar m1Position =
-        tailMotor_
-            ->getPosition();
-
-
-    const sf::Scalar m1Velocity =
-        tailMotor_
-            ->getVelocity();
-
-
-    const sf::Scalar m1Error =
-        lastTailCommandRad_
-        - m1Position;
-
-
-    if (
-        !std::isfinite(
-            static_cast<double>(
-                m1Position))
-        ||
-        !std::isfinite(
-            static_cast<double>(
-                m1Velocity))
-        ||
-        !std::isfinite(
-            static_cast<double>(
-                m1Error)))
-    {
-        EmergencyDisableTailMotor(
-            "non-finite M1 state");
-
-        return;
-    }
-
-
-    if (
-        std::abs(
-            m1Position)
-        > safetyMaxM1PositionRad_)
-    {
-        EmergencyDisableTailMotor(
-            "M1 position exceeded 25 deg");
-
-        return;
-    }
-
-
-    if (
-        std::abs(
-            m1Velocity)
-        > safetyMaxM1VelocityRadS_)
-    {
-        EmergencyDisableTailMotor(
-            "M1 velocity exceeded 2 rad/s");
-
-        return;
-    }
-
-
-    if (
-        elapsedTime_
-            >
-        driveStartTime_
-            + 0.25
-        &&
-        std::abs(
-            m1Error)
-            >
-        safetyMaxM1TrackingErrorRad_)
-    {
-        EmergencyDisableTailMotor(
-            "M1 tracking error exceeded 20 deg");
-
-        return;
-    }
-
-
-    // ========================================================================
-    // Passive joints
-    // ========================================================================
-
-    std::array<sf::Scalar, 4>
-        q;
-
-
-    std::array<sf::Scalar, 4>
-        qDot;
-
-
-    std::array<sf::Scalar, 4>
-        rawTorque;
-
-
-    std::array<sf::Scalar, 4>
-        appliedTorque;
-
-
-    ReadPassiveTailState(
-        q,
-        qDot,
-        rawTorque,
-        appliedTorque);
-
-
-    for (
-        std::size_t i = 0;
-        i < 4;
-        ++i)
-    {
-        if (
-            !std::isfinite(
-                static_cast<double>(
-                    q[i]))
-            ||
-            !std::isfinite(
-                static_cast<double>(
-                    qDot[i])))
-        {
-            EmergencyDisableTailMotor(
-                "non-finite passive-tail state");
-
-            return;
-        }
-
-
-        if (
-            std::abs(
-                q[i])
-            > safetyMaxPassivePositionRad_)
-        {
-            EmergencyDisableTailMotor(
-                "passive joint exceeded 20 deg");
-
-            return;
-        }
-
-
-        if (
-            std::abs(
-                qDot[i])
-            > safetyMaxPassiveVelocityRadS_)
-        {
-            EmergencyDisableTailMotor(
-                "passive joint velocity exceeded 30 rad/s");
-
-            return;
-        }
-    }
-
-
-    // ========================================================================
-    // Whole-body state
-    //
-    // Safe because this function is only called from the completed-step
-    // callback after the reference state has been captured.
-    // ========================================================================
-
-    const sf::Transform bodyTransform =
-        fishBody_
-            ->getOTransform();
-
-
-    const sf::Vector3 bodyPosition =
-        bodyTransform
-            .getOrigin();
-
-
-    const sf::Vector3 bodyVelocity =
-        fishBody_
-            ->getLinearVelocity();
-
-
-    sf::Scalar yaw =
-        0.0;
-
-
-    sf::Scalar pitch =
-        0.0;
-
-
-    sf::Scalar roll =
-        0.0;
-
-
-    bodyTransform
-        .getBasis()
-        .getEulerYPR(
-            yaw,
-            pitch,
-            roll);
-
-
-    if (
-        !std::isfinite(
-            static_cast<double>(
-                bodyPosition.x()))
-        ||
-        !std::isfinite(
-            static_cast<double>(
-                bodyPosition.y()))
-        ||
-        !std::isfinite(
-            static_cast<double>(
-                bodyPosition.z()))
-        ||
-        !std::isfinite(
-            static_cast<double>(
-                bodyVelocity.x()))
-        ||
-        !std::isfinite(
-            static_cast<double>(
-                bodyVelocity.y()))
-        ||
-        !std::isfinite(
-            static_cast<double>(
-                bodyVelocity.z())))
-    {
-        EmergencyDisableTailMotor(
-            "non-finite Body state");
-
-        return;
-    }
-
-
-    if (
-        bodyVelocity.length()
-        >
-        safetyMaxBodySpeedMS_)
-    {
-        EmergencyDisableTailMotor(
-            "Body speed exceeded 2 m/s");
-
-        return;
-    }
-
-
-    if (
-        std::abs(
-            roll)
-            >
-        safetyMaxRollPitchRad_
-        ||
-        std::abs(
-            pitch)
-            >
-        safetyMaxRollPitchRad_)
-    {
-        EmergencyDisableTailMotor(
-            "Body roll/pitch exceeded 60 deg");
-
-        return;
-    }
-
-
-    if (
-        bodyPosition.z()
-            <
-        safetyMinBodyZ_
-        ||
-        bodyPosition.z()
-            >
-        safetyMaxBodyZ_)
-    {
-        EmergencyDisableTailMotor(
-            "Body left safe pool depth range");
-
-        return;
-    }
-}
-
-
-// ============================================================================
-// Emergency M1 shutdown
-// ============================================================================
-
-void StaticPoolSimulator::EmergencyDisableTailMotor(
-    const char* reason)
-{
-    if (
-        tailMotor_ == nullptr
-        ||
-        motorSafetyTripped_)
-    {
-        return;
-    }
-
-
-    motorSafetyTripped_ =
-        true;
-
-
-    lastTailCommandRad_ =
-        0.0;
-
-
-    /*
-        Remove active propulsion capability.
-    */
-
-    tailMotor_
-        ->setMaxTorque(
-            0.0);
-
-
-    tailMotor_
-        ->setDesiredPosition(
-            0.0);
-
-
-    std::cerr
-        << "\n"
-        << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
-        << " STAGE 5A M1 SAFETY SHUTDOWN\n"
-        << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
-        << "\n"
-        << "Reason:\n"
-        << "  "
-        << (
-               reason != nullptr
-                   ? reason
-                   : "unknown")
-        << "\n"
-        << "\n"
-        << "TailMotor max torque = 0 Nm\n"
-        << "Passive tail remains enabled.\n"
-        << "Restart simulator before another active test.\n"
-        << "\n"
-        << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
-        << std::endl;
-}
-
-
-// ============================================================================
 // Camera
 // ============================================================================
 
@@ -1566,125 +1047,93 @@ void StaticPoolSimulator::ConfigureCamera()
 
 
 // ============================================================================
-// Open Stage-5A CSV
+// Open CSV
 // ============================================================================
 
-void StaticPoolSimulator::OpenSwimCsv()
+void StaticPoolSimulator::OpenDecayCsv()
 {
-    swimCsv_
+    decayCsv_
         .open(
-            "free_swim_stage5a.csv",
+            "tail_decay_stage_r1.csv",
             std::ios::out
             |
             std::ios::trunc);
 
 
     if (
-        !swimCsv_.is_open())
+        !decayCsv_.is_open())
     {
         throw std::runtime_error(
             "Failed to create "
-            "free_swim_stage5a.csv");
+            "tail_decay_stage_r1.csv");
     }
 
 
-    /*
-        IMPORTANT:
-
-        We intentionally do NOT include Servo::getEffort() in the first
-        Stage-5A logger.
-
-        Position and velocity are enough to validate initial free swimming,
-        and this avoids touching the motor solver impulse during the startup
-        transition.
-    */
-
-    swimCsv_
+    decayCsv_
         << "time_s,"
-        << "body_x_m,"
-        << "body_y_m,"
-        << "body_z_m,"
-        << "body_dx_m,"
-        << "body_dy_m,"
-        << "body_dz_m,"
-        << "body_vx_m_s,"
-        << "body_vy_m_s,"
-        << "body_vz_m_s,"
-        << "body_wx_rad_s,"
-        << "body_wy_rad_s,"
-        << "body_wz_rad_s,"
-        << "roll_rad,"
-        << "pitch_rad,"
-        << "yaw_rad,"
-        << "roll_deg,"
-        << "pitch_deg,"
-        << "yaw_deg,"
-        << "m1_cmd_rad,"
-        << "m1_cmd_deg,"
-        << "m1_q_rad,"
-        << "m1_q_deg,"
-        << "m1_vel_rad_s,"
+
+        << "j0_q_rad,"
         << "j1_q_rad,"
         << "j2_q_rad,"
         << "j3_q_rad,"
         << "j4_q_rad,"
+
+        << "j0_q_deg,"
         << "j1_q_deg,"
         << "j2_q_deg,"
         << "j3_q_deg,"
         << "j4_q_deg,"
+
+        << "tip_angle_rad,"
+        << "tip_angle_deg,"
+
+        << "j0_vel_rad_s,"
         << "j1_vel_rad_s,"
         << "j2_vel_rad_s,"
         << "j3_vel_rad_s,"
         << "j4_vel_rad_s,"
+
+        << "j0_tau_raw_nm,"
         << "j1_tau_raw_nm,"
         << "j2_tau_raw_nm,"
         << "j3_tau_raw_nm,"
         << "j4_tau_raw_nm,"
+
+        << "j0_tau_applied_nm,"
         << "j1_tau_applied_nm,"
         << "j2_tau_applied_nm,"
         << "j3_tau_applied_nm,"
         << "j4_tau_applied_nm,"
+
+        << "j0_clipped,"
         << "j1_clipped,"
         << "j2_clipped,"
         << "j3_clipped,"
-        << "j4_clipped,"
-        << "tail_tip_relative_rad,"
-        << "tail_tip_relative_deg,"
-        << "safety_tripped"
+        << "j4_clipped"
+
         << "\n";
 
 
-    swimCsv_
+    decayCsv_
         << std::setprecision(
             10);
 
 
     std::cout
-        << "Free-swim CSV opened:\n"
-        << "  free_swim_stage5a.csv\n"
+        << "Stage-R1 CSV opened:\n"
+        << "  tail_decay_stage_r1.csv\n"
         << std::endl;
 }
 
 
 // ============================================================================
-// Record completed-step state
+// Record decay sample
 // ============================================================================
 
-void StaticPoolSimulator::RecordSwimSample()
+void StaticPoolSimulator::RecordDecaySample()
 {
-    /*
-        Absolutely no dynamic state is read until the first completed
-        physics step has established our reference state.
-    */
-
     if (
-        !initialBodyStateCaptured_
-        ||
-        !swimCsv_.is_open()
-        ||
-        fishBody_ == nullptr
-        ||
-        tailMotor_ == nullptr
+        !decayCsv_.is_open()
         ||
         fishDynamics_ == nullptr)
     {
@@ -1701,111 +1150,46 @@ void StaticPoolSimulator::RecordSwimSample()
         / pi;
 
 
-    // ========================================================================
-    // Body
-    // ========================================================================
-
-    const sf::Transform bodyTransform =
-        fishBody_
-            ->getOTransform();
-
-
-    const sf::Vector3 bodyPosition =
-        bodyTransform
-            .getOrigin();
-
-
-    const sf::Vector3 bodyVelocity =
-        fishBody_
-            ->getLinearVelocity();
-
-
-    const sf::Vector3 bodyAngularVelocity =
-        fishBody_
-            ->getAngularVelocity();
-
-
-    const sf::Scalar dx =
-        bodyPosition.x()
-        - initialBodyX_;
-
-
-    const sf::Scalar dy =
-        bodyPosition.y()
-        - initialBodyY_;
-
-
-    const sf::Scalar dz =
-        bodyPosition.z()
-        - initialBodyZ_;
-
-
-    sf::Scalar yaw =
-        0.0;
-
-
-    sf::Scalar pitch =
-        0.0;
-
-
-    sf::Scalar roll =
-        0.0;
-
-
-    bodyTransform
-        .getBasis()
-        .getEulerYPR(
-            yaw,
-            pitch,
-            roll);
-
-
-    // ========================================================================
-    // M1
-    //
-    // Do NOT call getEffort() in this first Stage-5A version.
-    // ========================================================================
-
-    const sf::Scalar m1Position =
-        tailMotor_
-            ->getPosition();
-
-
-    const sf::Scalar m1Velocity =
-        tailMotor_
-            ->getVelocity();
-
-
-    // ========================================================================
-    // Passive tail
-    // ========================================================================
-
-    std::array<sf::Scalar, 4>
+    std::array<sf::Scalar, 5>
         q;
 
 
-    std::array<sf::Scalar, 4>
+    std::array<sf::Scalar, 5>
         qDot;
 
 
-    std::array<sf::Scalar, 4>
+    std::array<sf::Scalar, 5>
         rawTorque;
 
 
-    std::array<sf::Scalar, 4>
+    std::array<sf::Scalar, 5>
         appliedTorque;
 
 
-    ReadPassiveTailState(
+    ReadTailState(
         q,
         qDot,
         rawTorque,
         appliedTorque);
 
 
-    std::array<int, 4>
+    sf::Scalar tipAngle =
+        0.0;
+
+
+    for (
+        sf::Scalar value
+        : q)
+    {
+        tipAngle +=
+            value;
+    }
+
+
+    std::array<int, 5>
         clipped =
         {
+            0,
             0,
             0,
             0,
@@ -1815,13 +1199,9 @@ void StaticPoolSimulator::RecordSwimSample()
 
     for (
         std::size_t i = 0;
-        i < 4;
+        i < 5;
         ++i)
     {
-        /*
-            Give a very small floating-point tolerance.
-        */
-
         clipped[i] =
             std::abs(
                 rawTorque[i])
@@ -1835,87 +1215,10 @@ void StaticPoolSimulator::RecordSwimSample()
     }
 
 
-    // ========================================================================
-    // Relative tail-tip angle
-    // ========================================================================
-
-    const sf::Scalar tailTipRelative =
-        m1Position
-
-        + q[0]
-        + q[1]
-        + q[2]
-        + q[3];
-
-
-    // ========================================================================
-    // CSV row
-    // ========================================================================
-
-    swimCsv_
+    decayCsv_
         << elapsedTime_
         << ","
 
-        << bodyPosition.x()
-        << ","
-        << bodyPosition.y()
-        << ","
-        << bodyPosition.z()
-        << ","
-
-        << dx
-        << ","
-        << dy
-        << ","
-        << dz
-        << ","
-
-        << bodyVelocity.x()
-        << ","
-        << bodyVelocity.y()
-        << ","
-        << bodyVelocity.z()
-        << ","
-
-        << bodyAngularVelocity.x()
-        << ","
-        << bodyAngularVelocity.y()
-        << ","
-        << bodyAngularVelocity.z()
-        << ","
-
-        << roll
-        << ","
-        << pitch
-        << ","
-        << yaw
-        << ","
-
-        << roll
-               * radToDeg
-        << ","
-        << pitch
-               * radToDeg
-        << ","
-        << yaw
-               * radToDeg
-        << ","
-
-        << lastTailCommandRad_
-        << ","
-        << lastTailCommandRad_
-               * radToDeg
-        << ","
-
-        << m1Position
-        << ","
-        << m1Position
-               * radToDeg
-        << ","
-
-        << m1Velocity
-        << ","
-
         << q[0]
         << ","
         << q[1]
@@ -1924,18 +1227,23 @@ void StaticPoolSimulator::RecordSwimSample()
         << ","
         << q[3]
         << ","
+        << q[4]
+        << ","
 
-        << q[0]
-               * radToDeg
+        << q[0] * radToDeg
         << ","
-        << q[1]
-               * radToDeg
+        << q[1] * radToDeg
         << ","
-        << q[2]
-               * radToDeg
+        << q[2] * radToDeg
         << ","
-        << q[3]
-               * radToDeg
+        << q[3] * radToDeg
+        << ","
+        << q[4] * radToDeg
+        << ","
+
+        << tipAngle
+        << ","
+        << tipAngle * radToDeg
         << ","
 
         << qDot[0]
@@ -1946,6 +1254,8 @@ void StaticPoolSimulator::RecordSwimSample()
         << ","
         << qDot[3]
         << ","
+        << qDot[4]
+        << ","
 
         << rawTorque[0]
         << ","
@@ -1954,6 +1264,8 @@ void StaticPoolSimulator::RecordSwimSample()
         << rawTorque[2]
         << ","
         << rawTorque[3]
+        << ","
+        << rawTorque[4]
         << ","
 
         << appliedTorque[0]
@@ -1964,6 +1276,8 @@ void StaticPoolSimulator::RecordSwimSample()
         << ","
         << appliedTorque[3]
         << ","
+        << appliedTorque[4]
+        << ","
 
         << clipped[0]
         << ","
@@ -1973,17 +1287,7 @@ void StaticPoolSimulator::RecordSwimSample()
         << ","
         << clipped[3]
         << ","
-
-        << tailTipRelative
-        << ","
-        << tailTipRelative
-               * radToDeg
-        << ","
-
-        << (
-               motorSafetyTripped_
-                   ? 1
-                   : 0)
+        << clipped[4]
 
         << "\n";
 
@@ -1992,17 +1296,18 @@ void StaticPoolSimulator::RecordSwimSample()
 
 
     /*
-        Flush approximately every 0.5 s:
+        500 Hz.
 
-            200 Hz / 100 samples
+        Flush every 250 samples:
+            approximately every 0.5 s.
     */
 
     if (
         csvSampleCount_
-            % 100
+            % 250
         == 0)
     {
-        swimCsv_
+        decayCsv_
             .flush();
     }
 }
@@ -2015,11 +1320,7 @@ void StaticPoolSimulator::RecordSwimSample()
 void StaticPoolSimulator::PrintTelemetry()
 {
     if (
-        !initialBodyStateCaptured_
-        ||
-        fishBody_ == nullptr
-        ||
-        tailMotor_ == nullptr)
+        fishDynamics_ == nullptr)
     {
         return;
     }
@@ -2034,77 +1335,31 @@ void StaticPoolSimulator::PrintTelemetry()
         / pi;
 
 
-    const sf::Transform bodyTransform =
-        fishBody_
-            ->getOTransform();
-
-
-    const sf::Vector3 bodyPosition =
-        bodyTransform
-            .getOrigin();
-
-
-    const sf::Vector3 bodyVelocity =
-        fishBody_
-            ->getLinearVelocity();
-
-
-    const sf::Scalar dx =
-        bodyPosition.x()
-        - initialBodyX_;
-
-
-    const sf::Scalar dy =
-        bodyPosition.y()
-        - initialBodyY_;
-
-
-    const sf::Scalar dz =
-        bodyPosition.z()
-        - initialBodyZ_;
-
-
-    sf::Scalar yaw =
-        0.0;
-
-
-    sf::Scalar pitch =
-        0.0;
-
-
-    sf::Scalar roll =
-        0.0;
-
-
-    bodyTransform
-        .getBasis()
-        .getEulerYPR(
-            yaw,
-            pitch,
-            roll);
-
-
-    std::array<sf::Scalar, 4>
+    std::array<sf::Scalar, 5>
         q;
 
 
-    std::array<sf::Scalar, 4>
+    std::array<sf::Scalar, 5>
         qDot;
 
 
-    std::array<sf::Scalar, 4>
+    std::array<sf::Scalar, 5>
         rawTorque;
 
 
-    std::array<sf::Scalar, 4>
+    std::array<sf::Scalar, 5>
         appliedTorque;
 
 
-    ReadPassiveTailState(
+    ReadTailState(
         q,
         qDot,
         rawTorque,
         appliedTorque);
+
+
+    sf::Scalar tipAngle =
+        0.0;
 
 
     int clippedCount =
@@ -2113,9 +1368,13 @@ void StaticPoolSimulator::PrintTelemetry()
 
     for (
         std::size_t i = 0;
-        i < 4;
+        i < 5;
         ++i)
     {
+        tipAngle +=
+            q[i];
+
+
         if (
             std::abs(
                 rawTorque[i])
@@ -2130,98 +1389,65 @@ void StaticPoolSimulator::PrintTelemetry()
     }
 
 
-    const sf::Scalar tailTipRelative =
-        tailMotor_
-            ->getPosition()
-
-        + q[0]
-        + q[1]
-        + q[2]
-        + q[3];
-
-
     std::cout
         << std::fixed
         << std::setprecision(
-            3)
+            4)
 
-        << "[Stage5A] "
+        << "[StageR1] "
 
         << "t="
         << elapsedTime_
 
-        << " | dXYZ=("
-        << dx
-        << ","
-        << dy
-        << ","
-        << dz
-        << ")m"
-
-        << " | vXYZ=("
-        << bodyVelocity.x()
-        << ","
-        << bodyVelocity.y()
-        << ","
-        << bodyVelocity.z()
-        << ")m/s"
-
-        << " | RPY=("
-        << roll
-               * radToDeg
-        << ","
-        << pitch
-               * radToDeg
-        << ","
-        << yaw
-               * radToDeg
-        << ")deg"
-
-        << " | M1cmd="
-        << lastTailCommandRad_
-               * radToDeg
-        << "deg"
-
-        << " M1q="
-        << tailMotor_
-               ->getPosition()
-               * radToDeg
-        << "deg"
-
         << " | J=("
-        << q[0]
-               * radToDeg
+
+        << q[0] * radToDeg
         << ","
-        << q[1]
-               * radToDeg
+
+        << q[1] * radToDeg
         << ","
-        << q[2]
-               * radToDeg
+
+        << q[2] * radToDeg
         << ","
-        << q[3]
-               * radToDeg
+
+        << q[3] * radToDeg
+        << ","
+
+        << q[4] * radToDeg
+
         << ")deg"
 
         << " | tip="
-        << tailTipRelative
-               * radToDeg
+        << tipAngle * radToDeg
         << "deg"
+
+        << " | qDot=("
+
+        << qDot[0]
+        << ","
+
+        << qDot[1]
+        << ","
+
+        << qDot[2]
+        << ","
+
+        << qDot[3]
+        << ","
+
+        << qDot[4]
+
+        << ")rad/s"
 
         << " | clips="
         << clippedCount
-
-        << " | safety="
-        << (
-               motorSafetyTripped_
-                   ? "TRIPPED"
-                   : "OK")
 
         << std::endl;
 }
 
 
 // ============================================================================
-// Completed simulation step
+// SimulationStepCompleted
 // ============================================================================
 
 void StaticPoolSimulator::SimulationStepCompleted(
@@ -2232,126 +1458,32 @@ void StaticPoolSimulator::SimulationStepCompleted(
 
 
     // ========================================================================
-    // FIRST COMPLETED PHYSICS STEP
+    // IMPORTANT:
     //
-    // Capture our free-swim reference here.
+    // Absolutely no DriveJoint() here.
     //
-    // This is the major fix for the previous segmentation fault.
-    //
-    // BuildScenario() no longer reads dynamic body or motor solver state.
+    // Passive torques are already applied by
+    // PassiveFiveJointTailActuator::Update().
+    // ========================================================================
+
+
+    // ========================================================================
+    // CSV @ 500 Hz
     // ========================================================================
 
     if (
-        !initialBodyStateCaptured_)
-    {
-        if (
-            fishBody_ == nullptr)
-        {
-            return;
-        }
+        lastCsvTime_
+            < 0.0
 
+        ||
 
-        const sf::Transform bodyTransform =
-            fishBody_
-                ->getOTransform();
-
-
-        const sf::Vector3 bodyPosition =
-            bodyTransform
-                .getOrigin();
-
-
-        initialBodyX_ =
-            bodyPosition.x();
-
-
-        initialBodyY_ =
-            bodyPosition.y();
-
-
-        initialBodyZ_ =
-            bodyPosition.z();
-
-
-        initialBodyStateCaptured_ =
-            true;
-
-
-        lastCsvTime_ =
-            -1.0;
-
-
-        lastConsoleTime_ =
-            -1.0;
-
-
-        std::cout
-            << "\n"
-            << "Stage-5A free-swim reference captured:\n"
-            << "  t = "
-            << elapsedTime_
-            << " s\n"
-            << "  x = "
-            << initialBodyX_
-            << " m\n"
-            << "  y = "
-            << initialBodyY_
-            << " m\n"
-            << "  z = "
-            << initialBodyZ_
-            << " m\n"
-            << std::endl;
-    }
-
-
-    // ========================================================================
-    // Update persistent M1 desired position.
-    //
-    // In neutral mode this remains exactly zero.
-    //
-    // In straight mode:
-    //
-    //     0~1 s:
-    //         0 deg
-    //
-    //     1~2 s:
-    //         amplitude ramp
-    //
-    //     >2 s:
-    //         +/-5 deg @ 0.4 Hz
-    // ========================================================================
-
-    UpdateTailDriveCommand();
-
-
-    // ========================================================================
-    // Active-test safety
-    // ========================================================================
-
-    CheckSafety();
-
-
-    // ========================================================================
-    // CSV @ 200 Hz
-    // ========================================================================
-
-    if (
-        initialBodyStateCaptured_
-        &&
         (
-            lastCsvTime_
-                < 0.0
-
-            ||
-
-            (
-                elapsedTime_
-                - lastCsvTime_
-            )
-                >= csvPeriod_
-        ))
+            elapsedTime_
+            - lastCsvTime_
+        )
+            >= csvPeriod_)
     {
-        RecordSwimSample();
+        RecordDecaySample();
 
 
         lastCsvTime_ =
@@ -2360,24 +1492,20 @@ void StaticPoolSimulator::SimulationStepCompleted(
 
 
     // ========================================================================
-    // Console @ 10 Hz
+    // Console @ 20 Hz
     // ========================================================================
 
     if (
-        initialBodyStateCaptured_
-        &&
+        lastConsoleTime_
+            < 0.0
+
+        ||
+
         (
-            lastConsoleTime_
-                < 0.0
-
-            ||
-
-            (
-                elapsedTime_
-                - lastConsoleTime_
-            )
-                >= consolePeriod_
-        ))
+            elapsedTime_
+            - lastConsoleTime_
+        )
+            >= consolePeriod_)
     {
         PrintTelemetry();
 
