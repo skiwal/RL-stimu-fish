@@ -1,258 +1,222 @@
 #include "inc/tendon_tail_actuator.h"
 
+#include <Stonefish/actuators/Servo.h>
+#include <Stonefish/entities/SolidEntity.h>
+
 #include <algorithm>
 #include <cmath>
-
 
 namespace
 {
 
-constexpr sf::Scalar kPi =
-    3.1415926535897932384626433832795;
+    constexpr sf::Scalar kPi =
+        3.1415926535897932384626433832795;
 
+    constexpr sf::Scalar kTinyLength =
+        1.0e-9;
 
-/*
-    ================================================================
-    Geometry used in Stage R2-A
-    ================================================================
+    // ================================================================
+    // Tendon guide geometry
+    //
+    // These points are expressed in each Tail link BODY-ORIGIN frame.
+    //
+    // Each Tail link origin is located at the corresponding revolute
+    // joint, therefore:
+    //
+    //     local X = negative = toward tail
+    //
+    // ================================================================
 
-    IMPORTANT:
+    constexpr std::array<sf::Scalar, 5>
+        kGuideTailwardDistance =
+            {
+                0.0190,
+                0.0195,
+                0.0205,
+                0.0190,
+                0.0150};
 
-    These coordinates are NOT arbitrary visual guesses.
+    constexpr std::array<sf::Scalar, 5>
+        kGuideLateralOffset =
+            {
+                0.045,
+                0.035,
+                0.025,
+                0.015,
+                0.005};
 
-    Tail joint positions come from the CURRENT RL-stimu-fish SCN.
+    // 0 = nominal side
+    // 1 = crossed to opposite side
 
-    Motor/crank/tendon guide parameters come from the source fishsim
-    configuration already preserved in bionic_fish_v1_config.yaml.
+    constexpr std::array<int, 5>
+        kRouting =
+            {
+                0,
+                0,
+                0,
+                1,
+                1};
 
-    Coordinate convention here is the current robot BODY frame:
+    // ================================================================
+    // Virtual crank / tendon anchors.
+    //
+    // The MotorShaft rotates physically in Stonefish around +Y.
+    //
+    // The XZ radial vectors of these two attachment points are opposite,
+    // therefore they are 180 degrees apart around the shaft.
+    //
+    // Note:
+    //
+    //     physical crank arm length reference = 39.5 mm
+    //
+    // The actual tendon attachment site in the reference geometry is
+    // inset by 5 mm:
+    //
+    //     39.5 - 5.0 = 34.5 mm
+    //
+    // ================================================================
 
-        +X = head / forward
-        -X = tail
-        +Z = down
+    const sf::Vector3
+        kLeftMotorAnchorLocal(
+            0.0,
+            -0.055,
+            -0.0345);
 
-    Tail joints rotate around +Z.
-
-    Reference fishsim motor rotates around +Y.
-*/
-
-
-// ------------------------------------------------------------
-// Current RL-stimu-fish TailJoint0 position in Body.
-// ------------------------------------------------------------
-
-constexpr sf::Scalar kJoint0X =
-    -0.1810;
-
-
-// ------------------------------------------------------------
-// Current SCN distances:
-// J0 -> J1
-// J1 -> J2
-// J2 -> J3
-// J3 -> J4
-//
-// Tail direction is -X.
-// ------------------------------------------------------------
-
-constexpr std::array<sf::Scalar, 4>
-    kJointSpacing =
-    {
-        0.0295,
-        0.0310,
-        0.0305,
-        0.0250
-    };
-
-
-// ------------------------------------------------------------
-// Tendon-guide longitudinal position from each joint.
-//
-// Derived from the original fishsim support geometry.
-//
-// Tail0:
-//     body-tail0 / 2 + tailSegmentLength - 0.003
-//
-// etc.
-//
-// In our coordinates these extend along -X.
-// ------------------------------------------------------------
-
-constexpr std::array<sf::Scalar, 5>
-    kGuideTailwardDistance =
-    {
-        0.0190,
-        0.0195,
-        0.0205,
-        0.0190,
-        0.0150
-    };
-
-
-// ------------------------------------------------------------
-// Tendon lateral offsets from source fishsim.
-// ------------------------------------------------------------
-
-constexpr std::array<sf::Scalar, 5>
-    kGuideLateralOffset =
-    {
-        0.045,
-        0.035,
-        0.025,
-        0.015,
-        0.005
-    };
-
-
-// ------------------------------------------------------------
-// 0 = stay on nominal side
-// 1 = cross to opposite side
-// ------------------------------------------------------------
-
-constexpr std::array<int, 5>
-    kRouting =
-    {
-        0,
-        0,
-        0,
-        1,
-        1
-    };
-
-
-// ------------------------------------------------------------
-// Motor location.
-//
-// fishsim:
-//     MotorJoint X = 0.1655
-//     Tail Joint0 X = 0.2850
-//
-// separation:
-//     0.1195 m
-//
-// Current robot:
-//     TailJoint0 X = -0.1810
-//
-// The motor is 0.1195 m toward the head (+X):
-//
-//     -0.1810 + 0.1195 = -0.0615
-//
-// This is therefore source-derived, not guessed.
-// ------------------------------------------------------------
-
-constexpr sf::Scalar kMotorPivotX =
-    -0.0615;
-
-
-// ------------------------------------------------------------
-// Source-derived crank/tendon anchors.
-//
-// Left:
-//     (0, -0.055, -0.0345)
-//
-// Right:
-//     (0, +0.055, +0.0345)
-//
-// They rotate with the motor around +Y.
-// ------------------------------------------------------------
-
-constexpr TendonTailActuator::Vec3
-    kLeftMotorAnchorLocal =
-    {
-        0.0,
-        -0.055,
-        -0.0345
-    };
-
-
-constexpr TendonTailActuator::Vec3
-    kRightMotorAnchorLocal =
-    {
-        0.0,
-        0.055,
-        0.0345
-    };
+    const sf::Vector3
+        kRightMotorAnchorLocal(
+            0.0,
+            0.055,
+            0.0345);
 
 } // namespace
 
-
 TendonTailActuator::TendonTailActuator(
-    const std::string& name,
-    sf::FeatherstoneEntity* dynamics,
-    const std::array<unsigned int, 5>& jointIndices,
-    const TendonTailParameters& parameters)
-    : sf::Actuator(name),
-      dynamics_(dynamics),
-      jointIndices_(jointIndices),
-      parameters_(parameters)
+    const std::string &name,
+    sf::FeatherstoneEntity *dynamics,
+    sf::Servo *motorServo,
+    unsigned int motorShaftLinkIndex,
+    const std::array<unsigned int, 5> &tailLinkIndices,
+    const std::array<unsigned int, 5> &tailJointIndices,
+    const TendonTailParameters &parameters)
+    : sf::Actuator(
+          name),
+      dynamics_(
+          dynamics),
+      motorServo_(
+          motorServo),
+      motorShaftLinkIndex_(
+          motorShaftLinkIndex),
+      tailLinkIndices_(
+          tailLinkIndices),
+      tailJointIndices_(
+          tailJointIndices),
+      parameters_(
+          parameters)
 {
-    /*
-        MuJoCo spatial tendon default springlength = -1 means
-        reference configuration length.
+    if (
+        dynamics_ == nullptr ||
+        motorServo_ == nullptr)
+    {
+        safetyTripped_ =
+            true;
 
-        Our reference configuration is:
+        snapshot_.safetyTripped =
+            true;
 
-            alpha = 0
-            q0...q4 = 0
+        return;
+    }
 
-        So use exactly that configuration as the R2-A rest length.
-    */
+    // ------------------------------------------------------------
+    // Determine cable free length from the actual neutral geometry.
+    //
+    // For optional pretension:
+    //
+    //     T0 = k * (L_initial - L_free)
+    //
+    // therefore:
+    //
+    //     L_free = L_initial - T0/k
+    //
+    // ------------------------------------------------------------
 
-    const std::array<sf::Scalar, 5>
-        qZero =
+    for (
+        std::size_t side = 0;
+        side < 2;
+        ++side)
+    {
+        const bool
+            left =
+                side == 0;
+
+        const auto
+            path =
+                BuildTendonPath(
+                    left);
+
+        const sf::Scalar
+            initialLength =
+                ComputePathLength(
+                    path);
+
+        sf::Scalar
+            freeLength =
+                initialLength;
+
+        if (
+            parameters_.tendonStiffnessNPerM >
+            0.0)
         {
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0
-        };
+            freeLength -=
+                parameters_.initialPretensionN /
+                parameters_.tendonStiffnessNPerM;
+        }
 
+        freeLength =
+            std::max(
+                freeLength,
+                kTinyLength);
 
-    restLengthM_[0] =
-        ComputeTendonLength(
-            0.0,
-            qZero,
-            true);
+        freeLengthM_[side] =
+            freeLength;
 
+        previousLengthM_[side] =
+            initialLength;
 
-    restLengthM_[1] =
-        ComputeTendonLength(
-            0.0,
-            qZero,
-            false);
+        snapshot_.tendonLengthM[side] =
+            initialLength;
 
+        snapshot_.tendonFreeLengthM[side] =
+            freeLength;
 
-    snapshot_.tendonRestLengthM =
-        restLengthM_;
+        snapshot_.tendonExtensionM[side] =
+            initialLength -
+            freeLength;
+
+        snapshot_.tendonStrain[side] =
+            snapshot_.tendonExtensionM[side] /
+            freeLength;
+    }
+
+    previousLengthValid_ =
+        true;
 }
-
 
 sf::ActuatorType
 TendonTailActuator::getType() const
 {
-    /*
-        Stonefish has no tendon actuator enum.
-
-        MOTOR is only the generic actuator category.
-    */
-
-    return
-        sf::ActuatorType::MOTOR;
+    // Stonefish has no native tendon actuator type.
+    return sf::ActuatorType::MOTOR;
 }
 
-
-bool
-TendonTailActuator::ReadJointState(
-    std::array<sf::Scalar, 5>& q,
-    std::array<sf::Scalar, 5>& qDot) const
+bool TendonTailActuator::ReadJointState(
+    std::array<sf::Scalar, 5> &q,
+    std::array<sf::Scalar, 5> &qDot) const
 {
     if (
         dynamics_ == nullptr)
     {
         return false;
     }
-
 
     for (
         std::size_t i = 0;
@@ -261,37 +225,30 @@ TendonTailActuator::ReadJointState(
     {
         btMultibodyLink::eFeatherstoneJointType
             positionType =
-            btMultibodyLink::eInvalid;
-
+                btMultibodyLink::eInvalid;
 
         btMultibodyLink::eFeatherstoneJointType
             velocityType =
-            btMultibodyLink::eInvalid;
-
+                btMultibodyLink::eInvalid;
 
         dynamics_->getJointPosition(
-            jointIndices_[i],
+            tailJointIndices_[i],
             q[i],
             positionType);
 
-
         dynamics_->getJointVelocity(
-            jointIndices_[i],
+            tailJointIndices_[i],
             qDot[i],
             velocityType);
 
-
         if (
-            positionType
-                != btMultibodyLink::eRevolute
-            ||
-            velocityType
-                != btMultibodyLink::eRevolute
-            ||
+            positionType !=
+                btMultibodyLink::eRevolute ||
+            velocityType !=
+                btMultibodyLink::eRevolute ||
             !std::isfinite(
                 static_cast<double>(
-                    q[i]))
-            ||
+                    q[i])) ||
             !std::isfinite(
                 static_cast<double>(
                     qDot[i])))
@@ -300,103 +257,391 @@ TendonTailActuator::ReadJointState(
         }
     }
 
-
     return true;
 }
 
+sf::Vector3
+TendonTailActuator::LocalPointToWorld(
+    unsigned int linkIndex,
+    const sf::Vector3 &localPoint) const
+{
+    if (
+        dynamics_ == nullptr ||
+        linkIndex >=
+            dynamics_->getNumOfLinks())
+    {
+        return sf::Vector3(
+            0.0,
+            0.0,
+            0.0);
+    }
 
-void
-TendonTailActuator::Update(
+    const sf::FeatherstoneLink
+        link =
+            dynamics_->getLink(
+                linkIndex);
+
+    if (
+        link.solid == nullptr)
+    {
+        return sf::Vector3(
+            0.0,
+            0.0,
+            0.0);
+    }
+
+    // IMPORTANT:
+    //
+    // Guide coordinates are defined in BODY ORIGIN coordinates,
+    // not in CG coordinates.
+    //
+    // Therefore use getOTransform(), not getLinkTransform().
+
+    return link.solid->getOTransform() *
+           localPoint;
+}
+
+std::array<TendonTailActuator::PathPoint, 6>
+TendonTailActuator::BuildTendonPath(
+    bool leftTendon) const
+{
+    std::array<PathPoint, 6>
+        path;
+
+    // ------------------------------------------------------------
+    // P0 = crank anchor on real MotorShaft
+    // ------------------------------------------------------------
+
+    path[0].linkIndex =
+        motorShaftLinkIndex_;
+
+    path[0].world =
+        LocalPointToWorld(
+            motorShaftLinkIndex_,
+            leftTendon
+                ? kLeftMotorAnchorLocal
+                : kRightMotorAnchorLocal);
+
+    // ------------------------------------------------------------
+    // P1..P5 = Tail0..Tail4 guides / final anchor
+    // ------------------------------------------------------------
+
+    for (
+        std::size_t i = 0;
+        i < 5;
+        ++i)
+    {
+        sf::Scalar
+            sideSign =
+                leftTendon
+                    ? -1.0
+                    : 1.0;
+
+        if (
+            kRouting[i] != 0)
+        {
+            sideSign =
+                -sideSign;
+        }
+
+        const sf::Vector3
+            localGuide(
+                -kGuideTailwardDistance[i],
+                sideSign *
+                    kGuideLateralOffset[i],
+                0.0);
+
+        path[i + 1].linkIndex =
+            tailLinkIndices_[i];
+
+        path[i + 1].world =
+            LocalPointToWorld(
+                tailLinkIndices_[i],
+                localGuide);
+    }
+
+    return path;
+}
+
+sf::Scalar
+TendonTailActuator::ComputePathLength(
+    const std::array<PathPoint, 6> &path)
+{
+    sf::Scalar
+        total =
+            0.0;
+
+    for (
+        std::size_t i = 0;
+        i + 1 < path.size();
+        ++i)
+    {
+        const sf::Vector3
+            delta =
+                path[i + 1].world -
+                path[i].world;
+
+        total +=
+            delta.length();
+    }
+
+    return total;
+}
+
+bool TendonTailActuator::IsFiniteVector(
+    const sf::Vector3 &value)
+{
+    return std::isfinite(
+               static_cast<double>(
+                   value.x())) &&
+           std::isfinite(
+               static_cast<double>(
+                   value.y())) &&
+           std::isfinite(
+               static_cast<double>(
+                   value.z()));
+}
+
+void TendonTailActuator::ApplyPointForce(
+    unsigned int linkIndex,
+    const sf::Vector3 &worldPoint,
+    const sf::Vector3 &worldForce)
+{
+    if (
+        dynamics_ == nullptr ||
+        linkIndex >=
+            dynamics_->getNumOfLinks() ||
+        !IsFiniteVector(
+            worldPoint) ||
+        !IsFiniteVector(
+            worldForce))
+    {
+        safetyTripped_ =
+            true;
+
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // Stonefish AddLinkForce() applies force at link CG.
+    //
+    // A force F physically acting at point P is equivalent to:
+    //
+    //     Force at CG:
+    //         F
+    //
+    //     Torque at CG:
+    //         (P - CG) x F
+    //
+    // ------------------------------------------------------------
+
+    const sf::Vector3
+        cgWorld =
+            dynamics_->getLinkTransform(
+                         linkIndex)
+                .getOrigin();
+
+    const sf::Vector3
+        leverArm =
+            worldPoint -
+            cgWorld;
+
+    const sf::Vector3
+        torqueWorld =
+            leverArm.cross(
+                worldForce);
+
+    dynamics_->AddLinkForce(
+        linkIndex,
+        worldForce);
+
+    dynamics_->AddLinkTorque(
+        linkIndex,
+        torqueWorld);
+}
+
+void TendonTailActuator::ApplyTendonForces(
+    const std::array<PathPoint, 6> &path,
+    sf::Scalar tension)
+{
+    if (
+        tension <= 0.0)
+    {
+        return;
+    }
+
+    std::array<sf::Vector3, 6>
+        nodeForces;
+
+    for (
+        auto &force : nodeForces)
+    {
+        force =
+            sf::Vector3(
+                0.0,
+                0.0,
+                0.0);
+    }
+
+    // ------------------------------------------------------------
+    // Each cable segment pulls both of its endpoints toward the
+    // opposite endpoint.
+    //
+    // For segment:
+    //
+    //     Pi -------- Pj
+    //
+    // force on Pi:
+    //
+    //     +T * unit(Pj-Pi)
+    //
+    // force on Pj:
+    //
+    //     -T * unit(Pj-Pi)
+    //
+    // Intermediate guide forces therefore emerge automatically by
+    // summing the two adjacent segment forces.
+    // ------------------------------------------------------------
+
+    for (
+        std::size_t i = 0;
+        i + 1 < path.size();
+        ++i)
+    {
+        const sf::Vector3
+            segment =
+                path[i + 1].world -
+                path[i].world;
+
+        const sf::Scalar
+            segmentLength =
+                segment.length();
+
+        if (
+            segmentLength <=
+            kTinyLength)
+        {
+            safetyTripped_ =
+                true;
+
+            continue;
+        }
+
+        const sf::Vector3
+            direction =
+                segment /
+                segmentLength;
+
+        const sf::Vector3
+            segmentForce =
+                direction *
+                tension;
+
+        nodeForces[i] +=
+            segmentForce;
+
+        nodeForces[i + 1] -=
+            segmentForce;
+    }
+
+    for (
+        std::size_t i = 0;
+        i < path.size();
+        ++i)
+    {
+        ApplyPointForce(
+            path[i].linkIndex,
+            path[i].world,
+            nodeForces[i]);
+    }
+}
+
+void TendonTailActuator::Update(
     sf::Scalar timeStep)
 {
     sf::Actuator::Update(
         timeStep);
 
-
     if (
-        dynamics_ == nullptr
-        ||
+        dynamics_ == nullptr ||
+        motorServo_ == nullptr ||
         timeStep <= 0.0)
     {
+        safetyTripped_ =
+            true;
+
+        snapshot_.safetyTripped =
+            true;
+
         return;
     }
-
 
     elapsedTimeS_ +=
         timeStep;
 
+    snapshot_.timeS =
+        elapsedTimeS_;
+
+    // ============================================================
+    // 1. Read tail joint state
+    // ============================================================
 
     std::array<sf::Scalar, 5>
-        q {};
-
+        q{};
 
     std::array<sf::Scalar, 5>
-        qDot {};
-
+        qDot{};
 
     if (
         !ReadJointState(
             q,
             qDot))
     {
-        snapshot_.safetyTripped =
+        safetyTripped_ =
             true;
-
-        motorVelocityRadS_ =
-            0.0;
-
-        return;
     }
 
-
-    // ============================================================
-    // Joint safety check
-    // ============================================================
-
     for (
-        sf::Scalar value
-        : q)
+        std::size_t i = 0;
+        i < 5;
+        ++i)
     {
+        snapshot_.jointPositionRad[i] =
+            q[i];
+
+        snapshot_.jointVelocityRadS[i] =
+            qDot[i];
+
         if (
             std::abs(
-                value)
-            >
+                q[i]) >
             parameters_.jointSafetyLimitRad)
         {
-            snapshot_.safetyTripped =
+            safetyTripped_ =
                 true;
         }
     }
 
-
     // ============================================================
-    // Stage R2-A ideal motor shaft.
-    //
-    // This is deliberately a kinematic velocity source.
-    //
-    // R2-B will replace this with a real MotorRotor + MotorJoint.
+    // 2. M1 velocity command
     // ============================================================
 
-    sf::Scalar
-        commandedOmega =
-        2.0
-        * kPi
-        * parameters_.motorTargetFrequencyHz;
-
+    const sf::Scalar
+        targetOmega =
+            2.0 *
+            kPi *
+            parameters_.motorTargetFrequencyHz;
 
     sf::Scalar
         ramp =
-        0.0;
-
+            0.0;
 
     if (
-        elapsedTimeS_
-        >=
+        elapsedTimeS_ >=
         parameters_.motorStartTimeS)
     {
         if (
-            parameters_.motorRampTimeS
-            <=
+            parameters_.motorRampTimeS <=
             0.0)
         {
             ramp =
@@ -405,14 +650,9 @@ TendonTailActuator::Update(
         else
         {
             ramp =
-                (
-                    elapsedTimeS_
-                    -
-                    parameters_.motorStartTimeS
-                )
-                /
+                (elapsedTimeS_ -
+                 parameters_.motorStartTimeS) /
                 parameters_.motorRampTimeS;
-
 
             ramp =
                 std::max(
@@ -423,169 +663,293 @@ TendonTailActuator::Update(
         }
     }
 
+    sf::Scalar
+        motorCommand =
+            ramp *
+            targetOmega;
 
     if (
-        snapshot_.safetyTripped)
+        safetyTripped_)
     {
-        motorVelocityRadS_ =
-            0.0;
+        motorServo_->setDesiredVelocity(0.0);
+        motorServo_->setMaxTorque(0.0);
+
+        snapshot_.motorCommandVelocityRadS = 0.0;
+        snapshot_.tendonTensionN[0] = 0.0;
+        snapshot_.tendonTensionN[1] = 0.0;
+        snapshot_.safetyTripped = true;
+
+        return;
     }
-    else
-    {
-        motorVelocityRadS_ =
-            ramp
-            * commandedOmega;
-    }
 
+    motorServo_->setDesiredVelocity(
+        motorCommand);
 
-    motorAngleRad_ +=
-        motorVelocityRadS_
-        * timeStep;
+    snapshot_.motorCommandVelocityRadS =
+        motorCommand;
 
+    snapshot_.motorAngleRad =
+        motorServo_->getPosition();
+
+    snapshot_.motorVelocityRadS =
+        motorServo_->getVelocity();
+
+    snapshot_.motorEffortTorqueNm =
+        motorServo_->getEffort();
+
+    snapshot_.motorSaturated =
+        std::abs(
+            snapshot_.motorEffortTorqueNm) >=
+        0.98 *
+            parameters_.motorMaxTorqueNm;
 
     // ============================================================
-    // Tendon geometry and Jacobians
+    // 3. Actual spatial tendon geometry
     // ============================================================
-
-    std::array<sf::Scalar, 2>
-        length {};
-
-
-    std::array<sf::Scalar, 2>
-        lengthRate {};
-
-
-    std::array<sf::Scalar, 2>
-        tendonForce {};
-
 
     std::array<
-        std::array<sf::Scalar, 5>,
+        std::array<PathPoint, 6>,
         2>
-        jointJacobian {};
+        paths =
+            {
+                BuildTendonPath(
+                    true),
 
+                BuildTendonPath(
+                    false)};
 
     std::array<sf::Scalar, 2>
-        motorJacobian {};
+        currentLength{};
 
+    std::array<sf::Scalar, 2>
+        lengthRate{};
+
+    std::array<sf::Scalar, 2>
+        tension{};
 
     for (
         std::size_t side = 0;
         side < 2;
         ++side)
     {
-        const bool
-            left =
-            side == 0;
+        currentLength[side] =
+            ComputePathLength(
+                paths[side]);
 
-
-        length[side] =
-            ComputeTendonLength(
-                motorAngleRad_,
-                q,
-                left);
-
-
-        jointJacobian[side] =
-            ComputeJointLengthJacobian(
-                motorAngleRad_,
-                q,
-                left);
-
-
-        motorJacobian[side] =
-            ComputeMotorLengthDerivative(
-                motorAngleRad_,
-                q,
-                left);
-
-
-        lengthRate[side] =
-            motorJacobian[side]
-            * motorVelocityRadS_;
-
-
-        for (
-            std::size_t i = 0;
-            i < 5;
-            ++i)
+        if (
+            !std::isfinite(
+                static_cast<double>(
+                    currentLength[side])) ||
+            currentLength[side] <=
+                0.0)
         {
-            lengthRate[side] +=
-                jointJacobian[side][i]
-                * qDot[i];
+            safetyTripped_ =
+                true;
+
+            currentLength[side] =
+                previousLengthM_[side];
         }
 
+        if (
+            previousLengthValid_)
+        {
+            lengthRate[side] =
+                (currentLength[side] -
+                 previousLengthM_[side]) /
+                timeStep;
+        }
+        else
+        {
+            lengthRate[side] =
+                0.0;
+        }
 
         const sf::Scalar
-            stretch =
-            length[side]
-            -
-            restLengthM_[side];
+            extension =
+                currentLength[side] -
+                freeLengthM_[side];
 
+        sf::Scalar
+            strain =
+                0.0;
 
-        /*
-            MuJoCo-compatible linear tendon spring/damper:
+        if (
+            freeLengthM_[side] >
+            kTinyLength)
+        {
+            strain =
+                extension /
+                freeLengthM_[side];
+        }
 
-                F =
-                    -k * (L-L0)
-                    -c * Ldot
+        const bool
+            overstretch =
+                parameters_.maxDiagnosticStrain >
+                    0.0 &&
+                strain >
+                    parameters_.maxDiagnosticStrain;
 
-            This is a SIGNED scalar generalized tendon force.
+        snapshot_.tendonLengthM[side] =
+            currentLength[side];
 
-            Do not silently reinterpret this as a pull-only cable.
-            That hardware refinement comes later.
-        */
+        snapshot_.tendonFreeLengthM[side] =
+            freeLengthM_[side];
 
-        tendonForce[side] =
-            -parameters_.tendonStiffnessNPerM
-                * stretch
+        snapshot_.tendonExtensionM[side] =
+            extension;
 
-            -parameters_.tendonDampingNsPerM
-                * lengthRate[side];
+        snapshot_.tendonStrain[side] =
+            strain;
+
+        snapshot_.tendonLengthRateMS[side] =
+            lengthRate[side];
+
+        snapshot_.tendonOverstretch[side] =
+            overstretch;
+
+        if (
+            overstretch)
+        {
+            safetyTripped_ =
+                true;
+        }
+
+        // ========================================================
+        // Pull-only cable.
+        //
+        // A cable shorter than its free length is slack.
+        //
+        // It NEVER produces compression/pushing force.
+        // ========================================================
+
+        if (
+            extension >
+            0.0)
+        {
+            sf::Scalar
+                extensionForForce =
+                    extension;
+
+            // ----------------------------------------------------
+            // Numerical safety:
+            //
+            // If geometry has already crossed the diagnostic
+            // strain threshold, DO NOT alter the actual geometry.
+            //
+            // We only cap the extension used in the emergency
+            // force calculation, while simultaneously stopping M1.
+            //
+            // This prevents an unbounded k*x impulse from exploding
+            // the simulation.
+            // ----------------------------------------------------
+
+            if (
+                parameters_.maxDiagnosticStrain >
+                0.0)
+            {
+                const sf::Scalar
+                    maxExtensionForForce =
+                        parameters_.maxDiagnosticStrain *
+                        freeLengthM_[side];
+
+                extensionForForce =
+                    std::min(
+                        extensionForForce,
+                        maxExtensionForForce);
+            }
+
+            const sf::Scalar
+                rawTension =
+                    parameters_.tendonStiffnessNPerM *
+                        extensionForForce
+
+                    +
+
+                    parameters_.tendonDampingNsPerM *
+                        lengthRate[side];
+
+            tension[side] =
+                std::max(
+                    sf::Scalar(0.0),
+                    rawTension);
+        }
+        else
+        {
+            tension[side] =
+                0.0;
+        }
+
+        if (
+            !std::isfinite(
+                static_cast<double>(
+                    tension[side])))
+        {
+            tension[side] =
+                0.0;
+
+            safetyTripped_ =
+                true;
+        }
+
+        snapshot_.tendonTensionN[side] =
+            tension[side];
     }
 
+    previousLengthM_ =
+        currentLength;
+
+    previousLengthValid_ =
+        true;
 
     // ============================================================
-    // Generalized motor reaction torque
+    // 4. If a safety condition appeared during tendon calculation,
+    //    stop M1 immediately.
     // ============================================================
-
-    const sf::Scalar
-        tendonGeneralizedMotorTorque =
-            motorJacobian[0]
-                * tendonForce[0]
-
-            +
-            motorJacobian[1]
-                * tendonForce[1];
-
-
-    const sf::Scalar
-        motorRequiredTorque =
-            -tendonGeneralizedMotorTorque;
-
 
     if (
-        std::abs(
-            motorRequiredTorque)
-        >
-        parameters_.motorReactionTorqueLimitNm)
+        safetyTripped_)
     {
-        /*
-            Do not fake additional motor authority.
+        motorServo_->setDesiredVelocity(0.0);
+        motorServo_->setMaxTorque(0.0);
 
-            Freeze the ideal motor shaft and flag the test.
-        */
+        snapshot_.motorCommandVelocityRadS = 0.0;
+        snapshot_.tendonTensionN[0] = 0.0;
+        snapshot_.tendonTensionN[1] = 0.0;
+        snapshot_.safetyTripped = true;
 
-        snapshot_.safetyTripped =
-            true;
-
-        motorVelocityRadS_ =
-            0.0;
+        return;
     }
 
+    // ============================================================
+    // 5. Apply actual spatial tendon forces.
+    //
+    // LEFT and RIGHT cables each act on:
+    //
+    //     MotorShaft crank anchor
+    //     Tail0 guide
+    //     Tail1 guide
+    //     Tail2 guide
+    //     Tail3 guide
+    //     Tail4 final anchor
+    //
+    // No manual tendon joint torque is generated here.
+    // ============================================================
+
+    ApplyTendonForces(
+        paths[0],
+        tension[0]);
+
+    ApplyTendonForces(
+        paths[1],
+        tension[1]);
 
     // ============================================================
-    // Apply passive spine + tendon generalized torques
+    // 6. Passive flexible spine
+    //
+    // The ONLY directly applied J0~J4 torque is passive elasticity.
+    //
+    // Tendon loading reaches the joints through the rigid-body
+    // dynamics solved by Stonefish.
     // ============================================================
 
     for (
@@ -595,539 +959,28 @@ TendonTailActuator::Update(
     {
         const sf::Scalar
             passiveTorque =
-                -parameters_.passiveStiffnessNmRad
-                    * q[i]
+                -parameters_.passiveStiffnessNmRad *
+                    q[i]
 
-                -parameters_.passiveDampingNmsRad
-                    * qDot[i];
+                -
 
-
-        const sf::Scalar
-            tendonTorque =
-                jointJacobian[0][i]
-                    * tendonForce[0]
-
-                +
-                jointJacobian[1][i]
-                    * tendonForce[1];
-
-
-        const sf::Scalar
-            totalTorque =
-                passiveTorque
-                +
-                tendonTorque;
-
-
-        /*
-            This is an INTERNAL generalized joint torque.
-
-            No body-level propulsion force is applied.
-        */
+                parameters_.passiveDampingNmsRad *
+                    qDot[i];
 
         dynamics_->DriveJoint(
-            jointIndices_[i],
-            totalTorque);
-
+            tailJointIndices_[i],
+            passiveTorque);
 
         snapshot_.passiveTorqueNm[i] =
             passiveTorque;
-
-
-        snapshot_.tendonTorqueNm[i] =
-            tendonTorque;
-
-
-        snapshot_.totalTorqueNm[i] =
-            totalTorque;
     }
 
-
-    // ============================================================
-    // Telemetry snapshot
-    // ============================================================
-
-    snapshot_.timeS =
-        elapsedTimeS_;
-
-
-    snapshot_.motorAngleRad =
-        motorAngleRad_;
-
-
-    snapshot_.motorVelocityRadS =
-        motorVelocityRadS_;
-
-
-    snapshot_.motorRequiredTorqueNm =
-        motorRequiredTorque;
-
-
-    snapshot_.jointPositionRad =
-        q;
-
-
-    snapshot_.jointVelocityRadS =
-        qDot;
-
-
-    snapshot_.tendonLengthM =
-        length;
-
-
-    snapshot_.tendonLengthRateMS =
-        lengthRate;
-
-
-    snapshot_.tendonForceN =
-        tendonForce;
-
-
-    snapshot_.tendonRestLengthM =
-        restLengthM_;
-
-
-    for (
-        std::size_t side = 0;
-        side < 2;
-        ++side)
-    {
-        snapshot_.tendonStretchM[side] =
-            length[side]
-            -
-            restLengthM_[side];
-    }
+    snapshot_.safetyTripped =
+        safetyTripped_;
 }
-
 
 TendonTailActuator::Snapshot
 TendonTailActuator::GetSnapshot() const
 {
     return snapshot_;
-}
-
-
-// ============================================================================
-// Tendon length
-// ============================================================================
-
-sf::Scalar
-TendonTailActuator::ComputeTendonLength(
-    sf::Scalar motorAngle,
-    const std::array<sf::Scalar, 5>& q,
-    bool leftTendon) const
-{
-    const Vec3
-        motorAnchor =
-            ComputeMotorAnchor(
-                motorAngle,
-                leftTendon);
-
-
-    const std::array<Vec3, 5>
-        guides =
-            ComputeTendonGuidePoints(
-                q,
-                leftTendon);
-
-
-    sf::Scalar
-        length =
-            Norm(
-                Subtract(
-                    guides[0],
-                    motorAnchor));
-
-
-    for (
-        std::size_t i = 0;
-        i < 4;
-        ++i)
-    {
-        length +=
-            Norm(
-                Subtract(
-                    guides[i + 1],
-                    guides[i]));
-    }
-
-
-    return length;
-}
-
-
-// ============================================================================
-// dL / dq
-// ============================================================================
-
-std::array<sf::Scalar, 5>
-TendonTailActuator::ComputeJointLengthJacobian(
-    sf::Scalar motorAngle,
-    const std::array<sf::Scalar, 5>& q,
-    bool leftTendon) const
-{
-    std::array<sf::Scalar, 5>
-        jacobian {};
-
-
-    const sf::Scalar
-        epsilon =
-            parameters_.jacobianEpsilonRad;
-
-
-    for (
-        std::size_t i = 0;
-        i < 5;
-        ++i)
-    {
-        std::array<sf::Scalar, 5>
-            qPlus =
-                q;
-
-
-        std::array<sf::Scalar, 5>
-            qMinus =
-                q;
-
-
-        qPlus[i] +=
-            epsilon;
-
-
-        qMinus[i] -=
-            epsilon;
-
-
-        const sf::Scalar
-            lPlus =
-                ComputeTendonLength(
-                    motorAngle,
-                    qPlus,
-                    leftTendon);
-
-
-        const sf::Scalar
-            lMinus =
-                ComputeTendonLength(
-                    motorAngle,
-                    qMinus,
-                    leftTendon);
-
-
-        jacobian[i] =
-            (
-                lPlus
-                -
-                lMinus
-            )
-            /
-            (
-                2.0
-                * epsilon
-            );
-    }
-
-
-    return jacobian;
-}
-
-
-// ============================================================================
-// dL / dalpha
-// ============================================================================
-
-sf::Scalar
-TendonTailActuator::ComputeMotorLengthDerivative(
-    sf::Scalar motorAngle,
-    const std::array<sf::Scalar, 5>& q,
-    bool leftTendon) const
-{
-    const sf::Scalar
-        epsilon =
-            parameters_.jacobianEpsilonRad;
-
-
-    const sf::Scalar
-        lPlus =
-            ComputeTendonLength(
-                motorAngle + epsilon,
-                q,
-                leftTendon);
-
-
-    const sf::Scalar
-        lMinus =
-            ComputeTendonLength(
-                motorAngle - epsilon,
-                q,
-                leftTendon);
-
-
-    return
-        (
-            lPlus
-            -
-            lMinus
-        )
-        /
-        (
-            2.0
-            * epsilon
-        );
-}
-
-
-// ============================================================================
-// Motor anchor
-// ============================================================================
-
-TendonTailActuator::Vec3
-TendonTailActuator::ComputeMotorAnchor(
-    sf::Scalar motorAngle,
-    bool leftTendon) const
-{
-    const Vec3
-        local =
-            leftTendon
-                ? kLeftMotorAnchorLocal
-                : kRightMotorAnchorLocal;
-
-
-    const Vec3
-        rotated =
-            RotateY(
-                local,
-                motorAngle);
-
-
-    return
-        Add(
-            {
-                kMotorPivotX,
-                0.0,
-                0.0
-            },
-            rotated);
-}
-
-
-// ============================================================================
-// Tail tendon guide points
-// ============================================================================
-
-std::array<TendonTailActuator::Vec3, 5>
-TendonTailActuator::ComputeTendonGuidePoints(
-    const std::array<sf::Scalar, 5>& q,
-    bool leftTendon) const
-{
-    std::array<Vec3, 5>
-        jointPosition {};
-
-
-    std::array<sf::Scalar, 5>
-        absoluteAngle {};
-
-
-    jointPosition[0] =
-        {
-            kJoint0X,
-            0.0,
-            0.0
-        };
-
-
-    sf::Scalar
-        theta =
-            0.0;
-
-
-    for (
-        std::size_t i = 0;
-        i < 5;
-        ++i)
-    {
-        theta +=
-            q[i];
-
-
-        absoluteAngle[i] =
-            theta;
-
-
-        if (
-            i < 4)
-        {
-            jointPosition[i + 1] =
-                Add(
-                    jointPosition[i],
-                    RotateZ(
-                        {
-                            -kJointSpacing[i],
-                            0.0,
-                            0.0
-                        },
-                        theta));
-        }
-    }
-
-
-    std::array<Vec3, 5>
-        guide {};
-
-
-    for (
-        std::size_t i = 0;
-        i < 5;
-        ++i)
-    {
-        /*
-            fishsim convention:
-
-                left  = negative Y
-                right = positive Y
-        */
-
-        sf::Scalar
-            side =
-                leftTendon
-                    ? -1.0
-                    : 1.0;
-
-
-        if (
-            kRouting[i] != 0)
-        {
-            side =
-                -side;
-        }
-
-
-        const Vec3
-            localGuide =
-            {
-                -kGuideTailwardDistance[i],
-
-                side
-                    * kGuideLateralOffset[i],
-
-                0.0
-            };
-
-
-        guide[i] =
-            Add(
-                jointPosition[i],
-                RotateZ(
-                    localGuide,
-                    absoluteAngle[i]));
-    }
-
-
-    return guide;
-}
-
-
-// ============================================================================
-// Vector helpers
-// ============================================================================
-
-TendonTailActuator::Vec3
-TendonTailActuator::RotateZ(
-    const Vec3& v,
-    sf::Scalar angle)
-{
-    const sf::Scalar
-        c =
-            std::cos(
-                angle);
-
-
-    const sf::Scalar
-        s =
-            std::sin(
-                angle);
-
-
-    return
-    {
-        c * v.x
-            - s * v.y,
-
-        s * v.x
-            + c * v.y,
-
-        v.z
-    };
-}
-
-
-TendonTailActuator::Vec3
-TendonTailActuator::RotateY(
-    const Vec3& v,
-    sf::Scalar angle)
-{
-    const sf::Scalar
-        c =
-            std::cos(
-                angle);
-
-
-    const sf::Scalar
-        s =
-            std::sin(
-                angle);
-
-
-    return
-    {
-        c * v.x
-            + s * v.z,
-
-        v.y,
-
-        -s * v.x
-            + c * v.z
-    };
-}
-
-
-TendonTailActuator::Vec3
-TendonTailActuator::Add(
-    const Vec3& a,
-    const Vec3& b)
-{
-    return
-    {
-        a.x + b.x,
-        a.y + b.y,
-        a.z + b.z
-    };
-}
-
-
-TendonTailActuator::Vec3
-TendonTailActuator::Subtract(
-    const Vec3& a,
-    const Vec3& b)
-{
-    return
-    {
-        a.x - b.x,
-        a.y - b.y,
-        a.z - b.z
-    };
-}
-
-
-sf::Scalar
-TendonTailActuator::Norm(
-    const Vec3& v)
-{
-    return
-        std::sqrt(
-            v.x * v.x
-            +
-            v.y * v.y
-            +
-            v.z * v.z);
 }

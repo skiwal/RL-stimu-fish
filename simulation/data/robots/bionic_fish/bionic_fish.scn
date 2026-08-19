@@ -62,6 +62,41 @@
         </base_link>
 
 
+                <!-- ======================================================
+             M1 MOTOR SHAFT
+
+             Real Stonefish rigid link.
+
+             The crank arms themselves are NOT rigid-body links.
+             Their tendon attachment points are defined virtually
+             in tendon_tail_actuator.cpp.
+             ====================================================== -->
+
+        <link
+            name="MotorShaft"
+            type="box"
+            physics="surface">
+
+            <dimensions
+                xyz="0.015 0.120 0.015"/>
+
+            <origin
+                xyz="0.0 0.0 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+            <material
+                name="$(arg material_name)"/>
+
+            <look
+                name="BionicFishBodyLook"/>
+
+            <mass
+                value="0.050"/>
+
+        </link>
+
+
+
         <!-- ======================================================
              TAIL 0
              ====================================================== -->
@@ -494,10 +529,47 @@
         </link>
 
 
+
+                <!-- ======================================================
+             M1 MOTOR JOINT
+
+             Independent motor shaft.
+             Axis = +Y.
+
+             Motor pivot:
+                 TailJoint0 x = -0.1810
+                 reference M1->J0 separation = 0.1195
+
+                 -0.1810 + 0.1195 = -0.0615
+             ====================================================== -->
+
+        <joint
+            name="M1Joint"
+            type="revolute">
+
+            <parent
+                name="Body"/>
+
+            <child
+                name="MotorShaft"/>
+
+            <origin
+                xyz="-0.0615 0.0 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+            <axis
+                xyz="0.0 1.0 0.0"/>
+
+            <damping
+                value="0.0"/>
+
+        </joint>
+
+
         <!-- ======================================================
              TAIL JOINT 0
 
-             ACTIVE M1 JOINT
+             ACTIVE JOINT
              ====================================================== -->
 
         <joint
@@ -807,26 +879,45 @@
                  straight
 
              ====================================================== -->
-<!-- 
+
+                <!-- ======================================================
+             M1 — REAL STONEFISH MOTOR
+
+             Velocity controlled continuous motor.
+
+             First diagnostic:
+                 target = 0.05 Hz
+                        = 0.314159 rad/s
+
+             The actual setpoint is sent by
+             TendonTailActuator.
+
+             max_torque:
+                 6.9 Nm
+
+             max_velocity:
+                 72 rpm
+                 ~= 7.5398 rad/s
+             ====================================================== -->
+
         <actuator
-            name="TailMotor"
+            name="M1Servo"
             type="servo">
 
             <controller
-                position_gain="2.0"
-                velocity_gain="0.2"
-                max_torque="0.0"
-                max_velocity="0.35"/>
-
+                position_gain="0.0"
+                velocity_gain=".5"
+                max_torque="0.05"
+                max_velocity="0.5"/>
 
             <joint
-                name="TailJoint0"/>
-
+                name="M1Joint"/>
 
             <initial
                 position="0.0"/>
 
-        </actuator> -->
+        </actuator>
+
 
 
         <!-- ======================================================

@@ -7,42 +7,68 @@
 #include <string>
 
 
+namespace sf
+{
+class Servo;
+}
+
+
 struct TendonTailParameters
 {
-    // ------------------------------------------------------------
-    // Passive flexible spine
-    // ------------------------------------------------------------
+    // ============================================================
+    // Passive flexible tail
+    // ============================================================
 
     sf::Scalar passiveStiffnessNmRad = 0.65;
     sf::Scalar passiveDampingNmsRad = 0.0;
 
 
-    // ------------------------------------------------------------
-    // fishsim tendon parameters
+    // ============================================================
+    // Tendon model
     //
-    // Source model:
-    //     stiffness = 20000
-    //     damping   = 10
+    // First R2-B implementation:
     //
-    // For the spatial tendon these are treated as:
-    //     N/m
-    //     N*s/m
-    // ------------------------------------------------------------
+    //     extension = L - L_free
+    //
+    //     if extension <= 0:
+    //         tension = 0
+    //
+    //     if extension > 0:
+    //         tension = max(
+    //             0,
+    //             k * extension
+    //             +
+    //             c * length_rate)
+    //
+    // The cable can pull but cannot push.
+    // ============================================================
 
     sf::Scalar tendonStiffnessNPerM = 20000.0;
     sf::Scalar tendonDampingNsPerM = 10.0;
 
+    // Initial cable pre-tension.
+    //
+    // Keep zero for the first diagnostic.
+    // It can be changed later after the geometry is verified.
+    sf::Scalar initialPretensionN = 0.0;
 
-    // ------------------------------------------------------------
-    // Stage R2-A motor command
+
+    // ============================================================
+    // Diagnostic cable strain safety
     //
-    // Very slow first diagnostic:
+    // The project reference records approximately 3% extension.
     //
-    //     0.05 Hz = 1 revolution / 20 s
-    //
-    // The reference robot is driven substantially faster, but this
-    // first test is deliberately quasi-static.
-    // ------------------------------------------------------------
+    // We do NOT interpret this as a measured breaking strain.
+    // For R2-B it is only a "we have left the trusted region"
+    // diagnostic threshold.
+    // ============================================================
+
+    sf::Scalar maxDiagnosticStrain = 0.03;
+
+
+    // ============================================================
+    // M1 diagnostic command
+    // ============================================================
 
     sf::Scalar motorTargetFrequencyHz = 0.05;
 
@@ -50,37 +76,23 @@ struct TendonTailParameters
     sf::Scalar motorRampTimeS = 1.0;
 
 
-    // ------------------------------------------------------------
-    // Hardware safety reference.
+    // XW540-T140-R reference at 12 V.
     //
-    // XW540-T140-R 12 V stall torque:
-    //     6.9 Nm
-    //
-    // R2-A uses an ideal velocity source, but if the tendon geometry
-    // would require more than this reaction torque, the diagnostic
-    // trips and stops advancing the motor.
-    // ------------------------------------------------------------
+    // This is a momentary maximum/stall reference, not a continuous
+    // operating torque recommendation.
+    sf::Scalar motorMaxTorqueNm = 6.9;
 
-    sf::Scalar motorReactionTorqueLimitNm = 6.9;
+    // 72 rpm at 12 V ~= 7.5398 rad/s.
+    sf::Scalar motorMaxVelocityRadS =
+        7.5398223686155035;
 
 
-    // ------------------------------------------------------------
-    // Joint safety
-    //
-    // The XML mechanical limit is +/-80 deg.
-    // Stop the R2-A motor earlier if the model approaches extreme
-    // deformation.
-    // ------------------------------------------------------------
+    // ============================================================
+    // Tail safety
+    // ============================================================
 
     sf::Scalar jointSafetyLimitRad =
         1.0471975511965976; // 60 deg
-
-
-    // ------------------------------------------------------------
-    // Numerical derivative for tendon Jacobian.
-    // ------------------------------------------------------------
-
-    sf::Scalar jacobianEpsilonRad = 1.0e-6;
 };
 
 
@@ -93,40 +105,50 @@ public:
     {
         sf::Scalar timeS = 0.0;
 
+        sf::Scalar motorCommandVelocityRadS = 0.0;
         sf::Scalar motorAngleRad = 0.0;
         sf::Scalar motorVelocityRadS = 0.0;
+        sf::Scalar motorEffortTorqueNm = 0.0;
 
-        /*
-            Positive value means the ideal motor has to provide
-            positive torque to oppose the tendon reaction.
-        */
-        sf::Scalar motorRequiredTorqueNm = 0.0;
+        bool motorSaturated = false;
 
 
-        // [0] left
-        // [1] right
-        std::array<sf::Scalar, 2> tendonLengthM {};
-        std::array<sf::Scalar, 2> tendonRestLengthM {};
-        std::array<sf::Scalar, 2> tendonStretchM {};
-        std::array<sf::Scalar, 2> tendonLengthRateMS {};
+        // [0] = left
+        // [1] = right
 
-        /*
-            Signed scalar tendon spring/damper force.
+        std::array<sf::Scalar, 2>
+            tendonLengthM {};
 
-            This intentionally reproduces the mathematical behaviour
-            of the fishsim/MuJoCo tendon spring for R2-A.
+        std::array<sf::Scalar, 2>
+            tendonFreeLengthM {};
 
-            It is NOT yet a pull-only/slack fishing-line model.
-        */
-        std::array<sf::Scalar, 2> tendonForceN {};
+        std::array<sf::Scalar, 2>
+            tendonExtensionM {};
+
+        std::array<sf::Scalar, 2>
+            tendonStrain {};
+
+        std::array<sf::Scalar, 2>
+            tendonLengthRateMS {};
+
+        std::array<sf::Scalar, 2>
+            tendonTensionN {};
+
+        std::array<bool, 2>
+            tendonOverstretch {
+                false,
+                false
+            };
 
 
-        std::array<sf::Scalar, 5> jointPositionRad {};
-        std::array<sf::Scalar, 5> jointVelocityRadS {};
+        std::array<sf::Scalar, 5>
+            jointPositionRad {};
 
-        std::array<sf::Scalar, 5> passiveTorqueNm {};
-        std::array<sf::Scalar, 5> tendonTorqueNm {};
-        std::array<sf::Scalar, 5> totalTorqueNm {};
+        std::array<sf::Scalar, 5>
+            jointVelocityRadS {};
+
+        std::array<sf::Scalar, 5>
+            passiveTorqueNm {};
 
 
         bool safetyTripped = false;
@@ -136,7 +158,10 @@ public:
     TendonTailActuator(
         const std::string& name,
         sf::FeatherstoneEntity* dynamics,
-        const std::array<unsigned int, 5>& jointIndices,
+        sf::Servo* motorServo,
+        unsigned int motorShaftLinkIndex,
+        const std::array<unsigned int, 5>& tailLinkIndices,
+        const std::array<unsigned int, 5>& tailJointIndices,
         const TendonTailParameters& parameters);
 
 
@@ -153,16 +178,18 @@ public:
     GetSnapshot() const;
 
 
-public:
+private:
 
-    struct Vec3
+    struct PathPoint
     {
-        sf::Scalar x = 0.0;
-        sf::Scalar y = 0.0;
-        sf::Scalar z = 0.0;
+        unsigned int linkIndex = 0;
+        sf::Vector3 world =
+            sf::Vector3(
+                0.0,
+                0.0,
+                0.0);
     };
 
-private:
 
     bool
     ReadJointState(
@@ -170,76 +197,63 @@ private:
         std::array<sf::Scalar, 5>& qDot) const;
 
 
-    sf::Scalar
-    ComputeTendonLength(
-        sf::Scalar motorAngle,
-        const std::array<sf::Scalar, 5>& q,
+    sf::Vector3
+    LocalPointToWorld(
+        unsigned int linkIndex,
+        const sf::Vector3& localPoint) const;
+
+
+    std::array<PathPoint, 6>
+    BuildTendonPath(
         bool leftTendon) const;
-
-
-    std::array<sf::Scalar, 5>
-    ComputeJointLengthJacobian(
-        sf::Scalar motorAngle,
-        const std::array<sf::Scalar, 5>& q,
-        bool leftTendon) const;
-
-
-    sf::Scalar
-    ComputeMotorLengthDerivative(
-        sf::Scalar motorAngle,
-        const std::array<sf::Scalar, 5>& q,
-        bool leftTendon) const;
-
-
-    Vec3
-    ComputeMotorAnchor(
-        sf::Scalar motorAngle,
-        bool leftTendon) const;
-
-
-    std::array<Vec3, 5>
-    ComputeTendonGuidePoints(
-        const std::array<sf::Scalar, 5>& q,
-        bool leftTendon) const;
-
-
-    static Vec3
-    RotateZ(
-        const Vec3& v,
-        sf::Scalar angle);
-
-
-    static Vec3
-    RotateY(
-        const Vec3& v,
-        sf::Scalar angle);
-
-
-    static Vec3
-    Add(
-        const Vec3& a,
-        const Vec3& b);
-
-
-    static Vec3
-    Subtract(
-        const Vec3& a,
-        const Vec3& b);
 
 
     static sf::Scalar
-    Norm(
-        const Vec3& v);
+    ComputePathLength(
+        const std::array<PathPoint, 6>& path);
+
+
+    void
+    ApplyTendonForces(
+        const std::array<PathPoint, 6>& path,
+        sf::Scalar tension);
+
+
+    void
+    ApplyPointForce(
+        unsigned int linkIndex,
+        const sf::Vector3& worldPoint,
+        const sf::Vector3& worldForce);
+
+
+    static bool
+    IsFiniteVector(
+        const sf::Vector3& value);
 
 
 private:
 
-    sf::FeatherstoneEntity* dynamics_ =
-        nullptr;
+    sf::FeatherstoneEntity*
+        dynamics_ =
+            nullptr;
+
+
+    sf::Servo*
+        motorServo_ =
+            nullptr;
+
+
+    unsigned int
+        motorShaftLinkIndex_ =
+            0;
 
 
     std::array<unsigned int, 5>
-        jointIndices_ {};
+        tailLinkIndices_ {};
+
+
+    std::array<unsigned int, 5>
+        tailJointIndices_ {};
 
 
     TendonTailParameters
@@ -252,19 +266,23 @@ private:
 
     sf::Scalar
         elapsedTimeS_ =
-        0.0;
-
-
-    sf::Scalar
-        motorAngleRad_ =
-        0.0;
-
-
-    sf::Scalar
-        motorVelocityRadS_ =
-        0.0;
+            0.0;
 
 
     std::array<sf::Scalar, 2>
-        restLengthM_ {};
+        freeLengthM_ {};
+
+
+    std::array<sf::Scalar, 2>
+        previousLengthM_ {};
+
+
+    bool
+        previousLengthValid_ =
+            false;
+
+
+    bool
+        safetyTripped_ =
+            false;
 };

@@ -5,7 +5,6 @@
 #include "tendon_tail_actuator.h"
 
 #include <array>
-#include <cstddef>
 #include <fstream>
 
 
@@ -15,6 +14,7 @@ class Robot;
 class FeatherstoneRobot;
 class FeatherstoneEntity;
 class SolidEntity;
+class Servo;
 }
 
 
@@ -47,8 +47,13 @@ private:
         const char* jointName) const;
 
 
+    int
+    FindLinkIndex(
+        const char* linkName) const;
+
+
     void
-    SetNeutralTailInitialCondition();
+    SetNeutralInitialCondition();
 
 
     void
@@ -75,22 +80,37 @@ private:
 
     sf::Robot*
         fishRobot_ =
-        nullptr;
+            nullptr;
 
 
     sf::FeatherstoneRobot*
         fishFeatherstoneRobot_ =
-        nullptr;
+            nullptr;
 
 
     sf::FeatherstoneEntity*
         fishDynamics_ =
-        nullptr;
+            nullptr;
 
 
     sf::SolidEntity*
         fishBody_ =
-        nullptr;
+            nullptr;
+
+
+    sf::Servo*
+        m1Servo_ =
+            nullptr;
+
+
+    int
+        m1JointIndex_ =
+            -1;
+
+
+    int
+        motorShaftLinkIndex_ =
+            -1;
 
 
     std::array<int, 5>
@@ -104,9 +124,20 @@ private:
         };
 
 
+    std::array<int, 5>
+        tailLinkIndices_ =
+        {
+            -1,
+            -1,
+            -1,
+            -1,
+            -1
+        };
+
+
     TendonTailActuator*
         tendonActuator_ =
-        nullptr;
+            nullptr;
 
 
     std::ofstream
@@ -115,25 +146,25 @@ private:
 
     sf::Scalar
         elapsedTimeS_ =
-        0.0;
+            0.0;
 
 
     sf::Scalar
         csvPeriodS_ =
-        0.002;   // 500 Hz
+            0.002; // 500 Hz
 
 
     sf::Scalar
         consolePeriodS_ =
-        0.05;    // 20 Hz
+            0.05; // 20 Hz
 
 
     sf::Scalar
         lastCsvTimeS_ =
-        -1.0;
+            -1.0;
 
 
     sf::Scalar
         lastConsoleTimeS_ =
-        -1.0;
+            -1.0;
 };

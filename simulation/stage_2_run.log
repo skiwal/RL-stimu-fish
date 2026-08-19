@@ -1,0 +1,310 @@
+
+Starting Stage R2-A
+  M1 model     = kinematic crank shaft
+  tendons      = generalized spatial tendons
+  body fixed   = true
+  physics      = 2000 Hz
+
+[INFO] Welcome to Stonefish 1.6.
+[INFO] Window created. OpenGL 4.3 contexts created.
+[INFO] Checking GPU capabilities...
+[INFO] Number of texture units available: 192
+[INFO] Maximum texture size: 32768
+[INFO] Maximum number of texture layers: 2048
+[INFO] Maximum number of fragment shader uniforms: 4096
+[INFO] Setting up OpenGL...
+[INFO] Loaded texture from: /usr/local/share/Stonefish/shaders/logo_64.png
+[INFO] Initializing rendering pipeline:
+[INFO] Loading GUI...
+[INFO] Loaded texture from: /usr/local/share/Stonefish/shaders/logo_gray_64.png
+[INFO] Loaded texture from: /usr/local/share/Stonefish/shaders/gui.png
+[INFO] Initialising OpenGL rendering pipeline...
+[INFO] Loading shaders...
+[INFO] Loaded texture from: /usr/local/share/Stonefish/shaders/flake.png
+[INFO] Initializing simulation:
+[INFO] Building scenario...
+[INFO] Loaded precomputed atmosphere model (20 wavelengths, 5 scattering orders)
+
+Loading:
+  ./data/env/static_pool.scn
+[INFO] Scenario parser: Loading scenario from './data/env/static_pool.scn'.
+[INFO] Scenario parser: Including file './data/robots/bionic_fish/bionic_fish.scn'
+[INFO] Generating ocean waves...
+[INFO] Material PoolConcrete (0) created.
+[INFO] Material FishNeutral (1) created.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/visual/body.obj
+[INFO] Loaded mesh with 4032 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/physics/body.obj
+[INFO] Loaded mesh with 400 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/visual/tail_0.obj
+[INFO] Loaded mesh with 392 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/physics/tail_0.obj
+[INFO] Loaded mesh with 60 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/visual/tail_1.obj
+[INFO] Loaded mesh with 392 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/physics/tail_1.obj
+[INFO] Loaded mesh with 60 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/visual/tail_2.obj
+[INFO] Loaded mesh with 392 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/physics/tail_2.obj
+[INFO] Loaded mesh with 60 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/visual/tail_3.obj
+[INFO] Loaded mesh with 392 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/physics/tail_3.obj
+[INFO] Loaded mesh with 60 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/visual/tail_4.obj
+[INFO] Loaded mesh with 392 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/physics/tail_4.obj
+[INFO] Loaded mesh with 60 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/visual/caudal_fin.obj
+[INFO] Loaded mesh with 812 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/physics/caudal_fin.obj
+[INFO] Loaded mesh with 812 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/visual/dorsal_fin.obj
+[INFO] Loaded mesh with 436 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/physics/dorsal_fin.obj
+[INFO] Loaded mesh with 436 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/visual/left_pectoral.obj
+[INFO] Loaded mesh with 1020 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/physics/left_pectoral.obj
+[INFO] Loaded mesh with 168 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/visual/right_pectoral.obj
+[INFO] Loaded mesh with 1020 faces in 0 ms.
+[INFO] Loading geometry from: ./data/robots/bionic_fish/physics/right_pectoral.obj
+[INFO] Loaded mesh with 168 faces in 0 ms.
+[INFO] Built multibody link BionicFish/Body (mass[kg]: 5.285; inertia[kgm2]: 0.014, 0.046, 0.047; volume[cm3]: 5300.6)
+[INFO] Building kinematic tree of robot 'BionicFish', consisting of 11 links and 10 joints.
+[INFO] Joint 1: BionicFish/Body<-->BionicFish/DorsalFin
+[INFO] Joint 2: BionicFish/Body<-->BionicFish/RightPectoralFin
+[INFO] Joint 3: BionicFish/Body<-->BionicFish/LeftPectoralFin
+[INFO] Joint 4: BionicFish/Body<-->BionicFish/Tail0
+[INFO] Joint 5: BionicFish/Body<-->BionicFish/MotorShaft
+[INFO] Joint 6: BionicFish/Tail0<-->BionicFish/Tail1
+[INFO] Joint 7: BionicFish/Tail1<-->BionicFish/Tail2
+[INFO] Joint 8: BionicFish/Tail2<-->BionicFish/Tail3
+[INFO] Joint 9: BionicFish/Tail3<-->BionicFish/Tail4
+[INFO] Joint 10: BionicFish/Tail4<-->BionicFish/CaudalFin
+[INFO] Built multibody link BionicFish/DorsalFin (mass[kg]: 0.014; inertia[kgm2]: 0.000, 0.000, 0.000; volume[cm3]: 13.7)
+[INFO] Built multibody link BionicFish/RightPectoralFin (mass[kg]: 0.020; inertia[kgm2]: 0.000, 0.000, 0.000; volume[cm3]: 20.1)
+[INFO] Built multibody link BionicFish/LeftPectoralFin (mass[kg]: 0.020; inertia[kgm2]: 0.000, 0.000, 0.000; volume[cm3]: 20.1)
+[INFO] Built multibody link BionicFish/Tail0 (mass[kg]: 0.203; inertia[kgm2]: 0.000, 0.000, 0.000; volume[cm3]: 203.5)
+[INFO] Built multibody link BionicFish/MotorShaft (mass[kg]: 0.050; inertia[kgm2]: 0.000, 0.000, 0.000; volume[cm3]: 27.0)
+[INFO] Built multibody link BionicFish/Tail1 (mass[kg]: 0.157; inertia[kgm2]: 0.000, 0.000, 0.000; volume[cm3]: 157.9)
+[INFO] Built multibody link BionicFish/Tail2 (mass[kg]: 0.105; inertia[kgm2]: 0.000, 0.000, 0.000; volume[cm3]: 105.0)
+[INFO] Built multibody link BionicFish/Tail3 (mass[kg]: 0.049; inertia[kgm2]: 0.000, 0.000, 0.000; volume[cm3]: 48.8)
+[INFO] Built multibody link BionicFish/Tail4 (mass[kg]: 0.019; inertia[kgm2]: 0.000, 0.000, 0.000; volume[cm3]: 19.2)
+[INFO] Built multibody link BionicFish/CaudalFin (mass[kg]: 0.015; inertia[kgm2]: 0.000, 0.000, 0.000; volume[cm3]: 15.1)
+
+R2-B binding:
+  M1Joint    -> joint index 4
+  MotorShaft -> link index 5
+  TailJoint0 -> joint index 3 | Tail0 -> link index 4
+  TailJoint1 -> joint index 5 | Tail1 -> link index 6
+  TailJoint2 -> joint index 6 | Tail2 -> link index 7
+  TailJoint3 -> joint index 7 | Tail3 -> link index 8
+  TailJoint4 -> joint index 8 | Tail4 -> link index 9
+
+
+============================================================
+ BionicFish Stage R2-B
+ Real M1 + Spatial Pull-Only Tendon Drive
+============================================================
+Body fixed                 YES
+M1                          Stonefish Servo
+M1 mode                     velocity
+Motor shaft                 real Featherstone link
+Crank                       virtual geometry
+Tendon                      virtual elastic cable
+Tendon can push             NO
+Tendon forces               physical link forces
+Manual tendon joint torque  NO
+Routing                     0,0,0,1,1
+Tendon stiffness            20000 N/m
+Tendon damping              10 N*s/m
+Initial pretension          0 N
+Diagnostic strain limit     3 %
+Passive joint stiffness     0.65 Nm/rad
+Motor diagnostic freq       0.05 Hz
+Left free length            0.280897 m
+Right free length           0.280897 m
+CSV                         tendon_stage_r2b.csv
+============================================================
+
+[INFO] Finalizing OpenGL rendering pipeline...
+[INFO] Synchronizing motion states...
+[INFO] Simulation initialized -> using Bullet Physics 3.26.
+[INFO] Ready for running...
+[INFO] Multithreading physics using 14 threads.
+[INFO] IC problem solved with 1 iterations in 0.000109 s.
+[R2B] t=0.001 | M1=0.000deg cmd=0.000 w=0.000 tau=0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,0.000,0.000)deg | sat=NO safety=OK
+[R2B] t=0.051 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(-0.000,0.000,0.000,-0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=0.101 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,-0.000,-0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=0.151 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,-0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=0.201 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,-0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=0.251 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=0.301 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=0.351 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,-0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=0.401 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,-0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=0.451 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=0.501 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=0.551 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=0.602 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=0.652 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,-0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=0.703 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=0.753 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=0.804 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,0.000,0.000)deg | sat=NO safety=OK
+[R2B] t=0.854 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=0.905 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=0.955 | M1=0.000deg cmd=0.000 w=0.000 tau=-0.000Nm | L=(280.897,280.897)mm | T=(0.000,0.000)N | strain=(0.000%,0.000%) | J=(0.000,0.000,0.000,0.000,-0.000)deg | sat=NO safety=OK
+[R2B] t=1.006 | M1=-0.000deg cmd=0.002 w=-0.022 tau=0.000Nm | L=(280.897,280.897)mm | T=(0.012,0.000)N | strain=(0.000%,-0.000%) | J=(0.000,0.000,-0.000,-0.000,0.000)deg | sat=NO safety=OK
+[R2B] t=1.056 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-80.024,-81.388,-38.986,-22.217,-54.058)deg | sat=YES safety=TRIPPED
+[R2B] t=1.107 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-83.453,-82.647,-54.426,-44.839,-91.563)deg | sat=YES safety=TRIPPED
+[R2B] t=1.157 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-87.872,20.352,-9.573,21.649)deg | sat=YES safety=TRIPPED
+[R2B] t=1.208 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.536,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=1.258 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.769,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=1.309 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.052,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=1.359 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.672,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=1.410 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.009,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=1.460 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.661,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=1.511 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.003,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=1.561 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=1.612 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=1.662 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=1.713 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=1.763 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=1.814 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=1.864 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=1.915 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=1.965 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.015 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.065 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.115 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.165 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.215 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.265 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.315 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.365 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.415 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.465 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.516 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.566 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.616 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.666 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.716 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.766 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.816 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.866 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.916 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=2.966 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.016 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.066 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.116 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.166 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.216 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.266 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.316 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.366 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.416 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.466 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.516 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.566 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.616 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.666 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.716 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.766 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.816 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.866 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.916 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=3.966 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=4.016 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=4.066 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=4.117 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=4.167 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=4.218 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=4.268 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=4.319 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=4.369 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=4.420 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=4.470 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=4.521 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=4.571 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=4.622 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=4.672 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=4.723 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=4.773 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=4.824 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=4.874 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=4.924 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=4.975 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=5.025 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=5.076 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=5.126 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=5.177 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=5.227 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=5.278 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=5.328 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=5.379 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=5.429 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=5.480 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=5.530 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=5.581 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=5.631 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=5.682 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=5.732 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=5.783 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=5.833 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=5.884 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=5.934 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=5.985 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=6.035 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=6.086 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=6.136 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=6.187 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=6.237 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=6.288 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=6.338 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=6.389 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=6.439 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=6.490 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=6.540 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=6.591 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=6.641 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=6.692 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=6.742 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=6.793 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=6.843 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=6.894 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=6.944 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=6.995 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=7.045 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=7.096 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=7.146 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=7.197 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=7.247 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=7.298 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=7.348 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=7.399 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=7.449 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=7.500 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=7.550 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=7.601 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=7.651 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=7.702 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=7.752 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=7.803 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=7.853 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=7.904 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=7.954 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-99.659,13.977,-9.573,19.534)deg | sat=YES safety=TRIPPED
+[R2B] t=8.005 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=8.055 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=8.105 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=8.155 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=8.205 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=8.255 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=8.305 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=8.355 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=8.405 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=8.455 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=8.505 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=8.555 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
+[R2B] t=8.605 | M1=13.913deg cmd=0.000 w=986.667 tau=-0.050Nm | L=(271.906,289.403)mm | T=(0.000,0.000)N | strain=(-3.201%,3.028%) | J=(-84.915,-75.002,-14.671,19.075,-9.114)deg | sat=YES safety=TRIPPED
