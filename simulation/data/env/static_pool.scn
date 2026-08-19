@@ -362,7 +362,7 @@
 
         <arg
             name="robot_fixed"
-            value="true"/>
+            value="false"/>
 
     </include>
 

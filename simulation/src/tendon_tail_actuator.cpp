@@ -754,7 +754,7 @@ void TendonTailActuator::ApplyTendonForces(
     // ============================================================
 
     for (
-        std::size_t i = 1;
+        std::size_t i = 0;
         i < path.size();
         ++i)
     {
