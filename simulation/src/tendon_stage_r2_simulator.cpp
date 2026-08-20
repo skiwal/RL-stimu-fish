@@ -37,7 +37,7 @@ void TendonStageR2Simulator::BuildScenario()
 
     BindFish();
     SetNeutralInitialCondition();
-    // RegisterTendonActuator();
+    RegisterTendonActuator();
     OpenCsv();
     ConfigureCamera();
 
