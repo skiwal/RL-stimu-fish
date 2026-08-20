@@ -1,10 +1,12 @@
 #include <Stonefish/core/GraphicalSimulationApp.h>
+
 #include "inc/tendon_stage_r2_simulator.h"
 
 #include <iostream>
 #include <string>
 
 namespace {
+
 std::string NormalizeDataPath(std::string path)
 {
     if (path.empty())
@@ -15,39 +17,51 @@ std::string NormalizeDataPath(std::string path)
 
     return path;
 }
+
 }
 
 int main(int argc, char** argv)
 {
     const std::string dataPath =
-        NormalizeDataPath(argc > 1 ? argv[1] : "../data/");
+        NormalizeDataPath(
+            argc > 1
+                ? argv[1]
+                : "../data/");
 
-    sf::RenderSettings render;
-    render.windowW = 1920;
-    render.windowH = 1080;
+    sf::RenderSettings renderSettings;
+    renderSettings.windowW = 1920;
+    renderSettings.windowH = 1080;
 
-    sf::HelperSettings helper;
+    sf::HelperSettings helperSettings;
 
-    constexpr sf::Scalar physicsHz = 2000.0;
-    TendonStageR2Simulator simulator(physicsHz);
+    constexpr sf::Scalar physicsSPS = 2000.0;
+
+    TendonStageR2Simulator simulator(
+        physicsSPS);
 
     std::cout
-        << "\nStarting Tethered Thrust Test\n"
+        << "\nStarting Caudal Spring Thrust Test\n"
         << "  body         = fixed\n"
         << "  motor        = disabled\n"
-        << "  tendon       = continuous direct tension\n"
+        << "  tendon       = direct tension\n"
         << "  peak force   = 3 N\n"
-        << "  frequency    = 1.25 Hz\n"
+        << "  frequency    = 0.60 Hz\n"
+        << "  caudal       = revolute + spring + damping\n"
+        << "  spring k     = 0.05 Nm/rad\n"
+        << "  damping c    = 0.005 Nms/rad\n"
+        << "  caudal limit = +/-20 deg\n"
         << "  forward      = +X\n"
-        << "  physics      = 2000 Hz\n\n";
+        << "  physics      = 2000 Hz\n"
+        << std::endl;
 
     sf::GraphicalSimulationApp app(
-        "BionicFish - Tethered Thrust Test",
+        "BionicFish - Caudal Spring Thrust Test",
         dataPath,
-        render,
-        helper,
+        renderSettings,
+        helperSettings,
         &simulator);
 
     app.Run();
+
     return 0;
 }

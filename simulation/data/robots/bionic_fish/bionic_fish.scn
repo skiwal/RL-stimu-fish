@@ -775,7 +775,7 @@
         max="0.3490658504"/>
 
     <damping
-        value="0.005"/>
+        value="0.0"/>
 
 </joint>
 
