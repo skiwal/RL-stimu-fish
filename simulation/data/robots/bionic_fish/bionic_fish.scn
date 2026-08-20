@@ -749,26 +749,35 @@
 
 
         <!-- ======================================================
-             CAUDAL FIXED JOINT
-             ====================================================== -->
+     CAUDAL PASSIVE JOINT
+     Diagnostic passive caudal-fin hinge
+     ====================================================== -->
 
-        <joint
-            name="CaudalJoint"
-            type="fixed">
+<joint
+    name="CaudalJoint"
+    type="revolute">
 
-            <parent
-                name="Tail4"/>
+    <parent
+        name="Tail4"/>
 
+    <child
+        name="CaudalFin"/>
 
-            <child
-                name="CaudalFin"/>
+    <origin
+        xyz="-0.02155 0.0 0.0"
+        rpy="0.0 0.0 0.0"/>
 
+    <axis
+        xyz="0.0 0.0 1.0"/>
 
-            <origin
-                xyz="-0.02155 0.0 0.0"
-                rpy="0.0 0.0 0.0"/>
+    <limits
+        min="-0.3490658504"
+        max="0.3490658504"/>
 
-        </joint>
+    <damping
+        value="0.005"/>
+
+</joint>
 
 
         <!-- ======================================================
