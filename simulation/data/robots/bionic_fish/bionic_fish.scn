@@ -91,7 +91,7 @@
                 name="BionicFishBodyLook"/>
 
             <mass
-                value="0.0000000001"/>
+                value="0.005"/>
 
         </link>
 

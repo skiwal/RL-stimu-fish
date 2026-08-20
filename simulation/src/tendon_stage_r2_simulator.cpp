@@ -19,7 +19,7 @@ namespace {
 constexpr sf::Scalar kRadToDeg = 57.29577951308232;
 
 // First spring experiment.
-constexpr sf::Scalar kCaudalK = 0.05;   // Nm/rad
+constexpr sf::Scalar kCaudalK = 0.5;   // Nm/rad
 constexpr sf::Scalar kCaudalC = 0.005;  // Nms/rad
 }
 
