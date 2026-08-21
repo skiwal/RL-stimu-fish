@@ -1,5 +1,4 @@
 #include <Stonefish/core/GraphicalSimulationApp.h>
-
 #include "inc/tendon_stage_r2_simulator.h"
 
 #include <iostream>
@@ -25,40 +24,41 @@ int main(int argc, char** argv)
     const std::string dataPath =
         NormalizeDataPath(
             argc > 1
-                ? argv[1]
-                : "../data/");
+            ? argv[1]
+            : "../data/");
 
-    sf::RenderSettings renderSettings;
-    renderSettings.windowW = 1920;
-    renderSettings.windowH = 1080;
+    sf::RenderSettings render;
+    render.windowW = 1920;
+    render.windowH = 1080;
 
-    sf::HelperSettings helperSettings;
+    sf::HelperSettings helpers;
 
-    constexpr sf::Scalar physicsSPS = 2000.0;
+    constexpr sf::Scalar physicsSPS =
+        2000.0;
 
     TendonStageR2Simulator simulator(
         physicsSPS);
 
     std::cout
-        << "\nStarting Caudal Spring Thrust Test\n"
-        << "  body         = fixed\n"
-        << "  motor        = disabled\n"
-        << "  tendon       = direct tension\n"
-        << "  peak force   = 3 N\n"
-        << "  frequency    = 0.60 Hz\n"
-        << "  caudal       = revolute + spring + damping\n"
-        << "  spring k     = 0.05 Nm/rad\n"
-        << "  damping c    = 0.005 Nms/rad\n"
-        << "  caudal limit = +/-20 deg\n"
-        << "  forward      = +X\n"
-        << "  physics      = 2000 Hz\n"
+        << "\nStarting PHASE 0 Thrust Validation\n"
+        << "  body             = fixed\n"
+        << "  motor            = disabled\n"
+        << "  tendon peak      = 3.0 N\n"
+        << "  frequency        = 0.60 Hz\n"
+        << "  caudal k         = 0.50 Nm/rad\n"
+        << "  caudal damping   = 0.005 Nms/rad\n"
+        << "  anchor reaction  = enabled\n"
+        << "  jacobian check   = enabled\n"
+        << "  loadcell         = reconstructed support reaction\n"
+        << "  forward          = +X\n"
+        << "  physics          = 2000 Hz\n"
         << std::endl;
 
     sf::GraphicalSimulationApp app(
-        "BionicFish - Caudal Spring Thrust Test",
+        "BionicFish - Phase 0 Thrust Validation",
         dataPath,
-        renderSettings,
-        helperSettings,
+        render,
+        helpers,
         &simulator);
 
     app.Run();

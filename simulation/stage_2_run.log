@@ -1,16 +1,16 @@
 
-Starting Caudal Spring Thrust Test
-  body         = fixed
-  motor        = disabled
-  tendon       = direct tension
-  peak force   = 3 N
-  frequency    = 0.60 Hz
-  caudal       = revolute + spring + damping
-  spring k     = 0.05 Nm/rad
-  damping c    = 0.005 Nms/rad
-  caudal limit = +/-20 deg
-  forward      = +X
-  physics      = 2000 Hz
+Starting PHASE 0 Thrust Validation
+  body             = fixed
+  motor            = disabled
+  tendon peak      = 3.0 N
+  frequency        = 0.60 Hz
+  caudal k         = 0.50 Nm/rad
+  caudal damping   = 0.005 Nms/rad
+  anchor reaction  = enabled
+  jacobian check   = enabled
+  loadcell         = reconstructed support reaction
+  forward          = +X
+  physics          = 2000 Hz
 
 [INFO] Welcome to Stonefish 1.6.
 [INFO] Window created. OpenGL 4.3 contexts created.
@@ -102,30 +102,34 @@ Loading:
 [INFO] Built multibody link BionicFish/Tail4 (mass[kg]: 0.019; inertia[kgm2]: 0.000, 0.000, 0.000; volume[cm3]: 19.2)
 [INFO] Built multibody link BionicFish/CaudalFin (mass[kg]: 0.015; inertia[kgm2]: 0.000, 0.000, 0.000; volume[cm3]: 15.1)
 
-Hydro binding:
-  Tail0 joint=3 link=4
-  Tail1 joint=5 link=6
-  Tail2 joint=6 link=7
-  Tail3 joint=7 link=8
-  Tail4 joint=8 link=9
-  CaudalJoint joint=9
-  CaudalFin link=10
+Phase-0 binding:
+  joint 0 BionicFish/DorsalJoint parent=0 child=1  [BODY CHILD]
+  joint 1 BionicFish/RightPectoralJoint parent=0 child=2  [BODY CHILD]
+  joint 2 BionicFish/LeftPectoralJoint parent=0 child=3  [BODY CHILD]
+  joint 3 BionicFish/TailJoint0 parent=0 child=4  [BODY CHILD]
+  joint 4 BionicFish/M1Joint parent=0 child=5  [BODY CHILD]
+  joint 5 BionicFish/TailJoint1 parent=4 child=6
+  joint 6 BionicFish/TailJoint2 parent=6 child=7
+  joint 7 BionicFish/TailJoint3 parent=7 child=8
+  joint 8 BionicFish/TailJoint4 parent=8 child=9
+  joint 9 BionicFish/CaudalJoint parent=9 child=10
 
 
 ============================================================
- BionicFish Caudal Spring Thrust Test
+ BionicFish PHASE 0 - Thrust Validation
 ============================================================
-Body fixed              YES
-Motor                   DISABLED
-Tendon peak             3 N
-Tendon frequency        0.60 Hz
-Tail stiffness          0.65 Nm/rad
-Caudal joint            REVOLUTE +/-20 deg
-Caudal spring k         0.5 Nm/rad
-Caudal damping c        0.005 Nms/rad
-Forward                 +X
-Mean start              5.0 s
-CSV                     tethered_thrust_test.csv
+Body fixed                 YES
+Motor                      DISABLED
+Tendon peak                3.0 N
+Tendon frequency           0.60 Hz
+Tail stiffness             0.65 Nm/rad
+Caudal spring k            0.5 Nm/rad
+Caudal damping c           0.005 Nms/rad
+Tendon anchor reaction     ENABLED
+Jacobian check             ENABLED
+Load-cell reconstruction   ENABLED
+Forward                    +X
+CSV                        tethered_thrust_test.csv
 ============================================================
 
 [INFO] Finalizing OpenGL rendering pipeline...
@@ -133,220 +137,287 @@ CSV                     tethered_thrust_test.csv
 [INFO] Simulation initialized -> using Bullet Physics 3.26.
 [INFO] Ready for running...
 [INFO] Multithreading physics using 14 threads.
-[INFO] IC problem solved with 1 iterations in 0.000111 s.
-[HYDRO] t=0.001 T=(0.000,0.000) F=(0.000,0.000,0.000) meanFx=0.000 J=(0.000,0.000,0.000,0.000,0.000) C=(0.000deg,0.000rad/s,-0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.051 T=(0.000,0.000) F=(0.000,-0.000,0.001) meanFx=0.000 J=(-0.000,0.000,0.000,0.000,-0.000) C=(-0.000deg,-0.000rad/s,0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.101 T=(0.000,0.000) F=(0.000,-0.000,-0.000) meanFx=0.000 J=(-0.000,0.000,0.000,0.000,0.000) C=(0.000deg,0.000rad/s,-0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.151 T=(0.000,0.000) F=(0.000,0.000,-0.001) meanFx=0.000 J=(-0.000,-0.000,0.000,0.000,0.000) C=(0.000deg,0.000rad/s,-0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.201 T=(0.000,0.000) F=(0.000,0.000,-0.001) meanFx=0.000 J=(-0.000,-0.000,-0.000,-0.000,-0.000) C=(0.000deg,-0.000rad/s,-0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.251 T=(0.000,0.000) F=(0.000,0.000,-0.002) meanFx=0.000 J=(-0.000,-0.000,-0.000,-0.000,-0.000) C=(-0.000deg,-0.000rad/s,0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.301 T=(0.000,0.000) F=(0.000,0.000,-0.002) meanFx=0.000 J=(-0.000,-0.000,-0.000,-0.000,-0.000) C=(-0.000deg,-0.000rad/s,0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.351 T=(0.000,0.000) F=(0.000,0.000,-0.003) meanFx=0.000 J=(-0.000,-0.000,-0.000,-0.000,-0.000) C=(-0.000deg,-0.000rad/s,0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.401 T=(0.000,0.000) F=(0.000,0.000,-0.003) meanFx=0.000 J=(-0.000,-0.000,-0.000,-0.000,-0.000) C=(-0.000deg,0.000rad/s,0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.451 T=(0.000,0.000) F=(0.000,-0.000,-0.003) meanFx=0.000 J=(-0.000,-0.000,-0.000,-0.000,-0.000) C=(-0.000deg,-0.000rad/s,0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.501 T=(0.000,0.000) F=(0.000,-0.000,-0.004) meanFx=0.000 J=(-0.000,-0.000,-0.000,-0.000,-0.000) C=(-0.000deg,-0.000rad/s,0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.551 T=(0.000,0.000) F=(0.000,-0.000,-0.004) meanFx=0.000 J=(-0.000,-0.000,-0.000,-0.000,-0.000) C=(-0.000deg,-0.000rad/s,0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.602 T=(0.000,0.000) F=(0.000,-0.000,-0.005) meanFx=0.000 J=(-0.000,-0.000,-0.000,-0.000,-0.000) C=(-0.000deg,0.000rad/s,0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.652 T=(0.000,0.000) F=(0.000,-0.000,-0.005) meanFx=0.000 J=(-0.000,-0.000,-0.000,-0.000,-0.000) C=(-0.000deg,0.000rad/s,0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.703 T=(0.000,0.000) F=(0.000,-0.000,-0.005) meanFx=0.000 J=(-0.000,-0.000,-0.000,-0.000,-0.000) C=(-0.000deg,0.000rad/s,0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.753 T=(0.000,0.000) F=(0.000,-0.000,-0.005) meanFx=0.000 J=(0.000,0.000,-0.000,-0.000,-0.000) C=(-0.000deg,0.000rad/s,0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.804 T=(0.000,0.000) F=(0.000,-0.000,-0.006) meanFx=0.000 J=(0.000,0.000,0.000,-0.000,-0.000) C=(-0.000deg,0.000rad/s,0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.854 T=(0.000,0.000) F=(0.000,-0.000,-0.006) meanFx=0.000 J=(0.000,0.000,0.000,0.000,-0.000) C=(-0.000deg,0.000rad/s,0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.905 T=(0.000,0.000) F=(0.000,-0.000,-0.006) meanFx=0.000 J=(0.000,0.000,0.000,0.000,0.000) C=(0.000deg,0.000rad/s,-0.000Nm) safety=OK caudal=OK
-[HYDRO] t=0.955 T=(0.000,0.000) F=(0.000,-0.000,-0.006) meanFx=0.000 J=(0.000,0.000,0.000,0.000,0.000) C=(0.000deg,0.000rad/s,-0.000Nm) safety=OK caudal=OK
-[HYDRO] t=1.006 T=(0.000,0.000) F=(0.000,-0.000,-0.007) meanFx=0.000 J=(0.000,0.000,0.000,0.000,0.000) C=(0.000deg,-0.000rad/s,0.000Nm) safety=OK caudal=OK
-[HYDRO] t=1.056 T=(0.000,0.006) F=(0.000,0.000,-0.007) meanFx=0.000 J=(0.001,-0.001,-0.003,0.001,0.006) C=(-0.002deg,-0.001rad/s,0.000Nm) safety=OK caudal=OK
-[HYDRO] t=1.107 T=(0.000,0.038) F=(0.000,-0.000,-0.008) meanFx=0.000 J=(0.002,-0.016,-0.027,0.015,0.053) C=(0.002deg,0.005rad/s,-0.000Nm) safety=OK caudal=OK
-[HYDRO] t=1.157 T=(0.000,0.112) F=(0.000,-0.003,-0.010) meanFx=0.000 J=(-0.026,-0.062,-0.074,0.067,0.184) C=(0.035deg,0.020rad/s,-0.000Nm) safety=OK caudal=OK
-[HYDRO] t=1.208 T=(0.000,0.237) F=(0.000,-0.008,-0.013) meanFx=0.000 J=(-0.125,-0.158,-0.145,0.178,0.429) C=(0.123deg,0.041rad/s,-0.001Nm) safety=OK caudal=OK
-[HYDRO] t=1.258 T=(0.000,0.412) F=(-0.000,-0.011,-0.014) meanFx=0.000 J=(-0.314,-0.321,-0.249,0.342,0.786) C=(0.270deg,0.058rad/s,-0.003Nm) safety=OK caudal=OK
-[HYDRO] t=1.309 T=(0.000,0.627) F=(-0.001,-0.011,-0.014) meanFx=0.000 J=(-0.600,-0.561,-0.403,0.530,1.217) C=(0.452deg,0.065rad/s,-0.004Nm) safety=OK caudal=OK
-[HYDRO] t=1.359 T=(0.000,0.864) F=(-0.001,-0.009,-0.014) meanFx=0.000 J=(-0.981,-0.885,-0.623,0.703,1.668) C=(0.637deg,0.061rad/s,-0.006Nm) safety=OK caudal=OK
-[HYDRO] t=1.410 T=(0.000,1.099) F=(-0.002,-0.003,-0.015) meanFx=0.000 J=(-1.466,-1.296,-0.914,0.823,2.079) C=(0.794deg,0.047rad/s,-0.007Nm) safety=OK caudal=OK
-[HYDRO] t=1.460 T=(0.000,1.305) F=(-0.004,0.005,-0.015) meanFx=0.000 J=(-2.056,-1.793,-1.273,0.854,2.391) C=(0.899deg,0.024rad/s,-0.008Nm) safety=OK caudal=OK
-[HYDRO] t=1.511 T=(0.000,1.453) F=(-0.006,0.012,-0.015) meanFx=0.000 J=(-2.734,-2.360,-1.695,0.762,2.538) C=(0.923deg,-0.009rad/s,-0.008Nm) safety=OK caudal=OK
-[HYDRO] t=1.561 T=(0.000,1.517) F=(-0.008,0.023,-0.015) meanFx=0.000 J=(-3.466,-2.973,-2.163,0.516,2.463) C=(0.837deg,-0.050rad/s,-0.007Nm) safety=OK caudal=OK
-[HYDRO] t=1.612 T=(0.000,1.479) F=(-0.009,0.030,-0.015) meanFx=0.000 J=(-4.201,-3.594,-2.656,0.103,2.127) C=(0.624deg,-0.097rad/s,-0.005Nm) safety=OK caudal=OK
-[HYDRO] t=1.662 T=(0.000,1.324) F=(-0.010,0.037,-0.014) meanFx=0.000 J=(-4.882,-4.179,-3.139,-0.466,1.520) C=(0.280deg,-0.140rad/s,-0.002Nm) safety=OK caudal=OK
-[HYDRO] t=1.713 T=(0.000,1.052) F=(-0.009,0.038,-0.014) meanFx=0.000 J=(-5.447,-4.676,-3.569,-1.157,0.664) C=(-0.179deg,-0.176rad/s,0.002Nm) safety=OK caudal=OK
-[HYDRO] t=1.763 T=(0.000,0.670) F=(-0.006,0.036,-0.013) meanFx=0.000 J=(-5.826,-5.029,-3.900,-1.922,-0.397) C=(-0.727deg,-0.202rad/s,0.007Nm) safety=OK caudal=OK
-[HYDRO] t=1.814 T=(0.000,0.199) F=(-0.003,0.030,-0.012) meanFx=0.000 J=(-5.950,-5.175,-4.086,-2.699,-1.595) C=(-1.332deg,-0.215rad/s,0.013Nm) safety=OK caudal=OK
-[HYDRO] t=1.864 T=(0.334,0.000) F=(0.002,0.010,-0.012) meanFx=0.000 J=(-5.772,-5.041,-4.081,-3.432,-2.837) C=(-1.939deg,-0.198rad/s,0.018Nm) safety=OK caudal=OK
-[HYDRO] t=1.915 T=(0.891,0.000) F=(0.005,-0.004,-0.010) meanFx=0.000 J=(-5.267,-4.588,-3.821,-4.039,-4.022) C=(-2.483deg,-0.165rad/s,0.022Nm) safety=OK caudal=OK
-[HYDRO] t=1.965 T=(1.429,0.000) F=(0.005,-0.027,-0.011) meanFx=0.000 J=(-4.397,-3.815,-3.292,-4.424,-5.023) C=(-2.888deg,-0.111rad/s,0.026Nm) safety=OK caudal=OK
-[HYDRO] t=2.015 T=(1.902,0.000) F=(0.004,-0.042,-0.011) meanFx=0.000 J=(-3.175,-2.730,-2.485,-4.508,-5.724) C=(-3.108deg,-0.037rad/s,0.027Nm) safety=OK caudal=OK
-[HYDRO] t=2.065 T=(2.303,0.000) F=(-0.002,-0.062,-0.010) meanFx=0.000 J=(-1.611,-1.347,-1.391,-4.241,-6.066) C=(-3.085deg,0.049rad/s,0.027Nm) safety=OK caudal=OK
-[HYDRO] t=2.115 T=(2.623,0.000) F=(-0.008,-0.072,-0.010) meanFx=0.000 J=(0.262,0.318,-0.018,-3.614,-6.039) C=(-2.824deg,0.132rad/s,0.024Nm) safety=OK caudal=OK
-[HYDRO] t=2.165 T=(2.849,0.000) F=(-0.024,-0.075,-0.011) meanFx=0.000 J=(2.461,2.214,1.548,-2.697,-5.680) C=(-2.349deg,0.190rad/s,0.020Nm) safety=OK caudal=OK
-[HYDRO] t=2.215 T=(2.975,0.000) F=(-0.039,-0.067,-0.012) meanFx=0.000 J=(4.949,4.298,3.230,-1.585,-5.081) C=(-1.765deg,0.214rad/s,0.014Nm) safety=OK caudal=OK
-[HYDRO] t=2.265 T=(2.995,0.000) F=(-0.065,-0.046,-0.013) meanFx=0.000 J=(7.620,6.474,4.939,-0.355,-4.286) C=(-1.127deg,0.230rad/s,0.009Nm) safety=OK caudal=OK
-[HYDRO] t=2.315 T=(2.909,0.000) F=(-0.078,-0.034,-0.014) meanFx=0.000 J=(10.254,8.636,6.626,0.974,-3.300) C=(-0.443deg,0.251rad/s,0.003Nm) safety=OK caudal=OK
-[HYDRO] t=2.365 T=(2.720,0.000) F=(-0.089,-0.021,-0.015) meanFx=0.000 J=(12.636,10.658,8.235,2.389,-2.109) C=(0.323deg,0.283rad/s,-0.004Nm) safety=OK caudal=OK
-[HYDRO] t=2.415 T=(2.435,0.000) F=(-0.086,-0.011,-0.016) meanFx=0.000 J=(14.611,12.440,9.710,3.851,-0.739) C=(1.166deg,0.305rad/s,-0.012Nm) safety=OK caudal=OK
-[HYDRO] t=2.465 T=(2.063,0.000) F=(-0.062,0.012,-0.016) meanFx=0.000 J=(16.108,13.899,10.971,5.289,0.753) C=(2.056deg,0.314rad/s,-0.020Nm) safety=OK caudal=OK
-[HYDRO] t=2.516 T=(1.619,0.000) F=(-0.037,0.024,-0.014) meanFx=0.000 J=(17.091,14.973,11.951,6.622,2.296) C=(2.946deg,0.306rad/s,-0.027Nm) safety=OK caudal=OK
-[HYDRO] t=2.566 T=(1.117,0.000) F=(-0.009,0.045,-0.018) meanFx=0.000 J=(17.552,15.593,12.574,7.786,3.824) C=(3.803deg,0.291rad/s,-0.035Nm) safety=OK caudal=OK
-[HYDRO] t=2.616 T=(0.575,0.000) F=(0.005,0.069,-0.018) meanFx=0.000 J=(17.455,15.738,12.810,8.697,5.243) C=(4.576deg,0.244rad/s,-0.041Nm) safety=OK caudal=OK
-[HYDRO] t=2.666 T=(0.013,0.000) F=(0.020,0.090,-0.016) meanFx=0.000 J=(16.838,15.356,12.589,9.277,6.454) C=(5.191deg,0.181rad/s,-0.046Nm) safety=OK caudal=OK
-[HYDRO] t=2.716 T=(0.000,0.549) F=(0.036,0.118,-0.015) meanFx=0.000 J=(15.806,14.312,11.843,9.522,7.353) C=(5.516deg,0.070rad/s,-0.048Nm) safety=OK caudal=OK
-[HYDRO] t=2.766 T=(0.000,1.092) F=(0.060,0.144,-0.014) meanFx=0.000 J=(14.313,12.736,10.538,9.259,7.838) C=(5.520deg,-0.067rad/s,-0.048Nm) safety=OK caudal=OK
-[HYDRO] t=2.816 T=(0.000,1.596) F=(0.076,0.155,-0.013) meanFx=0.000 J=(12.338,10.628,8.688,8.466,7.881) C=(5.161deg,-0.184rad/s,-0.044Nm) safety=OK caudal=OK
-[HYDRO] t=2.866 T=(0.000,2.044) F=(0.092,0.139,-0.011) meanFx=0.000 J=(9.786,8.011,6.368,7.196,7.501) C=(4.490deg,-0.284rad/s,-0.038Nm) safety=OK caudal=OK
-[HYDRO] t=2.916 T=(0.000,2.419) F=(0.082,0.103,-0.009) meanFx=0.000 J=(6.527,4.928,3.713,5.580,6.801) C=(3.591deg,-0.335rad/s,-0.030Nm) safety=OK caudal=OK
-[HYDRO] t=2.966 T=(0.000,2.709) F=(0.029,0.016,-0.007) meanFx=0.000 J=(2.481,1.457,0.888,3.804,5.927) C=(2.620deg,-0.337rad/s,-0.021Nm) safety=OK caudal=OK
-[HYDRO] t=3.016 T=(0.000,2.902) F=(-0.027,-0.037,-0.007) meanFx=0.000 J=(-2.243,-2.265,-1.936,2.017,4.992) C=(1.698deg,-0.307rad/s,-0.013Nm) safety=OK caudal=OK
-[HYDRO] t=3.066 T=(0.000,2.993) F=(-0.130,-0.086,-0.008) meanFx=0.000 J=(-7.235,-6.042,-4.684,0.264,4.009) C=(0.859deg,-0.279rad/s,-0.006Nm) safety=OK caudal=OK
-[HYDRO] t=3.116 T=(0.000,2.978) F=(-0.189,-0.086,-0.009) meanFx=0.000 J=(-11.883,-9.688,-7.364,-1.543,2.893) C=(0.056deg,-0.295rad/s,0.001Nm) safety=OK caudal=OK
-[HYDRO] t=3.166 T=(0.000,2.857) F=(-0.224,-0.068,-0.011) meanFx=0.000 J=(-15.793,-12.978,-9.916,-3.459,1.528) C=(-0.869deg,-0.347rad/s,0.009Nm) safety=OK caudal=OK
-[HYDRO] t=3.216 T=(0.000,2.635) F=(-0.210,-0.064,-0.012) meanFx=0.000 J=(-18.828,-15.800,-12.267,-5.437,-0.058) C=(-1.915deg,-0.380rad/s,0.019Nm) safety=OK caudal=OK
-[HYDRO] t=3.266 T=(0.000,2.320) F=(-0.139,-0.077,-0.012) meanFx=0.000 J=(-21.063,-18.090,-14.291,-7.356,-1.774) C=(-3.019deg,-0.384rad/s,0.028Nm) safety=OK caudal=OK
-[HYDRO] t=3.316 T=(0.000,1.922) F=(-0.097,-0.079,-0.013) meanFx=0.000 J=(-22.591,-19.820,-15.896,-9.106,-3.526) C=(-4.100deg,-0.372rad/s,0.038Nm) safety=OK caudal=OK
-[HYDRO] t=3.366 T=(0.000,1.457) F=(-0.039,-0.091,-0.019) meanFx=0.000 J=(-23.445,-20.965,-17.024,-10.611,-5.241) C=(-5.140deg,-0.344rad/s,0.047Nm) safety=OK caudal=OK
-[HYDRO] t=3.416 T=(0.000,0.940) F=(-0.008,-0.113,-0.021) meanFx=0.000 J=(-23.608,-21.528,-17.658,-11.794,-6.819) C=(-6.054deg,-0.296rad/s,0.054Nm) safety=OK caudal=OK
-[HYDRO] t=3.466 T=(0.000,0.389) F=(0.021,-0.112,-0.018) meanFx=0.000 J=(-23.170,-21.448,-17.700,-12.566,-8.167) C=(-6.804deg,-0.221rad/s,0.060Nm) safety=OK caudal=OK
-[HYDRO] t=3.516 T=(0.175,0.000) F=(0.044,-0.127,-0.017) meanFx=0.000 J=(-22.198,-20.685,-17.098,-12.834,-9.137) C=(-7.261deg,-0.073rad/s,0.064Nm) safety=OK caudal=OK
-[HYDRO] t=3.566 T=(0.733,0.000) F=(0.087,-0.150,-0.013) meanFx=0.000 J=(-20.844,-19.083,-15.778,-12.603,-9.656) C=(-7.275deg,0.046rad/s,0.063Nm) safety=OK caudal=OK
-[HYDRO] t=3.616 T=(1.265,0.000) F=(0.126,-0.160,-0.011) meanFx=0.000 J=(-19.008,-16.861,-13.753,-11.675,-9.595) C=(-6.826deg,0.234rad/s,0.058Nm) safety=OK caudal=OK
-[HYDRO] t=3.666 T=(1.753,0.000) F=(0.192,-0.170,-0.007) meanFx=0.000 J=(-16.638,-14.009,-11.059,-10.095,-8.993) C=(-5.933deg,0.368rad/s,0.050Nm) safety=OK caudal=OK
-[HYDRO] t=3.716 T=(2.178,0.000) F=(0.223,-0.141,-0.004) meanFx=0.000 J=(-13.487,-10.549,-7.870,-8.031,-7.984) C=(-4.732deg,0.453rad/s,0.039Nm) safety=OK caudal=OK
-[HYDRO] t=3.766 T=(2.526,0.000) F=(0.201,-0.014,0.000) meanFx=0.000 J=(-9.205,-6.525,-4.443,-5.794,-6.815) C=(-3.442deg,0.432rad/s,0.028Nm) safety=OK caudal=OK
-[HYDRO] t=3.816 T=(2.784,0.000) F=(0.120,0.103,-0.002) meanFx=0.000 J=(-3.657,-2.060,-1.024,-3.644,-5.700) C=(-2.302deg,0.362rad/s,0.018Nm) safety=OK caudal=OK
-[HYDRO] t=3.866 T=(2.944,0.000) F=(-0.064,0.218,-0.014) meanFx=0.000 J=(2.735,2.619,2.272,-1.647,-4.655) C=(-1.358deg,0.306rad/s,0.010Nm) safety=OK caudal=OK
-[HYDRO] t=3.916 T=(3.000,0.000) F=(-0.193,0.211,-0.023) meanFx=0.000 J=(9.047,7.231,5.479,0.357,-3.533) C=(-0.480deg,0.308rad/s,0.003Nm) safety=OK caudal=OK
-[HYDRO] t=3.966 T=(2.949,0.000) F=(-0.316,0.144,-0.030) meanFx=0.000 J=(14.454,11.530,8.643,2.488,-2.199) C=(0.445deg,0.347rad/s,-0.006Nm) safety=OK caudal=OK
-[HYDRO] t=4.016 T=(2.794,0.000) F=(-0.331,0.110,-0.031) meanFx=0.000 J=(18.719,15.273,11.617,4.738,-0.587) C=(1.529deg,0.404rad/s,-0.015Nm) safety=OK caudal=OK
-[HYDRO] t=4.066 T=(2.537,0.000) F=(-0.264,0.098,-0.026) meanFx=0.000 J=(21.912,18.414,14.310,7.016,1.235) C=(2.734deg,0.424rad/s,-0.026Nm) safety=OK caudal=OK
-[HYDRO] t=4.117 T=(2.188,0.000) F=(-0.189,0.098,-0.020) meanFx=0.000 J=(24.164,20.888,16.571,9.160,3.152) C=(3.962deg,0.423rad/s,-0.037Nm) safety=OK caudal=OK
-[HYDRO] t=4.167 T=(1.760,0.000) F=(-0.099,0.096,-0.022) meanFx=0.000 J=(25.621,22.672,18.302,11.078,5.080) C=(5.175deg,0.412rad/s,-0.047Nm) safety=OK caudal=OK
-[HYDRO] t=4.218 T=(1.269,0.000) F=(-0.046,0.102,-0.024) meanFx=0.000 J=(26.288,23.816,19.496,12.667,6.896) C=(6.292deg,0.358rad/s,-0.057Nm) safety=OK caudal=OK
-[HYDRO] t=4.268 T=(0.731,0.000) F=(0.010,0.120,-0.022) meanFx=0.000 J=(26.239,24.282,20.064,13.840,8.509) C=(7.250deg,0.295rad/s,-0.065Nm) safety=OK caudal=OK
-[HYDRO] t=4.319 T=(0.168,0.000) F=(0.031,0.113,-0.019) meanFx=0.000 J=(25.571,24.022,19.925,14.471,9.786) C=(7.961deg,0.185rad/s,-0.070Nm) safety=OK caudal=OK
-[HYDRO] t=4.369 T=(0.000,0.402) F=(0.079,0.136,-0.016) meanFx=0.000 J=(24.434,22.872,19.041,14.560,10.558) C=(8.220deg,-0.018rad/s,-0.072Nm) safety=OK caudal=OK
-[HYDRO] t=4.420 T=(0.000,0.957) F=(0.116,0.130,-0.014) meanFx=0.000 J=(22.898,20.927,17.271,13.919,10.768) C=(8.016deg,-0.189rad/s,-0.069Nm) safety=OK caudal=OK
-[HYDRO] t=4.470 T=(0.000,1.478) F=(0.199,0.148,-0.012) meanFx=0.000 J=(20.899,18.308,14.721,12.472,10.280) C=(7.206deg,-0.375rad/s,-0.061Nm) safety=OK caudal=OK
-[HYDRO] t=4.521 T=(0.000,1.945) F=(0.299,0.153,-0.009) meanFx=0.000 J=(18.316,14.980,11.457,10.340,9.238) C=(5.947deg,-0.490rad/s,-0.049Nm) safety=OK caudal=OK
-[HYDRO] t=4.571 T=(0.000,2.342) F=(0.331,0.087,-0.006) meanFx=0.000 J=(14.660,10.987,7.791,7.859,7.896) C=(4.459deg,-0.511rad/s,-0.036Nm) safety=OK caudal=OK
-[HYDRO] t=4.622 T=(0.000,2.655) F=(0.262,-0.113,-0.002) meanFx=0.000 J=(9.461,6.372,4.047,5.434,6.606) C=(3.104deg,-0.416rad/s,-0.025Nm) safety=OK caudal=OK
-[HYDRO] t=4.672 T=(0.000,2.871) F=(0.128,-0.248,-0.002) meanFx=0.000 J=(2.772,1.343,0.440,3.237,5.468) C=(2.025deg,-0.339rad/s,-0.016Nm) safety=OK caudal=OK
-[HYDRO] t=4.723 T=(0.000,2.984) F=(-0.133,-0.300,-0.007) meanFx=0.000 J=(-4.482,-3.809,-3.074,1.118,4.332) C=(1.089deg,-0.325rad/s,-0.008Nm) safety=OK caudal=OK
-[HYDRO] t=4.773 T=(0.000,2.989) F=(-0.283,-0.246,-0.011) meanFx=0.000 J=(-11.164,-8.760,-6.547,-1.107,3.021) C=(0.102deg,-0.342rad/s,0.001Nm) safety=OK caudal=OK
-[HYDRO] t=4.824 T=(0.000,2.886) F=(-0.391,-0.159,-0.017) meanFx=0.000 J=(-16.633,-13.257,-9.924,-3.450,1.493) C=(-0.929deg,-0.379rad/s,0.010Nm) safety=OK caudal=OK
-[HYDRO] t=4.874 T=(0.000,2.678) F=(-0.379,-0.123,-0.020) meanFx=0.000 J=(-20.825,-17.069,-13.009,-5.852,-0.289) C=(-2.102deg,-0.426rad/s,0.020Nm) safety=OK caudal=OK
-[HYDRO] t=4.924 T=(0.000,2.374) F=(-0.264,-0.107,-0.019) meanFx=0.000 J=(-23.821,-20.157,-15.723,-8.219,-2.244) C=(-3.370deg,-0.448rad/s,0.032Nm) safety=OK caudal=OK
-[HYDRO] t=4.975 T=(0.000,1.984) F=(-0.184,-0.096,-0.017) meanFx=0.000 J=(-25.829,-22.512,-17.955,-10.428,-4.288) C=(-4.675deg,-0.452rad/s,0.043Nm) safety=OK caudal=OK
-[HYDRO] t=5.025 T=(0.000,1.522) F=(-0.083,-0.094,-0.023) meanFx=-0.107 J=(-27.001,-24.149,-19.620,-12.367,-6.298) C=(-5.956deg,-0.425rad/s,0.054Nm) safety=OK caudal=OK
-[HYDRO] t=5.076 T=(0.000,1.006) F=(-0.027,-0.109,-0.026) meanFx=-0.072 J=(-27.376,-25.120,-20.695,-13.907,-8.129) C=(-7.084deg,-0.360rad/s,0.064Nm) safety=OK caudal=OK
-[HYDRO] t=5.126 T=(0.000,0.453) F=(0.022,-0.107,-0.022) meanFx=-0.042 J=(-27.075,-25.364,-21.058,-14.942,-9.677) C=(-8.006deg,-0.271rad/s,0.071Nm) safety=OK caudal=OK
-[HYDRO] t=5.177 T=(0.117,0.000) F=(0.050,-0.113,-0.022) meanFx=-0.020 J=(-26.187,-24.835,-20.644,-15.354,-10.779) C=(-8.597deg,-0.116rad/s,0.076Nm) safety=OK caudal=OK
-[HYDRO] t=5.227 T=(0.682,0.000) F=(0.104,-0.114,-0.017) meanFx=0.003 J=(-24.941,-23.285,-19.381,-15.187,-11.334) C=(-8.633deg,0.033rad/s,0.075Nm) safety=OK caudal=OK
-[HYDRO] t=5.278 T=(1.223,0.000) F=(0.152,-0.122,-0.013) meanFx=0.026 J=(-23.265,-21.025,-17.236,-14.143,-11.178) C=(-8.130deg,0.283rad/s,0.070Nm) safety=OK caudal=OK
-[HYDRO] t=5.328 T=(1.719,0.000) F=(0.265,-0.147,-0.006) meanFx=0.054 J=(-21.134,-18.068,-14.261,-12.265,-10.327) C=(-7.021deg,0.460rad/s,0.059Nm) safety=OK caudal=OK
-[HYDRO] t=5.379 T=(2.153,0.000) F=(0.341,-0.141,-0.001) meanFx=0.088 J=(-18.251,-14.394,-10.651,-9.786,-8.993) C=(-5.534deg,0.555rad/s,0.046Nm) safety=OK caudal=OK
-[HYDRO] t=5.429 T=(2.509,0.000) F=(0.377,-0.006,0.009) meanFx=0.122 J=(-13.984,-10.031,-6.793,-7.169,-7.545) C=(-3.980deg,0.499rad/s,0.032Nm) safety=OK caudal=OK
-[HYDRO] t=5.480 T=(2.775,0.000) F=(0.308,0.154,0.010) meanFx=0.145 J=(-7.937,-5.074,-3.007,-4.778,-6.284) C=(-2.725deg,0.381rad/s,0.022Nm) safety=OK caudal=OK
-[HYDRO] t=5.530 T=(2.941,0.000) F=(0.067,0.336,-0.004) meanFx=0.148 J=(-0.574,0.211,0.622,-2.607,-5.144) C=(-1.725deg,0.332rad/s,0.013Nm) safety=OK caudal=OK
-[HYDRO] t=5.581 T=(3.000,0.000) F=(-0.219,0.302,-0.027) meanFx=0.130 J=(6.870,5.484,4.212,-0.383,-3.888) C=(-0.748deg,0.362rad/s,0.005Nm) safety=OK caudal=OK
-[HYDRO] t=5.631 T=(2.951,0.000) F=(-0.355,0.226,-0.038) meanFx=0.097 J=(13.352,10.455,7.779,1.970,-2.440) C=(0.302deg,0.360rad/s,-0.004Nm) safety=OK caudal=OK
-[HYDRO] t=5.682 T=(2.795,0.000) F=(-0.418,0.144,-0.041) meanFx=0.060 J=(18.521,14.850,11.149,4.400,-0.776) C=(1.393deg,0.403rad/s,-0.014Nm) safety=OK caudal=OK
-[HYDRO] t=5.732 T=(2.538,0.000) F=(-0.372,0.115,-0.038) meanFx=0.029 J=(22.374,18.502,14.177,6.848,1.120) C=(2.622deg,0.442rad/s,-0.025Nm) safety=OK caudal=OK
-[HYDRO] t=5.783 T=(2.189,0.000) F=(-0.234,0.098,-0.026) meanFx=0.007 J=(25.029,21.395,16.798,9.235,3.174) C=(3.939deg,0.465rad/s,-0.037Nm) safety=OK caudal=OK
-[HYDRO] t=5.833 T=(1.762,0.000) F=(-0.155,0.087,-0.024) meanFx=-0.006 J=(26.723,23.527,18.893,11.432,5.289) C=(5.291deg,0.464rad/s,-0.048Nm) safety=OK caudal=OK
-[HYDRO] t=5.884 T=(1.271,0.000) F=(-0.053,0.095,-0.027) meanFx=-0.011 J=(27.576,24.952,20.402,13.295,7.302) C=(6.578deg,0.414rad/s,-0.059Nm) safety=OK caudal=OK
-[HYDRO] t=5.934 T=(0.733,0.000) F=(-0.005,0.114,-0.026) meanFx=-0.012 J=(27.669,25.684,21.259,14.697,9.079) C=(7.667deg,0.341rad/s,-0.069Nm) safety=OK caudal=OK
-[HYDRO] t=5.985 T=(0.170,0.000) F=(0.038,0.107,-0.021) meanFx=-0.011 J=(27.128,25.655,21.346,15.522,10.496) C=(8.499deg,0.230rad/s,-0.075Nm) safety=OK caudal=OK
-[HYDRO] t=6.035 T=(0.000,0.400) F=(0.073,0.119,-0.018) meanFx=-0.007 J=(26.105,24.682,20.645,15.757,11.374) C=(8.853deg,0.006rad/s,-0.077Nm) safety=OK caudal=OK
-[HYDRO] t=6.086 T=(0.000,0.956) F=(0.131,0.115,-0.014) meanFx=-0.002 J=(24.701,22.853,18.979,15.212,11.651) C=(8.717deg,-0.172rad/s,-0.075Nm) safety=OK caudal=OK
-[HYDRO] t=6.136 T=(0.000,1.477) F=(0.194,0.125,-0.012) meanFx=0.005 J=(22.869,20.319,16.460,13.767,11.155) C=(7.910deg,-0.387rad/s,-0.067Nm) safety=OK caudal=OK
-[HYDRO] t=6.187 T=(0.000,1.944) F=(0.325,0.150,-0.007) meanFx=0.016 J=(20.547,17.043,13.127,11.536,10.015) C=(6.572deg,-0.527rad/s,-0.055Nm) safety=OK caudal=OK
-[HYDRO] t=6.237 T=(0.000,2.341) F=(0.390,0.112,-0.003) meanFx=0.030 J=(17.210,13.060,9.316,8.870,8.516) C=(4.946deg,-0.564rad/s,-0.040Nm) safety=OK caudal=OK
-[HYDRO] t=6.288 T=(0.000,2.654) F=(0.375,-0.086,0.003) meanFx=0.044 J=(12.209,8.382,5.410,6.276,7.088) C=(3.461deg,-0.449rad/s,-0.028Nm) safety=OK caudal=OK
-[HYDRO] t=6.338 T=(0.000,2.871) F=(0.257,-0.252,0.004) meanFx=0.055 J=(5.401,3.197,1.678,3.982,5.886) C=(2.334deg,-0.344rad/s,-0.019Nm) safety=OK caudal=OK
-[HYDRO] t=6.389 T=(0.000,2.984) F=(-0.035,-0.362,-0.003) meanFx=0.056 J=(-2.275,-2.203,-1.957,1.802,4.708) C=(1.376deg,-0.335rad/s,-0.010Nm) safety=OK caudal=OK
-[HYDRO] t=6.439 T=(0.000,2.989) F=(-0.229,-0.312,-0.010) meanFx=0.049 J=(-9.529,-7.444,-5.584,-0.518,3.327) C=(0.328deg,-0.380rad/s,-0.001Nm) safety=OK caudal=OK
-[HYDRO] t=6.490 T=(0.000,2.886) F=(-0.409,-0.203,-0.020) meanFx=0.035 J=(-15.572,-12.282,-9.145,-2.944,1.772) C=(-0.743deg,-0.373rad/s,0.008Nm) safety=OK caudal=OK
-[HYDRO] t=6.540 T=(0.000,2.679) F=(-0.413,-0.133,-0.026) meanFx=0.020 J=(-20.283,-16.435,-12.410,-5.411,-0.013) C=(-1.892deg,-0.422rad/s,0.019Nm) safety=OK caudal=OK
-[HYDRO] t=6.591 T=(0.000,2.375) F=(-0.336,-0.112,-0.025) meanFx=0.007 J=(-23.672,-19.818,-15.311,-7.870,-2.007) C=(-3.171deg,-0.458rad/s,0.030Nm) safety=OK caudal=OK
-[HYDRO] t=6.641 T=(0.000,1.985) F=(-0.195,-0.091,-0.020) meanFx=-0.001 J=(-25.920,-22.431,-17.762,-10.227,-4.134) C=(-4.530deg,-0.477rad/s,0.042Nm) safety=OK caudal=OK
-[HYDRO] t=6.692 T=(0.000,1.524) F=(-0.118,-0.086,-0.024) meanFx=-0.006 J=(-27.261,-24.279,-19.649,-12.342,-6.266) C=(-5.899deg,-0.461rad/s,0.054Nm) safety=OK caudal=OK
-[HYDRO] t=6.742 T=(0.000,1.007) F=(-0.026,-0.105,-0.028) meanFx=-0.008 J=(-27.775,-25.440,-20.930,-14.060,-8.221) C=(-7.135deg,-0.392rad/s,0.064Nm) safety=OK caudal=OK
-[HYDRO] t=6.793 T=(0.000,0.454) F=(0.014,-0.110,-0.025) meanFx=-0.008 J=(-27.585,-25.874,-21.497,-15.255,-9.885) C=(-8.147deg,-0.304rad/s,0.073Nm) safety=OK caudal=OK
-[HYDRO] t=6.843 T=(0.115,0.000) F=(0.056,-0.110,-0.023) meanFx=-0.007 J=(-26.801,-25.516,-21.254,-15.820,-11.100) C=(-8.837deg,-0.151rad/s,0.078Nm) safety=OK caudal=OK
-[HYDRO] t=6.894 T=(0.680,0.000) F=(0.092,-0.108,-0.018) meanFx=-0.005 J=(-25.652,-24.108,-20.152,-15.787,-11.755) C=(-8.955deg,0.002rad/s,0.078Nm) safety=OK caudal=OK
-[HYDRO] t=6.944 T=(1.221,0.000) F=(0.164,-0.115,-0.012) meanFx=-0.001 J=(-24.080,-21.965,-18.121,-14.852,-11.676) C=(-8.526deg,0.261rad/s,0.073Nm) safety=OK caudal=OK
-[HYDRO] t=6.995 T=(1.717,0.000) F=(0.244,-0.134,-0.006) meanFx=0.004 J=(-22.089,-19.114,-15.222,-13.017,-10.852) C=(-7.448deg,0.459rad/s,0.063Nm) safety=OK caudal=OK
-[HYDRO] t=7.045 T=(2.152,0.000) F=(0.373,-0.134,0.005) meanFx=0.011 J=(-19.439,-15.530,-11.608,-10.503,-9.475) C=(-5.931deg,0.575rad/s,0.049Nm) safety=OK caudal=OK
-[HYDRO] t=7.096 T=(2.508,0.000) F=(0.410,-0.049,0.012) meanFx=0.021 J=(-15.465,-11.233,-7.690,-7.779,-7.930) C=(-4.287deg,0.533rad/s,0.035Nm) safety=OK caudal=OK
-[HYDRO] t=7.146 T=(2.775,0.000) F=(0.322,0.195,0.016) meanFx=0.029 J=(-9.623,-6.288,-3.829,-5.297,-6.587) C=(-2.952deg,0.397rad/s,0.024Nm) safety=OK caudal=OK
-[HYDRO] t=7.197 T=(2.940,0.000) F=(0.159,0.333,0.006) meanFx=0.034 J=(-2.224,-0.949,-0.159,-3.083,-5.420) C=(-1.930deg,0.328rad/s,0.015Nm) safety=OK caudal=OK
-[HYDRO] t=7.247 T=(3.000,0.000) F=(-0.152,0.343,-0.022) meanFx=0.033 J=(5.462,4.444,3.485,-0.844,-4.151) C=(-0.954deg,0.366rad/s,0.006Nm) safety=OK caudal=OK
-[HYDRO] t=7.298 T=(2.951,0.000) F=(-0.318,0.265,-0.038) meanFx=0.027 J=(12.281,9.567,7.113,1.551,-2.669) C=(0.138deg,0.372rad/s,-0.003Nm) safety=OK caudal=OK
-[HYDRO] t=7.348 T=(2.796,0.000) F=(-0.432,0.167,-0.047) meanFx=0.018 J=(17.773,14.159,10.586,4.017,-1.005) C=(1.230deg,0.394rad/s,-0.013Nm) safety=OK caudal=OK
-[HYDRO] t=7.399 T=(2.539,0.000) F=(-0.410,0.126,-0.046) meanFx=0.008 J=(21.923,17.998,13.708,6.499,0.895) C=(2.449deg,0.441rad/s,-0.024Nm) safety=OK caudal=OK
-[HYDRO] t=7.449 T=(2.191,0.000) F=(-0.277,0.102,-0.033) meanFx=0.001 J=(24.794,21.061,16.442,8.945,2.974) C=(3.775deg,0.471rad/s,-0.035Nm) safety=OK caudal=OK
-[HYDRO] t=7.500 T=(1.763,0.000) F=(-0.188,0.087,-0.026) meanFx=-0.003 J=(26.625,23.346,18.669,11.230,5.141) C=(5.160deg,0.481rad/s,-0.047Nm) safety=OK caudal=OK
-[HYDRO] t=7.550 T=(1.272,0.000) F=(-0.077,0.088,-0.028) meanFx=-0.006 J=(27.591,24.895,20.305,13.200,7.231) C=(6.505deg,0.436rad/s,-0.059Nm) safety=OK caudal=OK
-[HYDRO] t=7.601 T=(0.735,0.000) F=(0.001,0.112,-0.027) meanFx=-0.006 J=(27.772,25.751,21.296,14.716,9.084) C=(7.655deg,0.360rad/s,-0.069Nm) safety=OK caudal=OK
-[HYDRO] t=7.651 T=(0.171,0.000) F=(0.029,0.103,-0.021) meanFx=-0.006 J=(27.306,25.842,21.517,15.647,10.581) C=(8.550deg,0.252rad/s,-0.076Nm) safety=OK caudal=OK
-[HYDRO] t=7.702 T=(0.000,0.398) F=(0.081,0.118,-0.017) meanFx=-0.005 J=(26.352,24.982,20.935,15.991,11.537) C=(8.975deg,0.027rad/s,-0.078Nm) safety=OK caudal=OK
-[HYDRO] t=7.752 T=(0.000,0.954) F=(0.115,0.109,-0.014) meanFx=-0.003 J=(25.011,23.254,19.383,15.543,11.891) C=(8.902deg,-0.151rad/s,-0.077Nm) safety=OK caudal=OK
-[HYDRO] t=7.803 T=(0.000,1.475) F=(0.212,0.129,-0.009) meanFx=-0.000 J=(23.253,20.808,16.951,14.181,11.454) C=(8.153deg,-0.369rad/s,-0.069Nm) safety=OK caudal=OK
-[HYDRO] t=7.853 T=(0.000,1.943) F=(0.303,0.148,-0.005) meanFx=0.004 J=(21.044,17.617,13.676,11.981,10.335) C=(6.835deg,-0.526rad/s,-0.057Nm) safety=OK caudal=OK
-[HYDRO] t=7.904 T=(0.000,2.340) F=(0.407,0.097,0.002) meanFx=0.011 J=(17.895,13.711,9.865,9.289,8.799) C=(5.184deg,-0.579rad/s,-0.042Nm) safety=OK caudal=OK
-[HYDRO] t=7.954 T=(0.000,2.653) F=(0.405,-0.036,0.007) meanFx=0.017 J=(13.116,9.090,5.928,6.624,7.309) C=(3.634deg,-0.468rad/s,-0.029Nm) safety=OK caudal=OK
-[HYDRO] t=8.005 T=(0.000,2.870) F=(0.235,-0.290,0.007) meanFx=0.023 J=(6.434,3.925,2.162,4.288,6.063) C=(2.467deg,-0.348rad/s,-0.020Nm) safety=OK caudal=OK
-[HYDRO] t=8.055 T=(0.000,2.983) F=(0.036,-0.377,0.001) meanFx=0.025 J=(-1.212,-1.448,-1.443,2.121,4.895) C=(1.515deg,-0.331rad/s,-0.012Nm) safety=OK caudal=OK
-[HYDRO] t=8.105 T=(0.000,2.990) F=(-0.262,-0.302,-0.013) meanFx=0.022 J=(-8.563,-6.705,-5.055,-0.178,3.523) C=(0.483deg,-0.386rad/s,-0.002Nm) safety=OK caudal=OK
-[HYDRO] t=8.155 T=(0.000,2.891) F=(-0.389,-0.224,-0.022) meanFx=0.017 J=(-14.768,-11.598,-8.623,-2.600,1.976) C=(-0.600deg,-0.372rad/s,0.007Nm) safety=OK caudal=OK
-[HYDRO] t=8.205 T=(0.000,2.690) F=(-0.431,-0.145,-0.030) meanFx=0.010 J=(-19.658,-15.847,-11.924,-5.059,0.221) C=(-1.726deg,-0.420rad/s,0.017Nm) safety=OK caudal=OK
-[HYDRO] t=8.255 T=(0.000,2.393) F=(-0.369,-0.116,-0.030) meanFx=0.003 J=(-23.232,-19.335,-14.865,-7.514,-1.750) C=(-2.986deg,-0.458rad/s,0.028Nm) safety=OK caudal=OK
-[HYDRO] t=8.305 T=(0.000,2.012) F=(-0.222,-0.094,-0.024) meanFx=-0.001 J=(-25.627,-22.060,-17.386,-9.894,-3.867) C=(-4.335deg,-0.481rad/s,0.040Nm) safety=OK caudal=OK
-[HYDRO] t=8.355 T=(0.000,1.559) F=(-0.141,-0.083,-0.025) meanFx=-0.004 J=(-27.088,-24.022,-19.368,-12.061,-6.016) C=(-5.715deg,-0.475rad/s,0.052Nm) safety=OK caudal=OK
-[HYDRO] t=8.405 T=(0.000,1.052) F=(-0.039,-0.096,-0.030) meanFx=-0.005 J=(-27.722,-25.296,-20.758,-13.860,-8.014) C=(-6.991deg,-0.409rad/s,0.063Nm) safety=OK caudal=OK
-[HYDRO] t=8.455 T=(0.000,0.507) F=(0.005,-0.112,-0.028) meanFx=-0.005 J=(-27.638,-25.864,-21.467,-15.160,-9.739) C=(-8.049deg,-0.328rad/s,0.072Nm) safety=OK caudal=OK
-[HYDRO] t=8.505 T=(0.057,0.000) F=(0.048,-0.106,-0.024) meanFx=-0.005 J=(-26.958,-25.664,-21.385,-15.845,-11.049) C=(-8.813deg,-0.202rad/s,0.078Nm) safety=OK caudal=OK
-[HYDRO] t=8.555 T=(0.618,0.000) F=(0.085,-0.112,-0.019) meanFx=-0.004 J=(-25.900,-24.430,-20.474,-15.968,-11.806) C=(-9.022deg,-0.027rad/s,0.079Nm) safety=OK caudal=OK
-[HYDRO] t=8.605 T=(1.157,0.000) F=(0.148,-0.112,-0.012) meanFx=-0.002 J=(-24.430,-22.455,-18.633,-15.207,-11.868) C=(-8.725deg,0.225rad/s,0.075Nm) safety=OK caudal=OK
-[HYDRO] t=8.655 T=(1.655,0.000) F=(0.222,-0.130,-0.006) meanFx=0.000 J=(-22.559,-19.788,-15.924,-13.540,-11.172) C=(-7.764deg,0.436rad/s,0.066Nm) safety=OK caudal=OK
-[HYDRO] t=8.705 T=(2.094,0.000) F=(0.357,-0.144,0.006) meanFx=0.004 J=(-20.140,-16.393,-12.450,-11.136,-9.874) C=(-6.319deg,0.569rad/s,0.052Nm) safety=OK caudal=OK
-[HYDRO] t=8.755 T=(2.460,0.000) F=(0.409,-0.080,0.016) meanFx=0.009 J=(-16.569,-12.295,-8.591,-8.413,-8.313) C=(-4.656deg,0.563rad/s,0.038Nm) safety=OK caudal=OK
-[HYDRO] t=8.805 T=(2.738,0.000) F=(0.355,0.153,0.023) meanFx=0.015 J=(-11.223,-7.521,-4.722,-5.865,-6.906) C=(-3.234deg,0.426rad/s,0.026Nm) safety=OK caudal=OK
-[HYDRO] t=8.855 T=(2.919,0.000) F=(0.209,0.310,0.014) meanFx=0.018 J=(-4.144,-2.292,-1.056,-3.626,-5.721) C=(-2.169deg,0.333rad/s,0.017Nm) safety=OK caudal=OK
-[HYDRO] t=8.905 T=(2.997,0.000) F=(-0.100,0.359,-0.016) meanFx=0.019 J=(3.550,3.084,2.550,-1.440,-4.503) C=(-1.219deg,0.345rad/s,0.009Nm) safety=OK caudal=OK
-[HYDRO] t=8.955 T=(2.969,0.000) F=(-0.281,0.288,-0.036) meanFx=0.016 J=(10.616,8.255,6.154,0.912,-3.064) C=(-0.147deg,0.381rad/s,-0.001Nm) safety=OK caudal=OK
-[HYDRO] t=9.005 T=(2.835,0.000) F=(-0.427,0.179,-0.052) meanFx=0.011 J=(16.413,12.981,9.670,3.356,-1.453) C=(0.936deg,0.385rad/s,-0.010Nm) safety=OK caudal=OK
-[HYDRO] t=9.055 T=(2.601,0.000) F=(-0.424,0.134,-0.052) meanFx=0.006 J=(20.895,16.998,12.865,5.824,0.383) C=(2.110deg,0.434rad/s,-0.021Nm) safety=OK caudal=OK
-[HYDRO] t=9.105 T=(2.275,0.000) F=(-0.303,0.104,-0.040) meanFx=0.001 J=(24.079,20.253,15.690,8.275,2.411) C=(3.403deg,0.468rad/s,-0.032Nm) safety=OK caudal=OK
-[HYDRO] t=9.155 T=(1.868,0.000) F=(-0.209,0.090,-0.030) meanFx=-0.002 J=(26.162,22.745,18.058,10.604,4.557) C=(4.771deg,0.484rad/s,-0.044Nm) safety=OK caudal=OK
-[HYDRO] t=9.205 T=(1.395,0.000) F=(-0.093,0.085,-0.030) meanFx=-0.004 J=(27.362,24.484,19.858,12.676,6.683) C=(6.141deg,0.464rad/s,-0.056Nm) safety=OK caudal=OK
-[HYDRO] t=9.255 T=(0.873,0.000) F=(-0.031,0.099,-0.030) meanFx=-0.004 J=(27.755,25.548,21.055,14.333,8.610) C=(7.353deg,0.387rad/s,-0.066Nm) safety=OK caudal=OK
-[HYDRO] t=9.305 T=(0.320,0.000) F=(0.023,0.103,-0.022) meanFx=-0.004 J=(27.475,25.880,21.523,15.459,10.225) C=(8.337deg,0.293rad/s,-0.074Nm) safety=OK caudal=OK
-[HYDRO] t=9.355 T=(0.000,0.245) F=(0.053,0.109,-0.021) meanFx=-0.004 J=(26.646,25.378,21.202,15.968,11.358) C=(8.953deg,0.095rad/s,-0.079Nm) safety=OK caudal=OK
-[HYDRO] t=9.405 T=(0.000,0.801) F=(0.105,0.107,-0.014) meanFx=-0.003 J=(25.463,23.894,19.980,15.827,11.930) C=(9.030deg,-0.048rad/s,-0.079Nm) safety=OK caudal=OK
-[HYDRO] t=9.455 T=(0.000,1.328) F=(0.157,0.115,-0.011) meanFx=-0.001 J=(23.866,21.696,17.867,14.782,11.749) C=(8.502deg,-0.289rad/s,-0.073Nm) safety=OK caudal=OK
-[HYDRO] t=9.505 T=(0.000,1.809) F=(0.282,0.144,-0.003) meanFx=0.001 J=(21.869,18.789,14.889,12.857,10.834) C=(7.359deg,-0.476rad/s,-0.062Nm) safety=OK caudal=OK
-[HYDRO] t=9.555 T=(0.000,2.225) F=(0.369,0.144,0.003) meanFx=0.005 J=(19.168,15.171,11.251,10.288,9.397) C=(5.795deg,-0.587rad/s,-0.048Nm) safety=OK caudal=OK
-[HYDRO] t=9.605 T=(0.000,2.563) F=(0.413,0.001,0.011) meanFx=0.009 J=(15.092,10.848,7.346,7.574,7.842) C=(4.161deg,-0.524rad/s,-0.034Nm) safety=OK caudal=OK
-[HYDRO] t=9.655 T=(0.000,2.810) F=(0.342,-0.176,0.013) meanFx=0.013 J=(9.134,5.900,3.540,5.128,6.518) C=(2.862deg,-0.386rad/s,-0.023Nm) safety=OK caudal=OK
-[HYDRO] t=9.705 T=(0.000,2.957) F=(0.083,-0.368,0.005) meanFx=0.015 J=(1.700,0.585,-0.087,2.949,5.354) C=(1.872deg,-0.324rad/s,-0.015Nm) safety=OK caudal=OK
-[HYDRO] t=9.755 T=(0.000,2.999) F=(-0.131,-0.354,-0.006) meanFx=0.015 J=(-5.909,-4.757,-3.693,0.706,4.069) C=(0.895deg,-0.368rad/s,-0.006Nm) safety=OK caudal=OK
-[HYDRO] t=9.805 T=(0.000,2.936) F=(-0.368,-0.239,-0.023) meanFx=0.012 J=(-12.595,-9.818,-7.298,-1.685,2.568) C=(-0.199deg,-0.377rad/s,0.004Nm) safety=OK caudal=OK
-[HYDRO] t=9.855 T=(0.000,2.768) F=(-0.434,-0.179,-0.031) meanFx=0.008 J=(-17.975,-14.339,-10.726,-4.144,0.888) C=(-1.295deg,-0.399rad/s,0.013Nm) safety=OK caudal=OK
-[HYDRO] t=9.905 T=(0.000,2.502) F=(-0.387,-0.121,-0.035) meanFx=0.003 J=(-22.036,-18.114,-13.802,-6.612,-1.016) C=(-2.512deg,-0.447rad/s,0.024Nm) safety=OK caudal=OK
-[HYDRO] t=9.955 T=(0.000,2.148) F=(-0.289,-0.105,-0.031) meanFx=-0.000 J=(-24.844,-21.122,-16.494,-9.036,-3.097) C=(-3.836deg,-0.477rad/s,0.036Nm) safety=OK caudal=OK
-[HYDRO] t=10.005 T=(0.000,1.717) F=(-0.158,-0.083,-0.026) meanFx=-0.003 J=(-26.625,-23.368,-18.687,-11.303,-5.256) C=(-5.218deg,-0.484rad/s,0.048Nm) safety=OK caudal=OK
-[HYDRO] t=10.055 T=(0.000,1.226) F=(-0.084,-0.086,-0.029) meanFx=-0.004 J=(-27.555,-24.887,-20.301,-13.256,-7.340) C=(-6.558deg,-0.441rad/s,0.059Nm) safety=OK caudal=OK
-[HYDRO] t=10.105 T=(0.000,0.691) F=(-0.002,-0.111,-0.030) meanFx=-0.004 J=(-27.711,-25.724,-21.277,-14.763,-9.181) C=(-7.704deg,-0.364rad/s,0.069Nm) safety=OK caudal=OK
-[HYDRO] t=10.155 T=(0.000,0.132) F=(0.027,-0.101,-0.024) meanFx=-0.004 J=(-27.237,-25.807,-21.496,-15.686,-10.669) C=(-8.593deg,-0.255rad/s,0.076Nm) safety=OK caudal=OK
-[HYDRO] t=10.205 T=(0.432,0.000) F=(0.078,-0.118,-0.020) meanFx=-0.003 J=(-26.303,-24.933,-20.921,-16.044,-11.618) C=(-9.007deg,-0.033rad/s,0.079Nm) safety=OK caudal=OK
-[HYDRO] t=10.255 T=(0.981,0.000) F=(0.111,-0.108,-0.015) meanFx=-0.002 J=(-24.979,-23.233,-19.391,-15.598,-11.964) C=(-8.936deg,0.153rad/s,0.077Nm) safety=OK caudal=OK
-[HYDRO] t=10.305 T=(1.495,0.000) F=(0.205,-0.126,-0.006) meanFx=-0.001 J=(-23.253,-20.826,-16.990,-14.251,-11.530) C=(-8.198deg,0.370rad/s,0.070Nm) safety=OK caudal=OK
-[HYDRO] t=10.355 T=(1.956,0.000) F=(0.295,-0.144,0.003) meanFx=0.001 J=(-21.090,-17.686,-13.758,-12.074,-10.420) C=(-6.896deg,0.527rad/s,0.058Nm) safety=OK caudal=OK
-[HYDRO] t=10.405 T=(2.347,0.000) F=(0.403,-0.099,0.018) meanFx=0.005 J=(-18.022,-13.843,-9.989,-9.401,-8.889) C=(-5.254deg,0.585rad/s,0.043Nm) safety=OK caudal=OK
-[HYDRO] t=10.455 T=(2.656,0.000) F=(0.405,0.030,0.027) meanFx=0.008 J=(-13.368,-9.294,-6.084,-6.741,-7.390) C=(-3.699deg,0.477rad/s,0.030Nm) safety=OK caudal=OK
-[HYDRO] t=10.505 T=(2.870,0.000) F=(0.243,0.285,0.021) meanFx=0.011 J=(-6.826,-4.199,-2.346,-4.407,-6.137) C=(-2.521deg,0.353rad/s,0.020Nm) safety=OK caudal=OK
-[HYDRO] t=10.555 T=(2.983,0.000) F=(0.049,0.377,0.002) meanFx=0.013 J=(0.814,1.170,1.258,-2.239,-4.966) C=(-1.566deg,0.329rad/s,0.012Nm) safety=OK caudal=OK
-[HYDRO] t=10.605 T=(2.990,0.000) F=(-0.251,0.305,-0.034) meanFx=0.012 J=(8.221,6.442,4.865,0.054,-3.597) C=(-0.542deg,0.386rad/s,0.003Nm) safety=OK caudal=OK
-[HYDRO] t=10.655 T=(2.891,0.000) F=(-0.382,0.222,-0.050) meanFx=0.009 J=(14.494,11.361,8.440,2.480,-2.045) C=(0.549deg,0.374rad/s,-0.007Nm) safety=OK caudal=OK
-[HYDRO] t=10.705 T=(2.690,0.000) F=(-0.430,0.141,-0.057) meanFx=0.005 J=(19.444,15.647,11.762,4.949,-0.287) C=(1.677deg,0.421rad/s,-0.017Nm) safety=OK caudal=OK
-[HYDRO] t=10.755 T=(2.393,0.000) F=(-0.371,0.112,-0.052) meanFx=0.001 J=(23.076,19.175,14.725,7.413,1.686) C=(2.937deg,0.458rad/s,-0.028Nm) safety=OK caudal=OK
-[HYDRO] t=10.805 T=(2.012,0.000) F=(-0.225,0.092,-0.035) meanFx=-0.001 J=(25.519,21.938,17.270,9.805,3.806) C=(4.286deg,0.481rad/s,-0.040Nm) safety=OK caudal=OK
+[INFO] IC problem solved with 1 iterations in 0.000100 s.
+[P0] t=0.0005 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.0505 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.1005 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.1505 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.2005 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.2505 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.3005 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.3505 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.4005 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.4505 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.5010 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.5515 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.6020 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.6525 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.7030 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.7535 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.8040 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.8545 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.9050 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=0.9555 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0000deg safety=OK
+[P0] t=1.0060 T=(0.0000,0.0000) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.0000deg safety=OK
+[P0] t=1.0565 T=(0.0000,0.0058) loadFx=-0.0000 meanFx=0.0000 tailSurfFx=-0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.0018deg safety=OK
+[P0] t=1.1070 T=(0.0000,0.0376) loadFx=-0.0001 meanFx=0.0000 tailSurfFx=-0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0016deg safety=OK
+[P0] t=1.1575 T=(0.0000,0.1118) loadFx=-0.0007 meanFx=0.0000 tailSurfFx=-0.0000 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0307deg safety=OK
+[P0] t=1.2080 T=(0.0000,0.2369) loadFx=-0.0026 meanFx=0.0000 tailSurfFx=-0.0001 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.1067deg safety=OK
+[P0] t=1.2585 T=(0.0000,0.4119) loadFx=-0.0056 meanFx=0.0000 tailSurfFx=-0.0003 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.2410deg safety=OK
+[P0] t=1.3090 T=(0.0000,0.6269) loadFx=-0.0088 meanFx=0.0000 tailSurfFx=-0.0009 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.4189deg safety=OK
+[P0] t=1.3595 T=(0.0000,0.8639) loadFx=-0.0119 meanFx=0.0000 tailSurfFx=-0.0015 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.6131deg safety=OK
+[P0] t=1.4100 T=(0.0000,1.0990) loadFx=-0.0154 meanFx=0.0000 tailSurfFx=-0.0026 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.7927deg safety=OK
+[P0] t=1.4605 T=(0.0000,1.3046) loadFx=-0.0202 meanFx=0.0000 tailSurfFx=-0.0042 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.9335deg safety=OK
+[P0] t=1.5110 T=(0.0000,1.4525) loadFx=-0.0268 meanFx=0.0000 tailSurfFx=-0.0053 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.0136deg safety=OK
+[P0] t=1.5615 T=(0.0000,1.5172) loadFx=-0.0343 meanFx=0.0000 tailSurfFx=-0.0068 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.0106deg safety=OK
+[P0] t=1.6120 T=(0.0000,1.4785) loadFx=-0.0415 meanFx=0.0000 tailSurfFx=-0.0074 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.9018deg safety=OK
+[P0] t=1.6625 T=(0.0000,1.3242) loadFx=-0.0454 meanFx=0.0000 tailSurfFx=-0.0072 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.6727deg safety=OK
+[P0] t=1.7130 T=(0.0000,1.0520) loadFx=-0.0416 meanFx=0.0000 tailSurfFx=-0.0064 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.3230deg safety=OK
+[P0] t=1.7635 T=(0.0000,0.6704) loadFx=-0.0254 meanFx=0.0000 tailSurfFx=-0.0045 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.1316deg safety=OK
+[P0] t=1.8140 T=(0.0000,0.1986) loadFx=0.0046 meanFx=0.0000 tailSurfFx=-0.0031 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.6630deg safety=OK
+[P0] t=1.8645 T=(0.3341,0.0000) loadFx=0.0468 meanFx=0.0000 tailSurfFx=-0.0013 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.2299deg safety=OK
+[P0] t=1.9150 T=(0.8905,0.0000) loadFx=0.0939 meanFx=0.0000 tailSurfFx=-0.0006 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.7898deg safety=OK
+[P0] t=1.9655 T=(1.4287,0.0000) loadFx=0.1386 meanFx=0.0000 tailSurfFx=0.0006 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.2919deg safety=OK
+[P0] t=2.0155 T=(1.9021,0.0000) loadFx=0.1691 meanFx=0.0000 tailSurfFx=0.0031 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.7029deg safety=OK
+[P0] t=2.0655 T=(2.3031,0.0000) loadFx=0.1693 meanFx=0.0000 tailSurfFx=0.0022 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.9778deg safety=OK
+[P0] t=2.1155 T=(2.6225,0.0000) loadFx=0.1286 meanFx=0.0000 tailSurfFx=0.0009 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.1041deg safety=OK
+[P0] t=2.1655 T=(2.8491,0.0000) loadFx=0.0485 meanFx=0.0000 tailSurfFx=-0.0028 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.0621deg safety=OK
+[P0] t=2.2155 T=(2.9747,0.0000) loadFx=-0.0616 meanFx=0.0000 tailSurfFx=-0.0070 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.8717deg safety=OK
+[P0] t=2.2655 T=(2.9949,0.0000) loadFx=-0.1843 meanFx=0.0000 tailSurfFx=-0.0170 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.5508deg safety=OK
+[P0] t=2.3155 T=(2.9090,0.0000) loadFx=-0.2941 meanFx=0.0000 tailSurfFx=-0.0266 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.1227deg safety=OK
+[P0] t=2.3655 T=(2.7201,0.0000) loadFx=-0.3727 meanFx=0.0000 tailSurfFx=-0.0435 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.6021deg safety=OK
+[P0] t=2.4155 T=(2.4348,0.0000) loadFx=-0.3944 meanFx=0.0000 tailSurfFx=-0.0528 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.9985deg safety=OK
+[P0] t=2.4655 T=(2.0632,0.0000) loadFx=-0.3525 meanFx=0.0000 tailSurfFx=-0.0589 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.3310deg safety=OK
+[P0] t=2.5155 T=(1.6186,0.0000) loadFx=-0.2557 meanFx=0.0000 tailSurfFx=-0.0625 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.3950deg safety=OK
+[P0] t=2.5655 T=(1.1166,0.0000) loadFx=-0.1151 meanFx=0.0000 tailSurfFx=-0.0657 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.1589deg safety=OK
+[P0] t=2.6155 T=(0.5751,0.0000) loadFx=0.0676 meanFx=0.0000 tailSurfFx=-0.0630 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.9442deg safety=OK
+[P0] t=2.6655 T=(0.0132,0.0000) loadFx=0.2736 meanFx=0.0000 tailSurfFx=-0.0503 consF=0.0000 consT=0.0000 jacErr=0.0000 C=2.7210deg safety=OK
+[P0] t=2.7155 T=(0.0000,0.5492) loadFx=0.4763 meanFx=0.0000 tailSurfFx=-0.0378 consF=0.0000 consT=0.0000 jacErr=0.0000 C=3.4284deg safety=OK
+[P0] t=2.7655 T=(0.0000,1.0921) loadFx=0.6579 meanFx=0.0000 tailSurfFx=-0.0165 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.0598deg safety=OK
+[P0] t=2.8155 T=(0.0000,1.5963) loadFx=0.7869 meanFx=0.0000 tailSurfFx=-0.0027 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.5484deg safety=OK
+[P0] t=2.8655 T=(0.0000,2.0440) loadFx=0.8522 meanFx=0.0000 tailSurfFx=0.0190 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.8839deg safety=OK
+[P0] t=2.9155 T=(0.0000,2.4193) loadFx=0.8211 meanFx=0.0000 tailSurfFx=0.0322 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.0110deg safety=OK
+[P0] t=2.9655 T=(0.0000,2.7088) loadFx=0.6919 meanFx=0.0000 tailSurfFx=0.0521 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.9097deg safety=OK
+[P0] t=3.0155 T=(0.0000,2.9024) loadFx=0.4558 meanFx=0.0000 tailSurfFx=0.0649 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.5579deg safety=OK
+[P0] t=3.0655 T=(0.0000,2.9932) loadFx=0.1443 meanFx=0.0000 tailSurfFx=0.0786 consF=0.0000 consT=0.0000 jacErr=0.0000 C=3.9939deg safety=OK
+[P0] t=3.1155 T=(0.0000,2.9780) loadFx=-0.1848 meanFx=0.0000 tailSurfFx=0.0784 consF=0.0000 consT=0.0000 jacErr=0.0000 C=3.3047deg safety=OK
+[P0] t=3.1655 T=(0.0000,2.8572) loadFx=-0.4842 meanFx=0.0000 tailSurfFx=0.0537 consF=0.0000 consT=0.0000 jacErr=0.0000 C=2.6039deg safety=OK
+[P0] t=3.2155 T=(0.0000,2.6353) loadFx=-0.6830 meanFx=0.0000 tailSurfFx=0.0200 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.9518deg safety=OK
+[P0] t=3.2655 T=(0.0000,2.3199) loadFx=-0.7877 meanFx=0.0000 tailSurfFx=-0.0420 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.3162deg safety=OK
+[P0] t=3.3155 T=(0.0000,1.9224) loadFx=-0.7470 meanFx=0.0000 tailSurfFx=-0.0746 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.6183deg safety=OK
+[P0] t=3.3655 T=(0.0000,1.4568) loadFx=-0.6171 meanFx=0.0000 tailSurfFx=-0.1009 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.2193deg safety=OK
+[P0] t=3.4155 T=(0.0000,0.9396) loadFx=-0.4056 meanFx=0.0000 tailSurfFx=-0.1163 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.1470deg safety=OK
+[P0] t=3.4655 T=(0.0000,0.3891) loadFx=-0.1488 meanFx=0.0000 tailSurfFx=-0.1242 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.0781deg safety=OK
+[P0] t=3.5155 T=(0.1752,0.0000) loadFx=0.1535 meanFx=0.0000 tailSurfFx=-0.1158 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.9596deg safety=OK
+[P0] t=3.5655 T=(0.7333,0.0000) loadFx=0.4536 meanFx=0.0000 tailSurfFx=-0.0873 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.7599deg safety=OK
+[P0] t=3.6155 T=(1.2654,0.0000) loadFx=0.7314 meanFx=0.0000 tailSurfFx=-0.0626 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.4846deg safety=OK
+[P0] t=3.6655 T=(1.7527,0.0000) loadFx=0.9657 meanFx=0.0000 tailSurfFx=-0.0253 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.1117deg safety=OK
+[P0] t=3.7155 T=(2.1779,0.0000) loadFx=1.1147 meanFx=0.0000 tailSurfFx=-0.0035 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.5993deg safety=OK
+[P0] t=3.7655 T=(2.5259,0.0000) loadFx=1.1695 meanFx=0.0000 tailSurfFx=0.0274 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.8673deg safety=OK
+[P0] t=3.8155 T=(2.7844,0.0000) loadFx=1.0874 meanFx=0.0000 tailSurfFx=0.0462 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.8557deg safety=OK
+[P0] t=3.8655 T=(2.9444,0.0000) loadFx=0.8679 meanFx=0.0000 tailSurfFx=0.0766 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.5038deg safety=OK
+[P0] t=3.9155 T=(3.0000,0.0000) loadFx=0.5172 meanFx=0.0000 tailSurfFx=0.0982 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.8292deg safety=OK
+[P0] t=3.9655 T=(2.9493,0.0000) loadFx=0.1028 meanFx=0.0000 tailSurfFx=0.1240 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.9404deg safety=OK
+[P0] t=4.0155 T=(2.7942,0.0000) loadFx=-0.2832 meanFx=0.0000 tailSurfFx=0.1264 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.0387deg safety=OK
+[P0] t=4.0660 T=(2.5370,0.0000) loadFx=-0.6036 meanFx=0.0000 tailSurfFx=0.0915 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.2799deg safety=OK
+[P0] t=4.1165 T=(2.1882,0.0000) loadFx=-0.7770 meanFx=0.0000 tailSurfFx=0.0442 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.6561deg safety=OK
+[P0] t=4.1670 T=(1.7603,0.0000) loadFx=-0.8355 meanFx=0.0000 tailSurfFx=-0.0317 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.9939deg safety=OK
+[P0] t=4.2175 T=(1.2688,0.0000) loadFx=-0.7400 meanFx=0.0000 tailSurfFx=-0.0630 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.1696deg safety=OK
+[P0] t=4.2680 T=(0.7315,0.0000) loadFx=-0.5651 meanFx=0.0000 tailSurfFx=-0.0927 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.8141deg safety=OK
+[P0] t=4.3185 T=(0.1677,0.0000) loadFx=-0.3103 meanFx=0.0000 tailSurfFx=-0.1088 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.8218deg safety=OK
+[P0] t=4.3690 T=(0.0000,0.4022) loadFx=-0.0249 meanFx=0.0000 tailSurfFx=-0.1126 consF=0.0000 consT=0.0000 jacErr=0.0000 C=2.7327deg safety=OK
+[P0] t=4.4195 T=(0.0000,0.9575) loadFx=0.2821 meanFx=0.0000 tailSurfFx=-0.1007 consF=0.0000 consT=0.0000 jacErr=0.0000 C=3.5546deg safety=OK
+[P0] t=4.4700 T=(0.0000,1.4782) loadFx=0.5807 meanFx=0.0000 tailSurfFx=-0.0694 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.2876deg safety=OK
+[P0] t=4.5205 T=(0.0000,1.9455) loadFx=0.8451 meanFx=0.0000 tailSurfFx=-0.0336 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.9548deg safety=OK
+[P0] t=4.5710 T=(0.0000,2.3425) loadFx=1.0279 meanFx=0.0000 tailSurfFx=-0.0121 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.4929deg safety=OK
+[P0] t=4.6215 T=(0.0000,2.6548) loadFx=1.1216 meanFx=0.0000 tailSurfFx=0.0157 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.8331deg safety=OK
+[P0] t=4.6720 T=(0.0000,2.8712) loadFx=1.0770 meanFx=0.0000 tailSurfFx=0.0320 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.8867deg safety=OK
+[P0] t=4.7225 T=(0.0000,2.9839) loadFx=0.8944 meanFx=0.0000 tailSurfFx=0.0578 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.5915deg safety=OK
+[P0] t=4.7730 T=(0.0000,2.9887) loadFx=0.5735 meanFx=0.0000 tailSurfFx=0.0766 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.9464deg safety=OK
+[P0] t=4.8235 T=(0.0000,2.8856) loadFx=0.1820 meanFx=0.0000 tailSurfFx=0.1014 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.0513deg safety=OK
+[P0] t=4.8740 T=(0.0000,2.6781) loadFx=-0.1891 meanFx=0.0000 tailSurfFx=0.1071 consF=0.0000 consT=0.0000 jacErr=0.0000 C=3.1081deg safety=OK
+[P0] t=4.9245 T=(0.0000,2.3739) loadFx=-0.4959 meanFx=0.0000 tailSurfFx=0.0835 consF=0.0000 consT=0.0000 jacErr=0.0000 C=2.2996deg safety=OK
+[P0] t=4.9750 T=(0.0000,1.9839) loadFx=-0.6741 meanFx=0.0000 tailSurfFx=0.0460 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.6378deg safety=OK
+[P0] t=5.0255 T=(0.0000,1.5223) loadFx=-0.7444 meanFx=-0.7374 tailSurfFx=-0.0177 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.9609deg safety=OK
+[P0] t=5.0760 T=(0.0000,1.0056) loadFx=-0.6722 meanFx=-0.7240 tailSurfFx=-0.0438 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.1334deg safety=OK
+[P0] t=5.1265 T=(0.0000,0.4525) loadFx=-0.5180 meanFx=-0.6746 tailSurfFx=-0.0687 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.8453deg safety=OK
+[P0] t=5.1770 T=(0.1168,0.0000) loadFx=-0.2869 meanFx=-0.5982 tailSurfFx=-0.0833 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.8558deg safety=OK
+[P0] t=5.2275 T=(0.6820,0.0000) loadFx=-0.0235 meanFx=-0.5004 tailSurfFx=-0.0885 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.7550deg safety=OK
+[P0] t=5.2780 T=(1.2225,0.0000) loadFx=0.2578 meanFx=-0.3880 tailSurfFx=-0.0798 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.5444deg safety=OK
+[P0] t=5.3285 T=(1.7188,0.0000) loadFx=0.5310 meanFx=-0.2672 tailSurfFx=-0.0549 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.2431deg safety=OK
+[P0] t=5.3790 T=(2.1531,0.0000) loadFx=0.7603 meanFx=-0.1446 tailSurfFx=-0.0354 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.8644deg safety=OK
+[P0] t=5.4295 T=(2.5095,0.0000) loadFx=0.9325 meanFx=-0.0269 tailSurfFx=-0.0084 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.3523deg safety=OK
+[P0] t=5.4800 T=(2.7752,0.0000) loadFx=0.9956 meanFx=0.0785 tailSurfFx=0.0074 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.6386deg safety=OK
+[P0] t=5.5305 T=(2.9407,0.0000) loadFx=0.9445 meanFx=0.1647 tailSurfFx=0.0274 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.6361deg safety=OK
+[P0] t=5.5810 T=(2.9999,0.0000) loadFx=0.7554 meanFx=0.2249 tailSurfFx=0.0484 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.2970deg safety=OK
+[P0] t=5.6315 T=(2.9507,0.0000) loadFx=0.4449 meanFx=0.2553 tailSurfFx=0.0632 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.6336deg safety=OK
+[P0] t=5.6820 T=(2.7948,0.0000) loadFx=0.0906 meanFx=0.2560 tailSurfFx=0.0800 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.7606deg safety=OK
+[P0] t=5.7325 T=(2.5380,0.0000) loadFx=-0.2318 meanFx=0.2330 tailSurfFx=0.0801 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.8650deg safety=OK
+[P0] t=5.7830 T=(2.1895,0.0000) loadFx=-0.4867 meanFx=0.1944 tailSurfFx=0.0531 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.0885deg safety=OK
+[P0] t=5.8335 T=(1.7618,0.0000) loadFx=-0.6223 meanFx=0.1485 tailSurfFx=0.0200 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.4096deg safety=OK
+[P0] t=5.8840 T=(1.2705,0.0000) loadFx=-0.6570 meanFx=0.1029 tailSurfFx=-0.0265 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.6842deg safety=OK
+[P0] t=5.9345 T=(0.7333,0.0000) loadFx=-0.5661 meanFx=0.0639 tailSurfFx=-0.0415 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.1769deg safety=OK
+[P0] t=5.9850 T=(0.1696,0.0000) loadFx=-0.4081 meanFx=0.0355 tailSurfFx=-0.0618 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.1602deg safety=OK
+[P0] t=6.0355 T=(0.0000,0.4003) loadFx=-0.1808 meanFx=0.0192 tailSurfFx=-0.0716 consF=0.0000 consT=0.0000 jacErr=0.0000 C=2.1239deg safety=OK
+[P0] t=6.0860 T=(0.0000,0.9557) loadFx=0.0706 meanFx=0.0158 tailSurfFx=-0.0711 consF=0.0000 consT=0.0000 jacErr=0.0000 C=2.9862deg safety=OK
+[P0] t=6.1365 T=(0.0000,1.4765) loadFx=0.3313 meanFx=0.0242 tailSurfFx=-0.0612 consF=0.0000 consT=0.0000 jacErr=0.0000 C=3.7250deg safety=OK
+[P0] t=6.1870 T=(0.0000,1.9440) loadFx=0.5753 meanFx=0.0426 tailSurfFx=-0.0384 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.3768deg safety=OK
+[P0] t=6.2375 T=(0.0000,2.3413) loadFx=0.7672 meanFx=0.0685 tailSurfFx=-0.0219 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.9255deg safety=OK
+[P0] t=6.2880 T=(0.0000,2.6539) loadFx=0.8931 meanFx=0.0988 tailSurfFx=-0.0011 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.3219deg safety=OK
+[P0] t=6.3385 T=(0.0000,2.8707) loadFx=0.9066 meanFx=0.1294 tailSurfFx=0.0128 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.4895deg safety=OK
+[P0] t=6.3890 T=(0.0000,2.9837) loadFx=0.8044 meanFx=0.1563 tailSurfFx=0.0302 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.3583deg safety=OK
+[P0] t=6.4395 T=(0.0000,2.9889) loadFx=0.5710 meanFx=0.1752 tailSurfFx=0.0423 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.9025deg safety=OK
+[P0] t=6.4900 T=(0.0000,2.8861) loadFx=0.2595 meanFx=0.1835 tailSurfFx=0.0600 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.1701deg safety=OK
+[P0] t=6.5405 T=(0.0000,2.6790) loadFx=-0.0642 meanFx=0.1805 tailSurfFx=0.0672 consF=0.0000 consT=0.0000 jacErr=0.0000 C=3.3029deg safety=OK
+[P0] t=6.5910 T=(0.0000,2.3751) loadFx=-0.3373 meanFx=0.1682 tailSurfFx=0.0589 consF=0.0000 consT=0.0000 jacErr=0.0000 C=2.4686deg safety=OK
+[P0] t=6.6415 T=(0.0000,1.9853) loadFx=-0.5342 meanFx=0.1494 tailSurfFx=0.0235 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.7423deg safety=OK
+[P0] t=6.6920 T=(0.0000,1.5239) loadFx=-0.6111 meanFx=0.1276 tailSurfFx=-0.0071 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.0476deg safety=OK
+[P0] t=6.7425 T=(0.0000,1.0073) loadFx=-0.5875 meanFx=0.1063 tailSurfFx=-0.0362 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.2654deg safety=OK
+[P0] t=6.7930 T=(0.0000,0.4544) loadFx=-0.4624 meanFx=0.0884 tailSurfFx=-0.0471 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.6492deg safety=OK
+[P0] t=6.8435 T=(0.1150,0.0000) loadFx=-0.2815 meanFx=0.0757 tailSurfFx=-0.0638 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.6336deg safety=OK
+[P0] t=6.8940 T=(0.6802,0.0000) loadFx=-0.0434 meanFx=0.0693 tailSurfFx=-0.0678 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.5402deg safety=OK
+[P0] t=6.9445 T=(1.2208,0.0000) loadFx=0.2056 meanFx=0.0697 tailSurfFx=-0.0598 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.3353deg safety=OK
+[P0] t=6.9950 T=(1.7173,0.0000) loadFx=0.4490 meanFx=0.0763 tailSurfFx=-0.0475 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.0200deg safety=OK
+[P0] t=7.0455 T=(2.1518,0.0000) loadFx=0.6645 meanFx=0.0882 tailSurfFx=-0.0247 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.6137deg safety=OK
+[P0] t=7.0960 T=(2.5085,0.0000) loadFx=0.8141 meanFx=0.1041 tailSurfFx=-0.0100 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.0793deg safety=OK
+[P0] t=7.1465 T=(2.7745,0.0000) loadFx=0.8846 meanFx=0.1219 tailSurfFx=0.0092 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.3593deg safety=OK
+[P0] t=7.1970 T=(2.9403,0.0000) loadFx=0.8338 meanFx=0.1391 tailSurfFx=0.0203 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.3757deg safety=OK
+[P0] t=7.2475 T=(2.9999,0.0000) loadFx=0.6661 meanFx=0.1530 tailSurfFx=0.0370 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.0814deg safety=OK
+[P0] t=7.2980 T=(2.9510,0.0000) loadFx=0.3884 meanFx=0.1614 tailSurfFx=0.0485 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.4830deg safety=OK
+[P0] t=7.3485 T=(2.7955,0.0000) loadFx=0.0694 meanFx=0.1628 tailSurfFx=0.0614 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.6775deg safety=OK
+[P0] t=7.3990 T=(2.5390,0.0000) loadFx=-0.2233 meanFx=0.1576 tailSurfFx=0.0614 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.8256deg safety=OK
+[P0] t=7.4495 T=(2.1908,0.0000) loadFx=-0.4497 meanFx=0.1473 tailSurfFx=0.0397 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.0549deg safety=OK
+[P0] t=7.5000 T=(1.7634,0.0000) loadFx=-0.5723 meanFx=0.1337 tailSurfFx=0.0124 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.3594deg safety=OK
+[P0] t=7.5505 T=(1.2722,0.0000) loadFx=-0.6013 meanFx=0.1192 tailSurfFx=-0.0271 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.6272deg safety=OK
+[P0] t=7.6010 T=(0.7351,0.0000) loadFx=-0.5203 meanFx=0.1059 tailSurfFx=-0.0449 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.2217deg safety=OK
+[P0] t=7.6515 T=(0.1714,0.0000) loadFx=-0.3598 meanFx=0.0954 tailSurfFx=-0.0567 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.1859deg safety=OK
+[P0] t=7.7020 T=(0.0000,0.3984) loadFx=-0.1490 meanFx=0.0889 tailSurfFx=-0.0673 consF=0.0000 consT=0.0000 jacErr=0.0000 C=2.1329deg safety=OK
+[P0] t=7.7525 T=(0.0000,0.9539) loadFx=0.0986 meanFx=0.0868 tailSurfFx=-0.0654 consF=0.0000 consT=0.0000 jacErr=0.0000 C=2.9863deg safety=OK
+[P0] t=7.8030 T=(0.0000,1.4749) loadFx=0.3482 meanFx=0.0893 tailSurfFx=-0.0506 consF=0.0000 consT=0.0000 jacErr=0.0000 C=3.7147deg safety=OK
+[P0] t=7.8535 T=(0.0000,1.9426) loadFx=0.5743 meanFx=0.0959 tailSurfFx=-0.0360 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.3514deg safety=OK
+[P0] t=7.9040 T=(0.0000,2.3401) loadFx=0.7599 meanFx=0.1060 tailSurfFx=-0.0133 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.8779deg safety=OK
+[P0] t=7.9545 T=(0.0000,2.6531) loadFx=0.8625 meanFx=0.1181 tailSurfFx=-0.0010 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.2498deg safety=OK
+[P0] t=8.0050 T=(0.0000,2.8701) loadFx=0.8720 meanFx=0.1309 tailSurfFx=0.0179 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.3931deg safety=OK
+[P0] t=8.0550 T=(0.0000,2.9829) loadFx=0.7549 meanFx=0.1422 tailSurfFx=0.0288 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.2464deg safety=OK
+[P0] t=8.1050 T=(0.0000,2.9900) loadFx=0.5267 meanFx=0.1504 tailSurfFx=0.0460 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.7913deg safety=OK
+[P0] t=8.1550 T=(0.0000,2.8912) loadFx=0.2198 meanFx=0.1540 tailSurfFx=0.0564 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.0772deg safety=OK
+[P0] t=8.2050 T=(0.0000,2.6899) loadFx=-0.0937 meanFx=0.1525 tailSurfFx=0.0626 consF=0.0000 consT=0.0000 jacErr=0.0000 C=3.2391deg safety=OK
+[P0] t=8.2550 T=(0.0000,2.3934) loadFx=-0.3509 meanFx=0.1466 tailSurfFx=0.0541 consF=0.0000 consT=0.0000 jacErr=0.0000 C=2.4299deg safety=OK
+[P0] t=8.3050 T=(0.0000,2.0121) loadFx=-0.5362 meanFx=0.1376 tailSurfFx=0.0196 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.7157deg safety=OK
+[P0] t=8.3550 T=(0.0000,1.5595) loadFx=-0.6057 meanFx=0.1269 tailSurfFx=-0.0100 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.0254deg safety=OK
+[P0] t=8.4050 T=(0.0000,1.0516) loadFx=-0.5788 meanFx=0.1162 tailSurfFx=-0.0385 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.2531deg safety=OK
+[P0] t=8.4550 T=(0.0000,0.5065) loadFx=-0.4536 meanFx=0.1069 tailSurfFx=-0.0491 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.6483deg safety=OK
+[P0] t=8.5050 T=(0.0565,0.0000) loadFx=-0.2743 meanFx=0.1002 tailSurfFx=-0.0652 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.6182deg safety=OK
+[P0] t=8.5550 T=(0.6176,0.0000) loadFx=-0.0389 meanFx=0.0965 tailSurfFx=-0.0691 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.5154deg safety=OK
+[P0] t=8.6050 T=(1.1568,0.0000) loadFx=0.2070 meanFx=0.0964 tailSurfFx=-0.0610 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.3094deg safety=OK
+[P0] t=8.6550 T=(1.6549,0.0000) loadFx=0.4486 meanFx=0.0996 tailSurfFx=-0.0485 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.9917deg safety=OK
+[P0] t=8.7050 T=(2.0945,0.0000) loadFx=0.6636 meanFx=0.1058 tailSurfFx=-0.0254 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.5866deg safety=OK
+[P0] t=8.7550 T=(2.4599,0.0000) loadFx=0.8156 meanFx=0.1143 tailSurfFx=-0.0104 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.0570deg safety=OK
+[P0] t=8.8050 T=(2.7381,0.0000) loadFx=0.8912 meanFx=0.1242 tailSurfFx=0.0094 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.3514deg safety=OK
+[P0] t=8.8550 T=(2.9193,0.0000) loadFx=0.8500 meanFx=0.1340 tailSurfFx=0.0207 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.3930deg safety=OK
+[P0] t=8.9050 T=(2.9971,0.0000) loadFx=0.6927 meanFx=0.1423 tailSurfFx=0.0378 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.1328deg safety=OK
+[P0] t=8.9550 T=(2.9687,0.0000) loadFx=0.4244 meanFx=0.1476 tailSurfFx=0.0495 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.5702deg safety=OK
+[P0] t=9.0050 T=(2.8352,0.0000) loadFx=0.1044 meanFx=0.1491 tailSurfFx=0.0630 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.7894deg safety=OK
+[P0] t=9.0550 T=(2.6012,0.0000) loadFx=-0.1954 meanFx=0.1466 tailSurfFx=0.0635 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.9438deg safety=OK
+[P0] t=9.1050 T=(2.2751,0.0000) loadFx=-0.4370 meanFx=0.1409 tailSurfFx=0.0422 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.1689deg safety=OK
+[P0] t=9.1550 T=(1.8684,0.0000) loadFx=-0.5748 meanFx=0.1330 tailSurfFx=0.0145 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.4784deg safety=OK
+[P0] t=9.2050 T=(1.3955,0.0000) loadFx=-0.6203 meanFx=0.1242 tailSurfFx=-0.0272 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.7696deg safety=OK
+[P0] t=9.2550 T=(0.8731,0.0000) loadFx=-0.5464 meanFx=0.1158 tailSurfFx=-0.0412 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.0470deg safety=OK
+[P0] t=9.3050 T=(0.3198,0.0000) loadFx=-0.4053 meanFx=0.1089 tailSurfFx=-0.0586 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.9889deg safety=OK
+[P0] t=9.3550 T=(0.0000,0.2448) loadFx=-0.1951 meanFx=0.1041 tailSurfFx=-0.0679 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.9474deg safety=OK
+[P0] t=9.4050 T=(0.0000,0.8007) loadFx=0.0437 meanFx=0.1021 tailSurfFx=-0.0686 consF=0.0000 consT=0.0000 jacErr=0.0000 C=2.8155deg safety=OK
+[P0] t=9.4550 T=(0.0000,1.3283) loadFx=0.2953 meanFx=0.1029 tailSurfFx=-0.0600 consF=0.0000 consT=0.0000 jacErr=0.0000 C=3.5651deg safety=OK
+[P0] t=9.5050 T=(0.0000,1.8088) loadFx=0.5335 meanFx=0.1064 tailSurfFx=-0.0389 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.2196deg safety=OK
+[P0] t=9.5550 T=(0.0000,2.2252) loadFx=0.7275 meanFx=0.1122 tailSurfFx=-0.0229 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.7783deg safety=OK
+[P0] t=9.6050 T=(0.0000,2.5628) loadFx=0.8624 meanFx=0.1197 tailSurfFx=-0.0017 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.1977deg safety=OK
+[P0] t=9.6550 T=(0.0000,2.8096) loadFx=0.8956 meanFx=0.1279 tailSurfFx=0.0116 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.4151deg safety=OK
+[P0] t=9.7050 T=(0.0000,2.9569) loadFx=0.8195 meanFx=0.1358 tailSurfFx=0.0287 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.3568deg safety=OK
+[P0] t=9.7550 T=(0.0000,2.9995) loadFx=0.6160 meanFx=0.1420 tailSurfFx=0.0405 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.9880deg safety=OK
+[P0] t=9.8050 T=(0.0000,2.9357) loadFx=0.3221 meanFx=0.1455 tailSurfFx=0.0577 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.3333deg safety=OK
+[P0] t=9.8550 T=(0.0000,2.7680) loadFx=-0.0010 meanFx=0.1456 tailSurfFx=0.0650 consF=0.0000 consT=0.0000 jacErr=0.0000 C=3.5079deg safety=OK
+[P0] t=9.9050 T=(0.0000,2.5022) loadFx=-0.2894 meanFx=0.1426 tailSurfFx=0.0588 consF=0.0000 consT=0.0000 jacErr=0.0000 C=2.6732deg safety=OK
+[P0] t=9.9550 T=(0.0000,2.1478) loadFx=-0.4932 meanFx=0.1371 tailSurfFx=0.0391 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.9329deg safety=OK
+[P0] t=10.0050 T=(0.0000,1.7173) loadFx=-0.6121 meanFx=0.1301 tailSurfFx=-0.0055 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.2516deg safety=OK
+[P0] t=10.0550 T=(0.0000,1.2259) loadFx=-0.6072 meanFx=0.1227 tailSurfFx=-0.0304 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.5134deg safety=OK
+[P0] t=10.1050 T=(0.0000,0.6912) loadFx=-0.5118 meanFx=0.1160 tailSurfFx=-0.0486 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.3499deg safety=OK
+[P0] t=10.1550 T=(0.0000,0.1319) loadFx=-0.3401 meanFx=0.1107 tailSurfFx=-0.0609 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.3163deg safety=OK
+[P0] t=10.2050 T=(0.4320,0.0000) loadFx=-0.1225 meanFx=0.1074 tailSurfFx=-0.0710 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.2459deg safety=OK
+[P0] t=10.2550 T=(0.9807,0.0000) loadFx=0.1280 meanFx=0.1064 tailSurfFx=-0.0682 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.0812deg safety=OK
+[P0] t=10.3050 T=(1.4946,0.0000) loadFx=0.3781 meanFx=0.1078 tailSurfFx=-0.0519 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.7956deg safety=OK
+[P0] t=10.3550 T=(1.9555,0.0000) loadFx=0.6030 meanFx=0.1114 tailSurfFx=-0.0365 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.4239deg safety=OK
+[P0] t=10.4050 T=(2.3472,0.0000) loadFx=0.7863 meanFx=0.1169 tailSurfFx=-0.0130 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.9420deg safety=OK
+[P0] t=10.4550 T=(2.6557,0.0000) loadFx=0.8841 meanFx=0.1235 tailSurfFx=-0.0010 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.3046deg safety=OK
+[P0] t=10.5050 T=(2.8701,0.0000) loadFx=0.8900 meanFx=0.1306 tailSurfFx=0.0193 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.4370deg safety=OK
+[P0] t=10.5550 T=(2.9829,0.0000) loadFx=0.7665 meanFx=0.1369 tailSurfFx=0.0307 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.2773deg safety=OK
+[P0] t=10.6050 T=(2.9900,0.0000) loadFx=0.5304 meanFx=0.1416 tailSurfFx=0.0487 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.8061deg safety=OK
+[P0] t=10.6550 T=(2.8912,0.0000) loadFx=0.2163 meanFx=0.1436 tailSurfFx=0.0596 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.0765deg safety=OK
+[P0] t=10.7050 T=(2.6899,0.0000) loadFx=-0.1028 meanFx=0.1428 tailSurfFx=0.0660 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.2290deg safety=OK
+[P0] t=10.7550 T=(2.3934,0.0000) loadFx=-0.3630 meanFx=0.1395 tailSurfFx=0.0570 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.4188deg safety=OK
+[P0] t=10.8050 T=(2.0121,0.0000) loadFx=-0.5499 meanFx=0.1343 tailSurfFx=0.0208 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.7086deg safety=OK
+[P0] t=10.8550 T=(1.5595,0.0000) loadFx=-0.6181 meanFx=0.1281 tailSurfFx=-0.0099 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.0207deg safety=OK
+[P0] t=10.9050 T=(1.0516,0.0000) loadFx=-0.5888 meanFx=0.1218 tailSurfFx=-0.0394 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.2456deg safety=OK
+[P0] t=10.9550 T=(0.5065,0.0000) loadFx=-0.4602 meanFx=0.1163 tailSurfFx=-0.0505 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.6614deg safety=OK
+[P0] t=11.0050 T=(0.0000,0.0565) loadFx=-0.2776 meanFx=0.1123 tailSurfFx=-0.0672 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.6351deg safety=OK
+[P0] t=11.0550 T=(0.0000,0.6176) loadFx=-0.0389 meanFx=0.1100 tailSurfFx=-0.0711 consF=0.0000 consT=0.0000 jacErr=0.0000 C=2.5332deg safety=OK
+[P0] t=11.1050 T=(0.0000,1.1568) loadFx=0.2100 meanFx=0.1098 tailSurfFx=-0.0625 consF=0.0000 consT=0.0000 jacErr=0.0000 C=3.3273deg safety=OK
+[P0] t=11.1550 T=(0.0000,1.6549) loadFx=0.4545 meanFx=0.1117 tailSurfFx=-0.0497 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.0111deg safety=OK
+[P0] t=11.2050 T=(0.0000,2.0945) loadFx=0.6719 meanFx=0.1153 tailSurfFx=-0.0260 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.6087deg safety=OK
+[P0] t=11.2550 T=(0.0000,2.4599) loadFx=0.8258 meanFx=0.1205 tailSurfFx=-0.0107 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.0821deg safety=OK
+[P0] t=11.3050 T=(0.0000,2.7381) loadFx=0.9025 meanFx=0.1264 tailSurfFx=0.0095 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.3785deg safety=OK
+[P0] t=11.3550 T=(0.0000,2.9193) loadFx=0.8613 meanFx=0.1325 tailSurfFx=0.0210 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.4201deg safety=OK
+[P0] t=11.4050 T=(0.0000,2.9971) loadFx=0.7028 meanFx=0.1376 tailSurfFx=0.0385 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.1576deg safety=OK
+[P0] t=11.4550 T=(0.0000,2.9687) loadFx=0.4320 meanFx=0.1410 tailSurfFx=0.0505 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.5903deg safety=OK
+[P0] t=11.5050 T=(0.0000,2.8352) loadFx=0.1090 meanFx=0.1420 tailSurfFx=0.0646 consF=0.0000 consT=0.0000 jacErr=0.0000 C=3.8035deg safety=OK
+[P0] t=11.5550 T=(0.0000,2.6012) loadFx=-0.1939 meanFx=0.1405 tailSurfFx=0.0654 consF=0.0000 consT=0.0000 jacErr=0.0000 C=2.9528deg safety=OK
+[P0] t=11.6050 T=(0.0000,2.2751) loadFx=-0.4382 meanFx=0.1370 tailSurfFx=0.0441 consF=0.0000 consT=0.0000 jacErr=0.0000 C=2.1758deg safety=OK
+[P0] t=11.6550 T=(0.0000,1.8684) loadFx=-0.5780 meanFx=0.1321 tailSurfFx=0.0160 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.4862deg safety=OK
+[P0] t=11.7050 T=(0.0000,1.3955) loadFx=-0.6250 meanFx=0.1266 tailSurfFx=-0.0265 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.7785deg safety=OK
+[P0] t=11.7550 T=(0.0000,0.8731) loadFx=-0.5517 meanFx=0.1212 tailSurfFx=-0.0410 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.0382deg safety=OK
+[P0] t=11.8050 T=(0.0000,0.3198) loadFx=-0.4104 meanFx=0.1168 tailSurfFx=-0.0586 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.9814deg safety=OK
+[P0] t=11.8550 T=(0.2448,0.0000) loadFx=-0.1998 meanFx=0.1137 tailSurfFx=-0.0681 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.9421deg safety=OK
+[P0] t=11.9050 T=(0.8007,0.0000) loadFx=0.0396 meanFx=0.1123 tailSurfFx=-0.0691 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.8116deg safety=OK
+[P0] t=11.9550 T=(1.3283,0.0000) loadFx=0.2921 meanFx=0.1127 tailSurfFx=-0.0606 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.5625deg safety=OK
+[P0] t=12.0050 T=(1.8088,0.0000) loadFx=0.5316 meanFx=0.1148 tailSurfFx=-0.0394 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.2185deg safety=OK
+[P0] t=12.0550 T=(2.2252,0.0000) loadFx=0.7271 meanFx=0.1185 tailSurfFx=-0.0234 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.7793deg safety=OK
+[P0] t=12.1050 T=(2.5628,0.0000) loadFx=0.8637 meanFx=0.1233 tailSurfFx=-0.0020 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.2015deg safety=OK
+[P0] t=12.1550 T=(2.8096,0.0000) loadFx=0.8985 meanFx=0.1287 tailSurfFx=0.0114 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.4220deg safety=OK
+[P0] t=12.2050 T=(2.9569,0.0000) loadFx=0.8238 meanFx=0.1338 tailSurfFx=0.0285 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.3668deg safety=OK
+[P0] t=12.2550 T=(2.9995,0.0000) loadFx=0.6215 meanFx=0.1380 tailSurfFx=0.0403 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.0004deg safety=OK
+[P0] t=12.3050 T=(2.9357,0.0000) loadFx=0.3278 meanFx=0.1403 tailSurfFx=0.0577 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.3466deg safety=OK
+[P0] t=12.3550 T=(2.7680,0.0000) loadFx=0.0042 meanFx=0.1404 tailSurfFx=0.0652 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.5201deg safety=OK
+[P0] t=12.4050 T=(2.5022,0.0000) loadFx=-0.2853 meanFx=0.1385 tailSurfFx=0.0594 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.6831deg safety=OK
+[P0] t=12.4550 T=(2.1478,0.0000) loadFx=-0.4905 meanFx=0.1349 tailSurfFx=0.0399 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.9411deg safety=OK
+[P0] t=12.5050 T=(1.7173,0.0000) loadFx=-0.6110 meanFx=0.1303 tailSurfFx=-0.0047 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.2597deg safety=OK
+[P0] t=12.5550 T=(1.2259,0.0000) loadFx=-0.6077 meanFx=0.1253 tailSurfFx=-0.0297 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.5223deg safety=OK
+[P0] t=12.6050 T=(0.6912,0.0000) loadFx=-0.5136 meanFx=0.1208 tailSurfFx=-0.0481 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.3396deg safety=OK
+[P0] t=12.6550 T=(0.1319,0.0000) loadFx=-0.3428 meanFx=0.1172 tailSurfFx=-0.0604 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.3059deg safety=OK
+[P0] t=12.7050 T=(0.0000,0.4320) loadFx=-0.1259 meanFx=0.1149 tailSurfFx=-0.0707 consF=0.0000 consT=0.0000 jacErr=0.0000 C=2.2366deg safety=OK
+[P0] t=12.7550 T=(0.0000,0.9807) loadFx=0.1244 meanFx=0.1141 tailSurfFx=-0.0681 consF=0.0000 consT=0.0000 jacErr=0.0000 C=3.0729deg safety=OK
+[P0] t=12.8050 T=(0.0000,1.4946) loadFx=0.3743 meanFx=0.1150 tailSurfFx=-0.0520 consF=0.0000 consT=0.0000 jacErr=0.0000 C=3.7880deg safety=OK
+[P0] t=12.8550 T=(0.0000,1.9555) loadFx=0.5996 meanFx=0.1174 tailSurfFx=-0.0367 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.4168deg safety=OK
+[P0] t=12.9050 T=(0.0000,2.3472) loadFx=0.7834 meanFx=0.1211 tailSurfFx=-0.0132 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.9359deg safety=OK
+[P0] t=12.9550 T=(0.0000,2.6557) loadFx=0.8822 meanFx=0.1256 tailSurfFx=-0.0011 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.3000deg safety=OK
+[P0] t=13.0050 T=(0.0000,2.8701) loadFx=0.8891 meanFx=0.1304 tailSurfFx=0.0190 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.4348deg safety=OK
+[P0] t=13.0550 T=(0.0000,2.9829) loadFx=0.7670 meanFx=0.1348 tailSurfFx=0.0304 consF=0.0000 consT=0.0000 jacErr=0.0000 C=5.2779deg safety=OK
+[P0] t=13.1050 T=(0.0000,2.9900) loadFx=0.5322 meanFx=0.1381 tailSurfFx=0.0483 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.8095deg safety=OK
+[P0] t=13.1550 T=(0.0000,2.8912) loadFx=0.2189 meanFx=0.1395 tailSurfFx=0.0592 consF=0.0000 consT=0.0000 jacErr=0.0000 C=4.0818deg safety=OK
+[P0] t=13.2050 T=(0.0000,2.6899) loadFx=-0.0997 meanFx=0.1390 tailSurfFx=0.0657 consF=0.0000 consT=0.0000 jacErr=0.0000 C=3.2349deg safety=OK
+[P0] t=13.2550 T=(0.0000,2.3934) loadFx=-0.3601 meanFx=0.1367 tailSurfFx=0.0569 consF=0.0000 consT=0.0000 jacErr=0.0000 C=2.4238deg safety=OK
+[P0] t=13.3050 T=(0.0000,2.0121) loadFx=-0.5473 meanFx=0.1331 tailSurfFx=0.0210 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.7127deg safety=OK
+[P0] t=13.3550 T=(0.0000,1.5595) loadFx=-0.6163 meanFx=0.1288 tailSurfFx=-0.0096 consF=0.0000 consT=0.0000 jacErr=0.0000 C=1.0246deg safety=OK
+[P0] t=13.4050 T=(0.0000,1.0516) loadFx=-0.5880 meanFx=0.1244 tailSurfFx=-0.0391 consF=0.0000 consT=0.0000 jacErr=0.0000 C=0.2502deg safety=OK
+[P0] t=13.4550 T=(0.0000,0.5065) loadFx=-0.4602 meanFx=0.1205 tailSurfFx=-0.0501 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-0.6557deg safety=OK
+[P0] t=13.5050 T=(0.0565,0.0000) loadFx=-0.2784 meanFx=0.1176 tailSurfFx=-0.0668 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.6290deg safety=OK
+[P0] t=13.5550 T=(0.6176,0.0000) loadFx=-0.0403 meanFx=0.1160 tailSurfFx=-0.0707 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.5274deg safety=OK
+[P0] t=13.6050 T=(1.1568,0.0000) loadFx=0.2081 meanFx=0.1158 tailSurfFx=-0.0623 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.3219deg safety=OK
+[P0] t=13.6550 T=(1.6549,0.0000) loadFx=0.4523 meanFx=0.1171 tailSurfFx=-0.0496 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.0057deg safety=OK
+[P0] t=13.7050 T=(2.0945,0.0000) loadFx=0.6696 meanFx=0.1196 tailSurfFx=-0.0260 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.6033deg safety=OK
+[P0] t=13.7550 T=(2.4599,0.0000) loadFx=0.8235 meanFx=0.1233 tailSurfFx=-0.0107 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.0768deg safety=OK
+[P0] t=13.8050 T=(2.7381,0.0000) loadFx=0.9004 meanFx=0.1275 tailSurfFx=0.0094 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.3736deg safety=OK
+[P0] t=13.8550 T=(2.9193,0.0000) loadFx=0.8597 meanFx=0.1318 tailSurfFx=0.0209 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.4162deg safety=OK
+[P0] t=13.9050 T=(2.9971,0.0000) loadFx=0.7019 meanFx=0.1355 tailSurfFx=0.0383 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-5.1552deg safety=OK
+[P0] t=13.9550 T=(2.9687,0.0000) loadFx=0.4319 meanFx=0.1380 tailSurfFx=0.0502 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-4.5895deg safety=OK
+[P0] t=14.0050 T=(2.8352,0.0000) loadFx=0.1095 meanFx=0.1387 tailSurfFx=0.0642 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-3.8040deg safety=OK
+[P0] t=14.0550 T=(2.6012,0.0000) loadFx=-0.1929 meanFx=0.1377 tailSurfFx=0.0650 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.9540deg safety=OK
+[P0] t=14.1050 T=(2.2751,0.0000) loadFx=-0.4369 meanFx=0.1352 tailSurfFx=0.0438 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-2.1769deg safety=OK
+[P0] t=14.1550 T=(1.8684,0.0000) loadFx=-0.5767 meanFx=0.1316 tailSurfFx=0.0159 consF=0.0000 consT=0.0000 jacErr=0.0000 C=-1.4868deg safety=OK

@@ -1,975 +1,498 @@
 #include "inc/tendon_tail_actuator.h"
 
 #include <Stonefish/entities/SolidEntity.h>
-
 #include <algorithm>
 #include <cmath>
 
-namespace
+namespace {
+
+constexpr sf::Scalar kTiny = 1.0e-9;
+constexpr sf::Scalar kPi = 3.14159265358979323846;
+
+constexpr std::array<sf::Scalar,5> kGuideX{
+    0.0190, 0.0195, 0.0205, 0.0190, 0.0150
+};
+
+constexpr std::array<sf::Scalar,5> kGuideY{
+    0.045, 0.035, 0.025, 0.015, 0.005
+};
+
+constexpr std::array<int,5> kRouting{0,0,0,1,1};
+
+const sf::Vector3 kLeftAnchor(-0.0615,-0.055,-0.0345);
+const sf::Vector3 kRightAnchor(-0.0615,0.055,0.0345);
+
+sf::Vector3 RotateAroundAxis(
+    const sf::Vector3& v,
+    const sf::Vector3& axis,
+    sf::Scalar a)
 {
+    const sf::Scalar c = std::cos(a);
+    const sf::Scalar s = std::sin(a);
 
-    constexpr sf::Scalar kTinyLength =
-        1.0e-9;
+    return v*c
+         + axis.cross(v)*s
+         + axis*(axis.dot(v)*(1.0-c));
+}
 
-    // ================================================================
-    // Tail tendon guide geometry
-    //
-    // Coordinates are expressed in the BODY-ORIGIN frame of each
-    // Tail link.
-    //
-    // local X negative = tailward
-    // local Y          = lateral
-    //
-    // ================================================================
-
-    constexpr std::array<sf::Scalar, 5>
-        kGuideTailwardDistance =
-            {
-                0.0190,
-                0.0195,
-                0.0205,
-                0.0190,
-                0.0150};
-
-    constexpr std::array<sf::Scalar, 5>
-        kGuideLateralOffset =
-            {
-                0.045,
-                0.035,
-                0.025,
-                0.015,
-                0.005};
-
-    // ================================================================
-    // Reference routing
-    //
-    // 0 = stay on nominal side
-    // 1 = cross to opposite side
-    //
-    // Left:
-    //
-    //   Tail0 L
-    //   Tail1 L
-    //   Tail2 L
-    //   Tail3 R
-    //   Tail4 R
-    //
-    // Right:
-    //
-    //   Tail0 R
-    //   Tail1 R
-    //   Tail2 R
-    //   Tail3 L
-    //   Tail4 L
-    //
-    // ================================================================
-
-    constexpr std::array<int, 5>
-        kRouting =
-            {
-                0,
-                0,
-                0,
-                1,
-                1};
-
-    // ================================================================
-    // FIXED tendon anchors for this diagnostic.
-    //
-    // IMPORTANT:
-    //
-    // There is NO motor motion in this experiment.
-    //
-    // M1 pivot in Body frame:
-    //
-    //     x = -0.0615 m
-    //
-    // Neutral left/right tendon sites:
-    //
-    //     left:
-    //         y = -0.055
-    //         z = -0.0345
-    //
-    //     right:
-    //         y = +0.055
-    //         z = +0.0345
-    //
-    // Therefore P0 is fixed to Body.
-    // ================================================================
-
-    const sf::Vector3
-        kLeftFixedAnchorBodyLocal(
-            -0.0615,
-            -0.055,
-            -0.0345);
-
-    const sf::Vector3
-        kRightFixedAnchorBodyLocal(
-            -0.0615,
-            0.055,
-            0.0345);
-
-} // namespace
+}
 
 TendonTailActuator::TendonTailActuator(
-    const std::string &name,
-    sf::FeatherstoneEntity *dynamics,
+    const std::string& name,
+    sf::FeatherstoneEntity* dynamics,
     unsigned int bodyLinkIndex,
-    const std::array<unsigned int, 5> &tailLinkIndices,
-    const std::array<unsigned int, 5> &tailJointIndices,
-    const TendonTailParameters &parameters)
-    : sf::Actuator(
-          name),
-      dynamics_(
-          dynamics),
-      bodyLinkIndex_(
-          bodyLinkIndex),
-      tailLinkIndices_(
-          tailLinkIndices),
-      tailJointIndices_(
-          tailJointIndices),
-      parameters_(
-          parameters)
+    const std::array<unsigned int,5>& tailLinkIndices,
+    const std::array<unsigned int,5>& tailJointIndices,
+    const TendonTailParameters& parameters)
+    : sf::Actuator(name),
+      dynamics_(dynamics),
+      bodyLinkIndex_(bodyLinkIndex),
+      tailLinkIndices_(tailLinkIndices),
+      tailJointIndices_(tailJointIndices),
+      parameters_(parameters)
 {
-    if (
-        dynamics_ == nullptr ||
-        bodyLinkIndex_ >=
-            dynamics_->getNumOfLinks())
-    {
-        safetyTripped_ =
-            true;
-
-        snapshot_.safetyTripped =
-            true;
-
+    if (!dynamics_ || bodyLinkIndex_ >= dynamics_->getNumOfLinks()) {
+        safetyTripped_ = true;
+        snapshot_.safetyTripped = true;
         return;
     }
 
-    // ============================================================
-    // Save neutral path lengths.
-    //
-    // They are diagnostic only.
-    //
-    // They DO NOT generate tension in this experiment.
-    // ============================================================
+    for (std::size_t s=0; s<2; ++s) {
+        const auto path = BuildTendonPath(s==0);
+        const auto L = ComputePathLength(path);
 
-    for (
-        std::size_t side = 0;
-        side < 2;
-        ++side)
-    {
-        const bool
-            leftTendon =
-                side == 0;
-
-        const auto
-            path =
-                BuildTendonPath(
-                    leftTendon);
-
-        const sf::Scalar
-            length =
-                ComputePathLength(
-                    path);
-
-        initialTendonLengthM_[side] =
-            length;
-
-        snapshot_.initialTendonLengthM[side] =
-            length;
-
-        snapshot_.tendonLengthM[side] =
-            length;
-
-        snapshot_.tendonLengthChangeM[side] =
-            0.0;
+        initialTendonLengthM_[s] = L;
+        snapshot_.initialTendonLengthM[s] = L;
+        snapshot_.tendonLengthM[s] = L;
     }
 }
 
-sf::ActuatorType
-TendonTailActuator::getType() const
+sf::ActuatorType TendonTailActuator::getType() const
 {
-    // Stonefish does not have a native tendon actuator type.
     return sf::ActuatorType::MOTOR;
 }
 
-bool TendonTailActuator::ReadJointState(
-    std::array<sf::Scalar, 5> &q,
-    std::array<sf::Scalar, 5> &qDot) const
+bool TendonTailActuator::IsFiniteVector(const sf::Vector3& v)
 {
-    if (
-        dynamics_ == nullptr)
-    {
+    return std::isfinite(static_cast<double>(v.x()))
+        && std::isfinite(static_cast<double>(v.y()))
+        && std::isfinite(static_cast<double>(v.z()));
+}
+
+bool TendonTailActuator::ReadJointState(
+    std::array<sf::Scalar,5>& q,
+    std::array<sf::Scalar,5>& qDot) const
+{
+    if (!dynamics_)
         return false;
-    }
 
-    for (
-        std::size_t i = 0;
-        i < 5;
-        ++i)
-    {
-        btMultibodyLink::eFeatherstoneJointType
-            positionType =
-                btMultibodyLink::eInvalid;
-
-        btMultibodyLink::eFeatherstoneJointType
-            velocityType =
-                btMultibodyLink::eInvalid;
+    for (std::size_t i=0; i<5; ++i) {
+        btMultibodyLink::eFeatherstoneJointType pt, vt;
 
         dynamics_->getJointPosition(
-            tailJointIndices_[i],
-            q[i],
-            positionType);
+            tailJointIndices_[i], q[i], pt);
 
         dynamics_->getJointVelocity(
-            tailJointIndices_[i],
-            qDot[i],
-            velocityType);
+            tailJointIndices_[i], qDot[i], vt);
 
-        if (
-            positionType !=
-                btMultibodyLink::eRevolute ||
-            velocityType !=
-                btMultibodyLink::eRevolute ||
-            !std::isfinite(
-                static_cast<double>(
-                    q[i])) ||
-            !std::isfinite(
-                static_cast<double>(
-                    qDot[i])))
-        {
+        if (pt != btMultibodyLink::eRevolute ||
+            vt != btMultibodyLink::eRevolute ||
+            !std::isfinite(static_cast<double>(q[i])) ||
+            !std::isfinite(static_cast<double>(qDot[i])))
             return false;
-        }
     }
 
     return true;
 }
 
-sf::Vector3
-TendonTailActuator::LocalPointToWorld(
-    unsigned int linkIndex,
-    const sf::Vector3 &localPoint) const
+sf::Vector3 TendonTailActuator::LocalPointToWorld(
+    unsigned int link,
+    const sf::Vector3& local) const
 {
-    if (
-        dynamics_ == nullptr ||
-        linkIndex >=
-            dynamics_->getNumOfLinks())
-    {
-        return sf::Vector3(
-            0.0,
-            0.0,
-            0.0);
-    }
+    if (!dynamics_ || link >= dynamics_->getNumOfLinks())
+        return sf::Vector3(0,0,0);
 
-    const sf::FeatherstoneLink
-        link =
-            dynamics_->getLink(
-                linkIndex);
+    auto solid = dynamics_->getLink(link).solid;
 
-    if (
-        link.solid == nullptr)
-    {
-        return sf::Vector3(
-            0.0,
-            0.0,
-            0.0);
-    }
-
-    // Guide coordinates are defined in body-origin coordinates.
-    //
-    // Therefore use getOTransform(), not CG transform.
-
-    return link.solid->getOTransform() *
-           localPoint;
+    return solid
+        ? solid->getOTransform()*local
+        : sf::Vector3(0,0,0);
 }
 
-std::array<TendonTailActuator::PathPoint, 6>
-TendonTailActuator::BuildTendonPath(
-    bool leftTendon) const
+TendonTailActuator::Path
+TendonTailActuator::BuildTendonPath(bool left) const
 {
-    std::array<PathPoint, 6>
-        path;
+    Path p;
 
-    // ============================================================
-    // P0
-    //
-    // FIXED Body tendon anchor.
-    //
-    // No MotorShaft.
-    // No Servo.
-    // No crank rotation.
-    // ============================================================
+    p[0].linkIndex = bodyLinkIndex_;
+    p[0].world = LocalPointToWorld(
+        bodyLinkIndex_,
+        left ? kLeftAnchor : kRightAnchor);
 
-    path[0].linkIndex =
-        bodyLinkIndex_;
+    for (std::size_t i=0; i<5; ++i) {
+        sf::Scalar sign = left ? -1.0 : 1.0;
 
-    path[0].world =
-        LocalPointToWorld(
-            bodyLinkIndex_,
-            leftTendon
-                ? kLeftFixedAnchorBodyLocal
-                : kRightFixedAnchorBodyLocal);
+        if (kRouting[i])
+            sign = -sign;
 
-    // ============================================================
-    // P1..P5
-    //
-    // Tail0..Tail4 guide points.
-    // ============================================================
-
-    for (
-        std::size_t i = 0;
-        i < 5;
-        ++i)
-    {
-        sf::Scalar
-            sideSign =
-                leftTendon
-                    ? -1.0
-                    : 1.0;
-
-        if (
-            kRouting[i] != 0)
-        {
-            sideSign =
-                -sideSign;
-        }
-
-        const sf::Vector3
-            localGuide(
-                -kGuideTailwardDistance[i],
-                sideSign *
-                    kGuideLateralOffset[i],
-                0.0);
-
-        path[i + 1].linkIndex =
-            tailLinkIndices_[i];
-
-        path[i + 1].world =
-            LocalPointToWorld(
-                tailLinkIndices_[i],
-                localGuide);
+        p[i+1].linkIndex = tailLinkIndices_[i];
+        p[i+1].world = LocalPointToWorld(
+            tailLinkIndices_[i],
+            sf::Vector3(
+                -kGuideX[i],
+                sign*kGuideY[i],
+                0.0));
     }
 
-    return path;
+    return p;
 }
 
-sf::Scalar
-TendonTailActuator::ComputePathLength(
-    const std::array<PathPoint, 6> &path)
+sf::Scalar TendonTailActuator::ComputePathLength(const Path& p)
 {
-    sf::Scalar
-        totalLength =
-            0.0;
+    sf::Scalar L = 0.0;
 
-    for (
-        std::size_t i = 0;
-        i + 1 < path.size();
-        ++i)
-    {
-        const sf::Vector3
-            segment =
-                path[i + 1].world -
-                path[i].world;
+    for (std::size_t i=0; i+1<p.size(); ++i) {
+        const auto d = p[i+1].world-p[i].world;
+        const auto l = d.length();
 
-        const sf::Scalar
-            segmentLength =
-                segment.length();
-
-        if (
-            !std::isfinite(
-                static_cast<double>(
-                    segmentLength)))
-        {
+        if (!std::isfinite(static_cast<double>(l)) || l <= kTiny)
             return 0.0;
-        }
 
-        totalLength +=
-            segmentLength;
+        L += l;
     }
 
-    return totalLength;
+    return L;
 }
 
-sf::Scalar
-TendonTailActuator::SmoothStep01(
-    sf::Scalar x)
+sf::Scalar TendonTailActuator::SmoothStep01(sf::Scalar x)
 {
-    x =
-        std::max(
-            sf::Scalar(0.0),
-            std::min(
-                sf::Scalar(1.0),
-                x));
-
-    return x *
-           x *
-           (3.0 -
-            2.0 *
-                x);
+    x = std::max(sf::Scalar(0), std::min(sf::Scalar(1),x));
+    return x*x*(3.0-2.0*x);
 }
 
-std::array<sf::Scalar, 2>
+std::array<sf::Scalar,2>
 TendonTailActuator::ComputeDirectTestTensions(
-    sf::Scalar timeS,
+    sf::Scalar t,
     unsigned int& phase) const
 {
-    std::array<sf::Scalar, 2>
-        tension =
-        {
-            0.0,
-            0.0
-        };
+    std::array<sf::Scalar,2> T{0.0,0.0};
 
-
-    // ============================================================
-    // Continuous antagonistic tendon test
-    //
-    // No motor.
-    // No crank.
-    // No length -> tension conversion.
-    //
-    // RIGHT:
-    //
-    //     T_R = A * max(0, sin(phi))
-    //
-    // LEFT:
-    //
-    //     T_L = A * max(0, -sin(phi))
-    //
-    // ============================================================
-
-    constexpr sf::Scalar kPi =
-        3.1415926535897932384626433832795;
-
-
-    constexpr sf::Scalar
-        startTimeS =
-            1.0;
-
-
-    constexpr sf::Scalar
-        rampTimeS =
-            1.0;
-
-
-    constexpr sf::Scalar
-        frequencyHz =
-            0.6;
-
-
-    constexpr sf::Scalar
-        amplitudeN =
-            3.0;
-
-
-    // ------------------------------------------------------------
-    // Initial neutral period
-    // ------------------------------------------------------------
-
-    if (
-        timeS < startTimeS)
-    {
+    if (t < parameters_.startTimeS) {
         phase = 0;
-
-        return tension;
+        return T;
     }
 
+    sf::Scalar envelope = 1.0;
 
-    // ------------------------------------------------------------
-    // Smooth amplitude ramp.
-    //
-    // Avoid suddenly applying several Newtons at t = 1 s.
-    // ------------------------------------------------------------
+    if (parameters_.rampTimeS > 0.0 &&
+        t < parameters_.startTimeS+parameters_.rampTimeS)
+        envelope = SmoothStep01(
+            (t-parameters_.startTimeS)/parameters_.rampTimeS);
 
-    sf::Scalar
-        envelope =
-            1.0;
+    const sf::Scalar phi =
+        2.0*kPi*
+        parameters_.directTestFrequencyHz*
+        (t-parameters_.startTimeS);
 
+    const sf::Scalar s = std::sin(phi);
+    const sf::Scalar A =
+        envelope*parameters_.directTestTensionN;
 
-    if (
-        timeS
-        <
-        startTimeS
-        +
-        rampTimeS)
-    {
-        const sf::Scalar
-            u =
-                (
-                    timeS
-                    -
-                    startTimeS
-                )
-                /
-                rampTimeS;
-
-
-        envelope =
-            SmoothStep01(
-                u);
+    if (s >= 0.0) {
+        T[1] = A*s;
+        phase = 1;
+    } else {
+        T[0] = A*(-s);
+        phase = 2;
     }
 
-
-    // ------------------------------------------------------------
-    // Continuous oscillation
-    // ------------------------------------------------------------
-
-    const sf::Scalar
-        oscillationTime =
-            timeS
-            -
-            startTimeS;
-
-
-    const sf::Scalar
-        phi =
-            2.0
-            *
-            kPi
-            *
-            frequencyHz
-            *
-            oscillationTime;
-
-
-    const sf::Scalar
-        s =
-            std::sin(
-                phi);
-
-
-    if (
-        s >= 0.0)
-    {
-        // Right tendon pulls.
-        tension[0] =
-            0.0;
-
-
-        tension[1] =
-            envelope
-            *
-            amplitudeN
-            *
-            s;
-
-
-        phase =
-            1;
-    }
-    else
-    {
-        // Left tendon pulls.
-        tension[0] =
-            envelope
-            *
-            amplitudeN
-            *
-            (-s);
-
-
-        tension[1] =
-            0.0;
-
-
-        phase =
-            2;
-    }
-
-
-    return tension;
+    return T;
 }
 
-
-bool TendonTailActuator::IsFiniteVector(
-    const sf::Vector3 &value)
+bool TendonTailActuator::JointAxisPivot(
+    std::size_t i,
+    sf::Vector3& axis,
+    sf::Vector3& pivot) const
 {
-    return std::isfinite(
-               static_cast<double>(
-                   value.x())) &&
-           std::isfinite(
-               static_cast<double>(
-                   value.y())) &&
-           std::isfinite(
-               static_cast<double>(
-                   value.z()));
+    if (!dynamics_ || i >= 5)
+        return false;
+
+    const auto joint =
+        dynamics_->getJoint(tailJointIndices_[i]);
+
+    if (joint.child >= dynamics_->getNumOfLinks())
+        return false;
+
+    const auto T =
+        dynamics_->getLinkTransform(joint.child);
+
+    axis = T.getBasis()*joint.axisInChild;
+
+    if (axis.length2() <= kTiny)
+        return false;
+
+    axis.normalize();
+    pivot = T*joint.pivotInChild;
+
+    return true;
+}
+
+sf::Scalar TendonTailActuator::PerturbedPathLength(
+    const Path& path,
+    std::size_t joint,
+    sf::Scalar delta) const
+{
+    sf::Vector3 axis, pivot;
+
+    if (!JointAxisPivot(joint,axis,pivot))
+        return 0.0;
+
+    Path p = path;
+
+    // q_joint changes the entire downstream subtree.
+    for (std::size_t k=joint+1; k<p.size(); ++k) {
+        const sf::Vector3 r = p[k].world-pivot;
+        p[k].world =
+            pivot+RotateAroundAxis(r,axis,delta);
+    }
+
+    return ComputePathLength(p);
+}
+
+void TendonTailActuator::ValidateTendon(
+    const Path& path,
+    const std::array<sf::Vector3,6>& F,
+    sf::Scalar tension)
+{
+    if (tension <= 0.0)
+        return;
+
+    const sf::Scalar eps =
+        parameters_.jacobianEpsilonRad;
+
+    for (std::size_t j=0; j<5; ++j) {
+        sf::Vector3 axis, pivot;
+
+        if (!JointAxisPivot(j,axis,pivot)) {
+            safetyTripped_ = true;
+            return;
+        }
+
+        sf::Vector3 moment(0,0,0);
+
+        // Only forces on the child subtree contribute to Q_j.
+        for (std::size_t k=j+1; k<path.size(); ++k)
+            moment +=
+                (path[k].world-pivot).cross(F[k]);
+
+        const sf::Scalar qForce =
+            axis.dot(moment);
+
+        const sf::Scalar Lp =
+            PerturbedPathLength(path,j,+eps);
+
+        const sf::Scalar Lm =
+            PerturbedPathLength(path,j,-eps);
+
+        if (Lp <= 0.0 || Lm <= 0.0) {
+            safetyTripped_ = true;
+            return;
+        }
+
+        const sf::Scalar dLdq =
+            (Lp-Lm)/(2.0*eps);
+
+        const sf::Scalar qJac =
+            -tension*dLdq;
+
+        snapshot_.tendonTorqueFromForcesNm[j] += qForce;
+        snapshot_.tendonTorqueFromJacobianNm[j] += qJac;
+    }
 }
 
 void TendonTailActuator::ApplyPointForce(
-    unsigned int linkIndex,
-    const sf::Vector3 &worldPoint,
-    const sf::Vector3 &worldForce)
+    unsigned int link,
+    const sf::Vector3& point,
+    const sf::Vector3& force)
 {
-    if (
-        dynamics_ == nullptr ||
-        linkIndex >=
-            dynamics_->getNumOfLinks() ||
-        !IsFiniteVector(
-            worldPoint) ||
-        !IsFiniteVector(
-            worldForce))
-    {
-        safetyTripped_ =
-            true;
-
+    if (!dynamics_ ||
+        link >= dynamics_->getNumOfLinks() ||
+        !IsFiniteVector(point) ||
+        !IsFiniteVector(force)) {
+        safetyTripped_ = true;
         return;
     }
 
-    // ============================================================
-    // AddLinkForce acts at CG.
-    //
-    // A force F acting at physical point P is represented by:
-    //
-    //     Force at CG:
-    //         F
-    //
-    //     Torque around CG:
-    //         (P - CG) x F
-    // ============================================================
+    const sf::Vector3 cg =
+        dynamics_->getLinkTransform(link).getOrigin();
 
-    const sf::Vector3
-        cgWorld =
-            dynamics_->getLinkTransform(
-                         linkIndex)
-                .getOrigin();
-
-    const sf::Vector3
-        leverArm =
-            worldPoint -
-            cgWorld;
-
-    const sf::Vector3
-        torqueWorld =
-            leverArm.cross(
-                worldForce);
-
-    dynamics_->AddLinkForce(
-        linkIndex,
-        worldForce);
-
+    dynamics_->AddLinkForce(link,force);
     dynamics_->AddLinkTorque(
-        linkIndex,
-        torqueWorld);
+        link,
+        (point-cg).cross(force));
 }
 
 void TendonTailActuator::ApplyTendonForces(
-    const std::array<PathPoint, 6> &path,
+    const Path& path,
     sf::Scalar tension)
 {
-    if (
-        tension <= 0.0)
-    {
+    if (tension <= 0.0)
         return;
-    }
 
-    std::array<sf::Vector3, 6>
-        nodeForces;
+    std::array<sf::Vector3,6> F;
 
-    for (
-        auto &force : nodeForces)
-    {
-        force =
-            sf::Vector3(
-                0.0,
-                0.0,
-                0.0);
-    }
+    for (auto& f : F)
+        f = sf::Vector3(0,0,0);
 
-    // ============================================================
-    // Every cable segment pulls its two endpoints toward each other.
-    //
-    // For:
-    //
-    //      Pi ------------ Pj
-    //
-    // unit vector:
-    //
-    //      u = (Pj - Pi) / |Pj - Pi|
-    //
-    // then:
-    //
-    //      F_i += +T u
-    //      F_j += -T u
-    //
-    // For an intermediate guide the two adjacent segment forces
-    // automatically add to the correct guide reaction.
-    // ============================================================
+    for (std::size_t i=0; i+1<path.size(); ++i) {
+        sf::Vector3 d =
+            path[i+1].world-path[i].world;
 
-    for (
-        std::size_t i = 0;
-        i + 1 < path.size();
-        ++i)
-    {
-        const sf::Vector3
-            segment =
-                path[i + 1].world -
-                path[i].world;
+        const sf::Scalar L = d.length();
 
-        const sf::Scalar
-            segmentLength =
-                segment.length();
-
-        if (
-            segmentLength <=
-                kTinyLength ||
-            !std::isfinite(
-                static_cast<double>(
-                    segmentLength)))
-        {
-            safetyTripped_ =
-                true;
-
+        if (L <= kTiny ||
+            !std::isfinite(static_cast<double>(L))) {
+            safetyTripped_ = true;
             return;
         }
 
-        const sf::Vector3
-            direction =
-                segment /
-                segmentLength;
+        d /= L;
 
-        const sf::Vector3
-            segmentForce =
-                tension *
-                direction;
+        const sf::Vector3 f = tension*d;
 
-        nodeForces[i] +=
-            segmentForce;
-
-        nodeForces[i + 1] -=
-            segmentForce;
+        F[i] += f;
+        F[i+1] -= f;
     }
 
-    // ============================================================
-    // IMPORTANT:
-    //
-    // path[0] is the fixed anchor on Body.
-    //
-    // Body is fixed in this diagnostic, therefore we deliberately
-    // do NOT apply the anchor reaction.
-    //
-    // Only forces on Tail0..Tail4 are applied.
-    //
-    // This completely removes M1 / crank / shaft dynamics from
-    // the experiment.
-    // ============================================================
+    sf::Vector3 netF(0,0,0);
+    sf::Vector3 netT(0,0,0);
 
-    for (
-        std::size_t i = 0;
-        i < path.size();
-        ++i)
-    {
+    for (std::size_t i=0; i<F.size(); ++i) {
+        netF += F[i];
+        netT += path[i].world.cross(F[i]);
+    }
+
+    snapshot_.bodyAnchorForceWorld += F[0];
+    snapshot_.tendonNetForceWorld += netF;
+    snapshot_.tendonNetTorqueWorld += netT;
+
+    ValidateTendon(path,F,tension);
+
+    // CRITICAL PHASE-0 CHANGE:
+    // Apply ALL nodes, including path[0] on Body.
+    for (std::size_t i=0; i<path.size(); ++i) {
         ApplyPointForce(
             path[i].linkIndex,
             path[i].world,
-            nodeForces[i]);
+            F[i]);
 
-        if (
-            safetyTripped_)
-        {
+        if (safetyTripped_)
             return;
-        }
     }
 }
 
-void TendonTailActuator::Update(
-    sf::Scalar timeStep)
+void TendonTailActuator::Update(sf::Scalar dt)
 {
-    sf::Actuator::Update(
-        timeStep);
+    sf::Actuator::Update(dt);
 
-    if (
-        dynamics_ == nullptr ||
-        timeStep <= 0.0)
-    {
-        safetyTripped_ =
-            true;
-
-        snapshot_.safetyTripped =
-            true;
-
+    if (!dynamics_ || dt <= 0.0) {
+        safetyTripped_ = true;
+        snapshot_.safetyTripped = true;
         return;
     }
 
-    elapsedTimeS_ +=
-        timeStep;
+    elapsedTimeS_ += dt;
+    snapshot_.timeS = elapsedTimeS_;
 
-    snapshot_.timeS =
-        elapsedTimeS_;
+    snapshot_.bodyAnchorForceWorld =
+        sf::Vector3(0,0,0);
 
-    // ============================================================
-    // 1. Read passive tail state
-    // ============================================================
+    snapshot_.tendonNetForceWorld =
+        sf::Vector3(0,0,0);
 
-    std::array<sf::Scalar, 5>
-        q{};
+    snapshot_.tendonNetTorqueWorld =
+        sf::Vector3(0,0,0);
 
-    std::array<sf::Scalar, 5>
-        qDot{};
+    snapshot_.tendonTorqueFromForcesNm.fill(0.0);
+    snapshot_.tendonTorqueFromJacobianNm.fill(0.0);
+    snapshot_.tendonTorqueErrorNm.fill(0.0);
+    snapshot_.jacobianMaxErrorNm = 0.0;
 
-    if (
-        !ReadJointState(
-            q,
-            qDot))
-    {
-        safetyTripped_ =
-            true;
-    }
+    std::array<sf::Scalar,5> q{}, qDot{};
 
-    for (
-        std::size_t i = 0;
-        i < 5;
-        ++i)
-    {
-        snapshot_.jointPositionRad[i] =
-            q[i];
+    if (!ReadJointState(q,qDot))
+        safetyTripped_ = true;
 
-        snapshot_.jointVelocityRadS[i] =
-            qDot[i];
+    for (std::size_t i=0; i<5; ++i) {
+        snapshot_.jointPositionRad[i] = q[i];
+        snapshot_.jointVelocityRadS[i] = qDot[i];
 
-        if (
-            std::abs(
-                q[i]) >
+        if (std::abs(q[i]) >
             parameters_.jointSafetyLimitRad)
-        {
-            safetyTripped_ =
-                true;
-        }
+            safetyTripped_ = true;
     }
 
-    // ============================================================
-    // 2. Build current tendon geometry
-    // ============================================================
+    std::array<Path,2> paths{
+        BuildTendonPath(true),
+        BuildTendonPath(false)
+    };
 
-    std::array<
-        std::array<PathPoint, 6>,
-        2>
-        paths =
-            {
-                BuildTendonPath(
-                    true),
+    for (std::size_t s=0; s<2; ++s) {
+        const sf::Scalar L =
+            ComputePathLength(paths[s]);
 
-                BuildTendonPath(
-                    false)};
+        if (L <= 0.0)
+            safetyTripped_ = true;
 
-    for (
-        std::size_t side = 0;
-        side < 2;
-        ++side)
-    {
-        const sf::Scalar
-            length =
-                ComputePathLength(
-                    paths[side]);
+        snapshot_.tendonLengthM[s] = L;
+        snapshot_.initialTendonLengthM[s] =
+            initialTendonLengthM_[s];
 
-        if (
-            !std::isfinite(
-                static_cast<double>(
-                    length)) ||
-            length <= 0.0)
-        {
-            safetyTripped_ =
-                true;
-        }
-
-        snapshot_.tendonLengthM[side] =
-            length;
-
-        snapshot_.initialTendonLengthM[side] =
-            initialTendonLengthM_[side];
-
-        snapshot_.tendonLengthChangeM[side] =
-            length -
-            initialTendonLengthM_[side];
+        snapshot_.tendonLengthChangeM[s] =
+            L-initialTendonLengthM_[s];
     }
 
-    // ============================================================
-    // 3. Prescribed direct tendon tension
-    // ============================================================
+    unsigned int phase = 0;
 
-    unsigned int
-        phase =
-            0;
+    auto tension =
+        ComputeDirectTestTensions(
+            elapsedTimeS_,phase);
 
-    std::array<sf::Scalar, 2>
-        commandedTension =
-            ComputeDirectTestTensions(
-                elapsedTimeS_,
-                phase);
+    if (safetyTripped_)
+        tension = {0.0,0.0};
 
-    snapshot_.testPhase =
-        phase;
+    snapshot_.testPhase = phase;
+    snapshot_.commandedTensionN = tension;
 
-    // Safety is latching.
-    //
-    // Once it trips, direct tendon force remains zero for the
-    // rest of this run.
+    if (!safetyTripped_) {
+        ApplyTendonForces(paths[0],tension[0]);
 
-    if (
-        safetyTripped_)
-    {
-        commandedTension[0] =
-            0.0;
-
-        commandedTension[1] =
-            0.0;
+        if (!safetyTripped_)
+            ApplyTendonForces(paths[1],tension[1]);
     }
 
-    snapshot_.commandedTensionN =
-        commandedTension;
-
-    // ============================================================
-    // 4. Apply DIRECT tendon forces
-    // ============================================================
-
-    if (
-        !safetyTripped_)
-    {
-        ApplyTendonForces(
-            paths[0],
-            commandedTension[0]);
-
-        if (
-            !safetyTripped_)
-        {
-            ApplyTendonForces(
-                paths[1],
-                commandedTension[1]);
-        }
-    }
-
-    // ============================================================
-    // 5. Passive tail elasticity
-    //
-    // This is the ONLY direct joint torque.
-    //
-    // Tendon force enters through Tail link spatial forces.
-    // ============================================================
-
-    for (
-        std::size_t i = 0;
-        i < 5;
-        ++i)
-    {
-        const sf::Scalar
-            passiveTorque =
-                -parameters_.passiveStiffnessNmRad *
-                    q[i]
-
-                -
-
-                parameters_.passiveDampingNmsRad *
-                    qDot[i];
+    for (std::size_t i=0; i<5; ++i) {
+        const sf::Scalar tau =
+            -parameters_.passiveStiffnessNmRad*q[i]
+            -parameters_.passiveDampingNmsRad*qDot[i];
 
         dynamics_->DriveJoint(
-            tailJointIndices_[i],
-            passiveTorque);
+            tailJointIndices_[i],tau);
 
-        snapshot_.passiveTorqueNm[i] =
-            passiveTorque;
+        snapshot_.passiveTorqueNm[i] = tau;
+
+        const sf::Scalar err =
+            snapshot_.tendonTorqueFromForcesNm[i]
+            -snapshot_.tendonTorqueFromJacobianNm[i];
+
+        snapshot_.tendonTorqueErrorNm[i] = err;
+        snapshot_.jacobianMaxErrorNm =
+            std::max(
+                snapshot_.jacobianMaxErrorNm,
+                std::abs(err));
     }
 
-    snapshot_.safetyTripped =
-        safetyTripped_;
+    snapshot_.safetyTripped = safetyTripped_;
 }
 
 TendonTailActuator::Snapshot

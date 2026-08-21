@@ -15,15 +15,24 @@ class SolidEntity;
 
 class CaudalSpringActuator;
 
-class TendonStageR2Simulator final : public sf::SimulationManager
+class TendonStageR2Simulator final :
+    public sf::SimulationManager
 {
 public:
-    explicit TendonStageR2Simulator(sf::Scalar stepsPerSecond);
+    explicit TendonStageR2Simulator(
+        sf::Scalar stepsPerSecond);
 
     void BuildScenario() override;
-    void SimulationStepCompleted(sf::Scalar timeStep) override;
+
+    void SimulationStepCompleted(
+        sf::Scalar timeStep) override;
 
 private:
+    struct Wrench {
+        sf::Vector3 force{0,0,0};
+        sf::Vector3 torque{0,0,0};
+    };
+
     void BindFish();
     int FindJointIndex(const char* name) const;
     int FindLinkIndex(const char* name) const;
@@ -33,8 +42,12 @@ private:
     void RegisterCaudalSpringActuator();
     void ConfigureCamera();
 
-    sf::Vector3 GetHydroForce(sf::SolidEntity* solid) const;
-    sf::Vector3 GetPropulsorForce() const;
+    sf::Vector3 GetSurfaceHydroForce(
+        sf::SolidEntity* solid) const;
+
+    sf::Vector3 GetTailSurfaceForce() const;
+
+    Wrench GetSupportReaction() const;
 
     void OpenCsv();
     void RecordSample();
@@ -49,9 +62,11 @@ private:
     int caudalLinkIndex_ = -1;
     int caudalJointIndex_ = -1;
 
-    std::array<int, 5> tailJointIndices_{{-1,-1,-1,-1,-1}};
-    std::array<int, 5> tailLinkIndices_{{-1,-1,-1,-1,-1}};
-    std::array<sf::SolidEntity*, 5> tailSolids_{{nullptr,nullptr,nullptr,nullptr,nullptr}};
+    std::array<int,5> tailJointIndices_{{-1,-1,-1,-1,-1}};
+    std::array<int,5> tailLinkIndices_{{-1,-1,-1,-1,-1}};
+
+    std::array<sf::SolidEntity*,5>
+        tailSolids_{{nullptr,nullptr,nullptr,nullptr,nullptr}};
 
     sf::SolidEntity* caudalFin_ = nullptr;
 
@@ -61,14 +76,20 @@ private:
     std::ofstream csv_;
 
     sf::Scalar elapsedTimeS_ = 0.0;
-    sf::Scalar csvPeriodS_ = 0.002;       // 500 Hz
-    sf::Scalar consolePeriodS_ = 0.05;    // 20 Hz
+
+    sf::Scalar csvPeriodS_ = 0.002;
+    sf::Scalar consolePeriodS_ = 0.05;
+
     sf::Scalar lastCsvTimeS_ = -1.0;
     sf::Scalar lastConsoleTimeS_ = -1.0;
 
     sf::Scalar meanStartTimeS_ = 5.0;
     sf::Scalar meanAccumTimeS_ = 0.0;
-    sf::Scalar impulseFxNs_ = 0.0;
-    sf::Scalar impulseFyNs_ = 0.0;
-    sf::Scalar impulseFzNs_ = 0.0;
+
+    sf::Scalar thrustImpulseNs_ = 0.0;
+    sf::Scalar tailSurfaceImpulseNs_ = 0.0;
+
+    Wrench lastSupport_;
+    sf::Vector3 lastTailSurface_{0,0,0};
+    sf::Scalar lastLoadcellThrustFx_ = 0.0;
 };
