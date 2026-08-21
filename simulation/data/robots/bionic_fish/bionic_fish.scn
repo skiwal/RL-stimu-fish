@@ -21,7 +21,7 @@
         <base_link
             name="Body"
             type="model"
-            physics="submerged"
+            physics="surface"
             buoyant="true">
 
             <physical>
@@ -104,7 +104,7 @@
         <link
             name="Tail0"
             type="model"
-            physics="submerged"
+            physics="surface"
             buoyant="true">
 
             <physical>
@@ -152,7 +152,7 @@
         <link
             name="Tail1"
             type="model"
-            physics="submerged"
+            physics="surface"
             buoyant="true">
 
             <physical>
@@ -200,7 +200,7 @@
         <link
             name="Tail2"
             type="model"
-            physics="submerged"
+            physics="surface"
             buoyant="true">
 
             <physical>
@@ -248,7 +248,7 @@
         <link
             name="Tail3"
             type="model"
-            physics="submerged"
+            physics="surface"
             buoyant="true">
 
             <physical>
@@ -296,7 +296,7 @@
         <link
             name="Tail4"
             type="model"
-            physics="submerged"
+            physics="surface"
             buoyant="true">
 
             <physical>
@@ -344,7 +344,7 @@
         <link
             name="CaudalFin"
             type="model"
-            physics="submerged"
+            physics="surface"
             buoyant="true">
 
             <physical>
@@ -392,7 +392,7 @@
         <link
             name="DorsalFin"
             type="model"
-            physics="submerged"
+            physics="surface"
             buoyant="true">
 
             <physical>
@@ -440,7 +440,7 @@
         <link
             name="LeftPectoralFin"
             type="model"
-            physics="submerged"
+            physics="surface"
             buoyant="true">
 
             <physical>
@@ -488,7 +488,7 @@
         <link
             name="RightPectoralFin"
             type="model"
-            physics="submerged"
+            physics="surface"
             buoyant="true">
 
             <physical>
