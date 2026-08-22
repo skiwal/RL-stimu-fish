@@ -73,27 +73,97 @@
              ====================================================== -->
 
         <link
-            name="MotorShaft"
-            type="box"
-            physics="surface">
+    name="MotorShaft"
+    type="compound"
+    physics="submerged">
 
-            <dimensions
-                xyz="0.015 0.120 0.015"/>
+    <external_part
+        name="MotorShaftCore"
+        type="box"
+        physics="submerged"
+        buoyant="false">
 
-            <origin
-                xyz="0.0 0.0 0.0"
-                rpy="0.0 0.0 0.0"/>
+        <dimensions
+            xyz="0.015 0.120 0.015"/>
 
-            <material
-                name="$(arg material_name)"/>
+        <origin
+            xyz="0.0 0.0 0.0"
+            rpy="0.0 0.0 0.0"/>
 
-            <look
-                name="BionicFishBodyLook"/>
+        <material
+            name="$(arg material_name)"/>
 
-            <mass
-                value="0.005"/>
+        <look
+            name="BionicFishBodyLook"/>
 
-        </link>
+        <mass
+            value="0.050000000"/>
+
+        <compound_transform
+            xyz="0.0 0.0 0.0"
+            rpy="0.0 0.0 0.0"/>
+
+    </external_part>
+
+
+    <external_part
+        name="MotorArmLeft"
+        type="box"
+        physics="submerged"
+        buoyant="false">
+
+        <dimensions
+            xyz="0.015 0.010 0.0395"/>
+
+        <origin
+            xyz="0.0 0.0 0.0"
+            rpy="0.0 0.0 0.0"/>
+
+        <material
+            name="$(arg material_name)"/>
+
+        <look
+            name="BionicFishBodyLook"/>
+
+        <mass
+            value="0.007406250"/>
+
+        <compound_transform
+            xyz="0.0 -0.055 -0.01975"
+            rpy="0.0 0.0 0.0"/>
+
+    </external_part>
+
+
+    <external_part
+        name="MotorArmRight"
+        type="box"
+        physics="submerged"
+        buoyant="false">
+
+        <dimensions
+            xyz="0.015 0.010 0.0395"/>
+
+        <origin
+            xyz="0.0 0.0 0.0"
+            rpy="0.0 0.0 0.0"/>
+
+        <material
+            name="$(arg material_name)"/>
+
+        <look
+            name="BionicFishBodyLook"/>
+
+        <mass
+            value="0.007406250"/>
+
+        <compound_transform
+            xyz="0.0 0.055 0.01975"
+            rpy="0.0 0.0 0.0"/>
+
+    </external_part>
+
+</link>
 
 
 
@@ -1525,22 +1595,22 @@
              ====================================================== -->
 
         <actuator
-            name="M1Servo"
-            type="servo">
+    name="M1Servo"
+    type="servo">
 
-            <controller
-                position_gain="0.0"
-                velocity_gain="0.0"
-                max_torque="0.0"
-                max_velocity="0.0"/>
+    <controller
+        position_gain="0.0"
+        velocity_gain="100.0"
+        max_torque="100.0"
+        max_velocity="31.41592653589793"/>
 
-            <joint
-                name="M1Joint"/>
+    <joint
+        name="M1Joint"/>
 
-            <initial
-                position="0.0"/>
+    <initial
+        position="0.0"/>
 
-        </actuator>
+</actuator>
 
 
 

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 
+
 namespace
 {
 
@@ -23,6 +24,7 @@ std::string NormalizeDataPath(
 }
 
 
+
 int main(
     int argc,
     char** argv)
@@ -33,39 +35,54 @@ int main(
             ? argv[1]
             : "../data/");
 
+
     sf::RenderSettings render;
 
-    render.windowW = 1920;
-    render.windowH = 1080;
+    render.windowW =
+        1920;
+
+    render.windowH =
+        1080;
+
 
     sf::HelperSettings helpers;
 
+
+    // Stiff tendon:
+    // k = 20000 N/m.
+    //
+    // Use a higher physics rate than the previous
+    // constant-force diagnostic.
     constexpr sf::Scalar physicsSPS =
-        2000.0;
+        4000.0;
+
 
     TendonStageR2Simulator simulator(
         physicsSPS);
 
+
     std::cout
-        << "\nStarting S-Bend Tendon Diagnostic\n"
-        << "  body          = fixed\n"
-        << "  caudal        = fixed to Tail4\n"
-        << "  left tendon   = constant 1.0 N\n"
-        << "  right tendon  = 0.0 N\n"
-        << "  routing       = [0,0,0,1,1]\n"
-        << "  tail k        = 0.65 Nm/rad\n"
-        << "  tail c        = 0.0 Nms/rad\n"
-        << "  motor/crank   = bypassed\n"
-        << "  physics       = 2000 Hz\n"
-        << "  output        = s_bend_diagnostic.csv\n"
+        << "\nStarting Stage 3 Motor + Dual Elastic Tendon\n"
+        << "  motor           = real M1Joint\n"
+        << "  motor mode      = velocity\n"
+        << "  motor frequency = 1.25 Hz\n"
+        << "  tendon k        = 20000 N/m\n"
+        << "  tendon c        = 10 Ns/m\n"
+        << "  routing         = [0,0,0,1,1]\n"
+        << "  tail k          = 0.65 Nm/rad\n"
+        << "  caudal          = fixed\n"
+        << "  physics         = 4000 Hz\n"
+        << "  output          = dual_tendon_motor.csv\n"
         << std::endl;
 
+
     sf::GraphicalSimulationApp app(
-        "BionicFish - S-Bend Tendon Diagnostic",
+        "BionicFish - Motor + Dual Elastic Tendon",
         dataPath,
         render,
         helpers,
         &simulator);
+
 
     app.Run();
 

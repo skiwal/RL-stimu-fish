@@ -1,0 +1,1768 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<scenario>
+
+
+    <!-- ==========================================================
+         Robot
+         ========================================================== -->
+
+    <robot
+        name="$(arg robot_name)"
+        fixed="$(arg robot_fixed)"
+        self_collisions="false"
+        algorithm="featherstone">
+
+
+        <!-- ======================================================
+             BODY
+             ====================================================== -->
+
+        <base_link
+            name="Body"
+            type="model"
+            physics="submerged"
+            buoyant="true">
+
+            <physical>
+
+                <mesh
+                    filename="robots/bionic_fish/physics/body.obj"
+                    scale="1.0"/>
+
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+            </physical>
+
+
+            <visual>
+
+                <mesh
+                    filename="robots/bionic_fish/visual/body.obj"
+                    scale="1.0"/>
+
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+            </visual>
+
+
+            <material
+                name="$(arg material_name)"/>
+
+
+            <look
+                name="BionicFishBodyLook"/>
+
+        </base_link>
+
+
+                <!-- ======================================================
+             M1 MOTOR SHAFT
+
+             Real Stonefish rigid link.
+
+             The crank arms themselves are NOT rigid-body links.
+             Their tendon attachment points are defined virtually
+             in tendon_tail_actuator.cpp.
+             ====================================================== -->
+
+        <link
+            name="MotorShaft"
+            type="box"
+            physics="surface">
+
+            <dimensions
+                xyz="0.015 0.120 0.015"/>
+
+            <origin
+                xyz="0.0 0.0 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+            <material
+                name="$(arg material_name)"/>
+
+            <look
+                name="BionicFishBodyLook"/>
+
+            <mass
+                value="0.005"/>
+
+        </link>
+
+
+
+        <!-- ======================================================
+             TAIL 0
+             ====================================================== -->
+
+        <!-- ======================================================
+             TAIL0 - FISHSIM-STYLE COMPOUND TAIL
+
+             Local origin = proximal revolute joint.
+
+             Replaces the previous full-volume fish-shaped
+             physics mesh with:
+
+                 thin spine
+                    +
+                 15 mm support
+                    +
+                 tendon guide arms
+                    +
+                 thin spine
+
+             Joint positions and tendon guide coordinates
+             remain unchanged.
+             ====================================================== -->
+
+        <link
+            name="Tail0"
+            type="compound"
+            physics="submerged">
+
+
+            <external_part
+                name="Tail0ProxSpine"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00700000 0.00100000 0.07500000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.001000000"/>
+
+                <compound_transform
+                    xyz="-0.00350000 0.00000000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail0Support"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.01500000 0.00300000 0.10000000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.005625000"/>
+
+                <compound_transform
+                    xyz="-0.01450000 0.00000000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail0GuideLeft"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00600000 0.04850000 0.01400000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.005092500"/>
+
+                <compound_transform
+                    xyz="-0.01900000 -0.02575000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail0GuideRight"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00600000 0.04850000 0.01400000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.005092500"/>
+
+                <compound_transform
+                    xyz="-0.01900000 0.02575000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail0DistSpine"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00750000 0.00100000 0.07000000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.001000000"/>
+
+                <compound_transform
+                    xyz="-0.02575000 0.00000000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+        </link>
+
+
+        <!-- ======================================================
+             TAIL 1
+             ====================================================== -->
+
+        <!-- ======================================================
+             TAIL1 - FISHSIM-STYLE COMPOUND TAIL
+
+             Local origin = proximal revolute joint.
+
+             Replaces the previous full-volume fish-shaped
+             physics mesh with:
+
+                 thin spine
+                    +
+                 15 mm support
+                    +
+                 tendon guide arms
+                    +
+                 thin spine
+
+             Joint positions and tendon guide coordinates
+             remain unchanged.
+             ====================================================== -->
+
+        <link
+            name="Tail1"
+            type="compound"
+            physics="submerged">
+
+
+            <external_part
+                name="Tail1ProxSpine"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00750000 0.00100000 0.07000000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.001000000"/>
+
+                <compound_transform
+                    xyz="-0.00375000 0.00000000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail1Support"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.01500000 0.00300000 0.09500000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.005343750"/>
+
+                <compound_transform
+                    xyz="-0.01500000 0.00000000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail1GuideLeft"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00600000 0.03850000 0.01400000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.004042500"/>
+
+                <compound_transform
+                    xyz="-0.01950000 -0.02075000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail1GuideRight"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00600000 0.03850000 0.01400000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.004042500"/>
+
+                <compound_transform
+                    xyz="-0.01950000 0.02075000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail1DistSpine"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00850000 0.00100000 0.06500000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.001000000"/>
+
+                <compound_transform
+                    xyz="-0.02675000 0.00000000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+        </link>
+
+
+        <!-- ======================================================
+             TAIL 2
+             ====================================================== -->
+
+        <!-- ======================================================
+             TAIL2 - FISHSIM-STYLE COMPOUND TAIL
+
+             Local origin = proximal revolute joint.
+
+             Replaces the previous full-volume fish-shaped
+             physics mesh with:
+
+                 thin spine
+                    +
+                 15 mm support
+                    +
+                 tendon guide arms
+                    +
+                 thin spine
+
+             Joint positions and tendon guide coordinates
+             remain unchanged.
+             ====================================================== -->
+
+        <link
+            name="Tail2"
+            type="compound"
+            physics="submerged">
+
+
+            <external_part
+                name="Tail2ProxSpine"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00850000 0.00100000 0.06500000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.001000000"/>
+
+                <compound_transform
+                    xyz="-0.00425000 0.00000000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail2Support"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.01500000 0.00300000 0.09000000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.005062500"/>
+
+                <compound_transform
+                    xyz="-0.01600000 0.00000000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail2GuideLeft"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00600000 0.02850000 0.01400000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.002992500"/>
+
+                <compound_transform
+                    xyz="-0.02050000 -0.01575000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail2GuideRight"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00600000 0.02850000 0.01400000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.002992500"/>
+
+                <compound_transform
+                    xyz="-0.02050000 0.01575000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail2DistSpine"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00700000 0.00100000 0.06000000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.001000000"/>
+
+                <compound_transform
+                    xyz="-0.02700000 0.00000000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+        </link>
+
+
+        <!-- ======================================================
+             TAIL 3
+             ====================================================== -->
+
+        <!-- ======================================================
+             TAIL3 - FISHSIM-STYLE COMPOUND TAIL
+
+             Local origin = proximal revolute joint.
+
+             Replaces the previous full-volume fish-shaped
+             physics mesh with:
+
+                 thin spine
+                    +
+                 15 mm support
+                    +
+                 tendon guide arms
+                    +
+                 thin spine
+
+             Joint positions and tendon guide coordinates
+             remain unchanged.
+             ====================================================== -->
+
+        <link
+            name="Tail3"
+            type="compound"
+            physics="submerged">
+
+
+            <external_part
+                name="Tail3ProxSpine"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00700000 0.00100000 0.06000000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.001000000"/>
+
+                <compound_transform
+                    xyz="-0.00350000 0.00000000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail3Support"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.01500000 0.00300000 0.08500000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.004781250"/>
+
+                <compound_transform
+                    xyz="-0.01450000 0.00000000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail3GuideLeft"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00600000 0.01850000 0.01400000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.001942500"/>
+
+                <compound_transform
+                    xyz="-0.01900000 -0.01075000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail3GuideRight"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00600000 0.01850000 0.01400000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.001942500"/>
+
+                <compound_transform
+                    xyz="-0.01900000 0.01075000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail3DistSpine"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00300000 0.00100000 0.05500000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.001000000"/>
+
+                <compound_transform
+                    xyz="-0.02350000 0.00000000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+        </link>
+
+
+        <!-- ======================================================
+             TAIL 4
+             ====================================================== -->
+
+        <!-- ======================================================
+             TAIL4 - FISHSIM-STYLE COMPOUND TAIL
+
+             Local origin = proximal revolute joint.
+
+             Replaces the previous full-volume fish-shaped
+             physics mesh with:
+
+                 thin spine
+                    +
+                 15 mm support
+                    +
+                 tendon guide arms
+                    +
+                 thin spine
+
+             Joint positions and tendon guide coordinates
+             remain unchanged.
+             ====================================================== -->
+
+        <link
+            name="Tail4"
+            type="compound"
+            physics="submerged">
+
+
+            <external_part
+                name="Tail4ProxSpine"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00300000 0.00100000 0.05500000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.001000000"/>
+
+                <compound_transform
+                    xyz="-0.00150000 0.00000000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail4Support"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.01500000 0.00300000 0.08000000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.004500000"/>
+
+                <compound_transform
+                    xyz="-0.01050000 0.00000000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail4GuideLeft"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00600000 0.00850000 0.01400000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.000892500"/>
+
+                <compound_transform
+                    xyz="-0.01500000 -0.00575000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail4GuideRight"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00600000 0.00850000 0.01400000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.000892500"/>
+
+                <compound_transform
+                    xyz="-0.01500000 0.00575000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+            <external_part
+                name="Tail4DistSpine"
+                type="box"
+                physics="submerged"
+                buoyant="true">
+
+                <dimensions
+                    xyz="0.00355000 0.00100000 0.04500000"/>
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+                <material
+                    name="$(arg material_name)"/>
+
+                <look
+                    name="BionicFishTailLook"/>
+
+                <mass
+                    value="0.001000000"/>
+
+                <compound_transform
+                    xyz="-0.01977500 0.00000000 0.00000000"
+                    rpy="0.0 0.0 0.0"/>
+
+            </external_part>
+
+        </link>
+
+
+        <!-- ======================================================
+             CAUDAL FIN
+             ====================================================== -->
+
+        <link
+            name="CaudalFin"
+            type="model"
+            physics="submerged"
+            buoyant="true">
+
+            <physical>
+
+                <mesh
+                    filename="robots/bionic_fish/physics/caudal_fin.obj"
+                    scale="1.0"/>
+
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+            </physical>
+
+
+            <visual>
+
+                <mesh
+                    filename="robots/bionic_fish/visual/caudal_fin.obj"
+                    scale="1.0"/>
+
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+            </visual>
+
+
+            <material
+                name="$(arg material_name)"/>
+
+
+            <look
+                name="BionicFishFinLook"/>
+
+        </link>
+
+
+        <!-- ======================================================
+             DORSAL FIN
+             ====================================================== -->
+
+        <link
+            name="DorsalFin"
+            type="model"
+            physics="submerged"
+            buoyant="true">
+
+            <physical>
+
+                <mesh
+                    filename="robots/bionic_fish/physics/dorsal_fin.obj"
+                    scale="1.0"/>
+
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+            </physical>
+
+
+            <visual>
+
+                <mesh
+                    filename="robots/bionic_fish/visual/dorsal_fin.obj"
+                    scale="1.0"/>
+
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+            </visual>
+
+
+            <material
+                name="$(arg material_name)"/>
+
+
+            <look
+                name="BionicFishFinLook"/>
+
+        </link>
+
+
+        <!-- ======================================================
+             LEFT PECTORAL
+             ====================================================== -->
+
+        <link
+            name="LeftPectoralFin"
+            type="model"
+            physics="submerged"
+            buoyant="true">
+
+            <physical>
+
+                <mesh
+                    filename="robots/bionic_fish/physics/left_pectoral.obj"
+                    scale="1.0"/>
+
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+            </physical>
+
+
+            <visual>
+
+                <mesh
+                    filename="robots/bionic_fish/visual/left_pectoral.obj"
+                    scale="1.0"/>
+
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+            </visual>
+
+
+            <material
+                name="$(arg material_name)"/>
+
+
+            <look
+                name="BionicFishLeftPectoralLook"/>
+
+        </link>
+
+
+        <!-- ======================================================
+             RIGHT PECTORAL
+             ====================================================== -->
+
+        <link
+            name="RightPectoralFin"
+            type="model"
+            physics="submerged"
+            buoyant="true">
+
+            <physical>
+
+                <mesh
+                    filename="robots/bionic_fish/physics/right_pectoral.obj"
+                    scale="1.0"/>
+
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+            </physical>
+
+
+            <visual>
+
+                <mesh
+                    filename="robots/bionic_fish/visual/right_pectoral.obj"
+                    scale="1.0"/>
+
+
+                <origin
+                    xyz="0.0 0.0 0.0"
+                    rpy="0.0 0.0 0.0"/>
+
+            </visual>
+
+
+            <material
+                name="$(arg material_name)"/>
+
+
+            <look
+                name="BionicFishRightPectoralLook"/>
+
+        </link>
+
+
+
+                <!-- ======================================================
+             M1 MOTOR JOINT
+
+             Independent motor shaft.
+             Axis = +Y.
+
+             Motor pivot:
+                 TailJoint0 x = -0.1810
+                 reference M1->J0 separation = 0.1195
+
+                 -0.1810 + 0.1195 = -0.0615
+             ====================================================== -->
+
+        <joint
+            name="M1Joint"
+            type="revolute">
+
+            <parent
+                name="Body"/>
+
+            <child
+                name="MotorShaft"/>
+
+            <origin
+                xyz="-0.0615 0.0 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+            <axis
+                xyz="0.0 1.0 0.0"/>
+
+            <damping
+                value="0.0"/>
+
+        </joint>
+
+
+        <!-- ======================================================
+             TAIL JOINT 0
+
+             ACTIVE JOINT
+             ====================================================== -->
+
+        <joint
+            name="TailJoint0"
+            type="revolute">
+
+            <parent
+                name="Body"/>
+
+
+            <child
+                name="Tail0"/>
+
+
+            <origin
+                xyz="-0.1810 0.0 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+
+            <axis
+                xyz="0.0 0.0 1.0"/>
+
+
+            <limits
+                min="-1.3962634016"
+                max="1.3962634016"/>
+
+
+            <damping
+                value="0.0"/>
+
+        </joint>
+
+
+        <!-- ======================================================
+             TAIL JOINT 1
+             ====================================================== -->
+
+        <joint
+            name="TailJoint1"
+            type="revolute">
+
+            <parent
+                name="Tail0"/>
+
+
+            <child
+                name="Tail1"/>
+
+
+            <origin
+                xyz="-0.0295 0.0 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+
+            <axis
+                xyz="0.0 0.0 1.0"/>
+
+
+            <limits
+                min="-1.3962634016"
+                max="1.3962634016"/>
+
+
+            <damping
+                value="0.0"/>
+
+        </joint>
+
+
+        <!-- ======================================================
+             TAIL JOINT 2
+             ====================================================== -->
+
+        <joint
+            name="TailJoint2"
+            type="revolute">
+
+            <parent
+                name="Tail1"/>
+
+
+            <child
+                name="Tail2"/>
+
+
+            <origin
+                xyz="-0.0310 0.0 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+
+            <axis
+                xyz="0.0 0.0 1.0"/>
+
+
+            <limits
+                min="-1.3962634016"
+                max="1.3962634016"/>
+
+
+            <damping
+                value="0.0"/>
+
+        </joint>
+
+
+        <!-- ======================================================
+             TAIL JOINT 3
+             ====================================================== -->
+
+        <joint
+            name="TailJoint3"
+            type="revolute">
+
+            <parent
+                name="Tail2"/>
+
+
+            <child
+                name="Tail3"/>
+
+
+            <origin
+                xyz="-0.0305 0.0 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+
+            <axis
+                xyz="0.0 0.0 1.0"/>
+
+
+            <limits
+                min="-1.3962634016"
+                max="1.3962634016"/>
+
+
+            <damping
+                value="0.0"/>
+
+        </joint>
+
+
+        <!-- ======================================================
+             TAIL JOINT 4
+             ====================================================== -->
+
+        <joint
+            name="TailJoint4"
+            type="revolute">
+
+            <parent
+                name="Tail3"/>
+
+
+            <child
+                name="Tail4"/>
+
+
+            <origin
+                xyz="-0.0250 0.0 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+
+            <axis
+                xyz="0.0 0.0 1.0"/>
+
+
+            <limits
+                min="-1.3962634016"
+                max="1.3962634016"/>
+
+
+            <damping
+                value="0.0"/>
+
+        </joint>
+
+
+        <!-- ======================================================
+     CAUDAL PASSIVE JOINT
+     Diagnostic passive caudal-fin hinge
+     ====================================================== -->
+
+<joint
+            name="CaudalJoint"
+            type="fixed">
+
+            <parent
+                name="Tail4"/>
+
+            <child
+                name="CaudalFin"/>
+
+            <origin
+                xyz="-0.02155 0.0 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+        </joint>
+
+
+        <!-- ======================================================
+             LEFT PECTORAL JOINT
+             ====================================================== -->
+
+        <joint
+            name="LeftPectoralJoint"
+            type="revolute">
+
+            <parent
+                name="Body"/>
+
+
+            <child
+                name="LeftPectoralFin"/>
+
+
+            <origin
+                xyz="0.060 -0.080 0.010"
+                rpy="0.0 0.0 0.0"/>
+
+
+            <axis
+                xyz="0.0 1.0 0.0"/>
+
+
+            <limits
+                min="-0.6108652382"
+                max="0.6108652382"/>
+
+
+            <damping
+                value="0.02"/>
+
+        </joint>
+
+
+        <!-- ======================================================
+             RIGHT PECTORAL JOINT
+             ====================================================== -->
+
+        <joint
+            name="RightPectoralJoint"
+            type="revolute">
+
+            <parent
+                name="Body"/>
+
+
+            <child
+                name="RightPectoralFin"/>
+
+
+            <origin
+                xyz="0.060 0.080 0.010"
+                rpy="0.0 0.0 0.0"/>
+
+
+            <axis
+                xyz="0.0 1.0 0.0"/>
+
+
+            <limits
+                min="-0.6108652382"
+                max="0.6108652382"/>
+
+
+            <damping
+                value="0.02"/>
+
+        </joint>
+
+
+        <!-- ======================================================
+             DORSAL FIXED JOINT
+             ====================================================== -->
+
+        <joint
+            name="DorsalJoint"
+            type="fixed">
+
+            <parent
+                name="Body"/>
+
+
+            <child
+                name="DorsalFin"/>
+
+
+            <origin
+                xyz="-0.156 0.0 -0.040"
+                rpy="0.0 0.0 0.0"/>
+
+        </joint>
+
+
+        <!-- ======================================================
+             M1 — TAIL MOTOR
+
+             Stage 4A deliberately soft position controller.
+
+             XML torque = 0.
+
+             static_pool_simulator.cpp only enables 0.05 Nm when
+             running:
+
+                 straight
+
+             ====================================================== -->
+
+                <!-- ======================================================
+             M1 — REAL STONEFISH MOTOR
+
+             Velocity controlled continuous motor.
+
+             First diagnostic:
+                 target = 0.05 Hz
+                        = 0.314159 rad/s
+
+             The actual setpoint is sent by
+             TendonTailActuator.
+
+             max_torque:
+                 6.9 Nm
+
+             max_velocity:
+                 72 rpm
+                 ~= 7.5398 rad/s
+             ====================================================== -->
+
+        <actuator
+            name="M1Servo"
+            type="servo">
+
+            <controller
+                position_gain="0.0"
+                velocity_gain="0.0"
+                max_torque="0.0"
+                max_velocity="0.0"/>
+
+            <joint
+                name="M1Joint"/>
+
+            <initial
+                position="0.0"/>
+
+        </actuator>
+
+
+
+        <!-- ======================================================
+             M2 — LEFT PECTORAL
+
+             OFF
+             ====================================================== -->
+
+        <actuator
+            name="LeftPectoralMotor"
+            type="servo">
+
+            <controller
+                position_gain="12.0"
+                velocity_gain="1.5"
+                max_torque="0.0"
+                max_velocity="4.0"/>
+
+
+            <joint
+                name="LeftPectoralJoint"/>
+
+
+            <initial
+                position="0.0"/>
+
+        </actuator>
+
+
+        <!-- ======================================================
+             M3 — RIGHT PECTORAL
+
+             OFF
+             ====================================================== -->
+
+        <actuator
+            name="RightPectoralMotor"
+            type="servo">
+
+            <controller
+                position_gain="12.0"
+                velocity_gain="1.5"
+                max_torque="0.0"
+                max_velocity="4.0"/>
+
+
+            <joint
+                name="RightPectoralJoint"/>
+
+
+            <initial
+                position="0.0"/>
+
+        </actuator>
+
+
+        <!-- ======================================================
+             TAIL ENCODER
+             ====================================================== -->
+
+        <sensor
+            name="TailEncoder"
+            type="encoder"
+            rate="100.0">
+
+            <history
+                samples="32"/>
+
+
+            <joint
+                name="TailJoint0"/>
+
+        </sensor>
+
+
+        <!-- ======================================================
+             LEFT PECTORAL ENCODER
+             ====================================================== -->
+
+        <sensor
+            name="LeftPectoralEncoder"
+            type="encoder"
+            rate="100.0">
+
+            <history
+                samples="32"/>
+
+
+            <joint
+                name="LeftPectoralJoint"/>
+
+        </sensor>
+
+
+        <!-- ======================================================
+             RIGHT PECTORAL ENCODER
+             ====================================================== -->
+
+        <sensor
+            name="RightPectoralEncoder"
+            type="encoder"
+            rate="100.0">
+
+            <history
+                samples="32"/>
+
+
+            <joint
+                name="RightPectoralJoint"/>
+
+        </sensor>
+
+
+        <!-- ======================================================
+             IMU
+             ====================================================== -->
+
+        <sensor
+            name="IMU"
+            type="imu"
+            rate="100.0">
+
+            <range
+                angular_velocity="20.0 20.0 20.0"
+                linear_acceleration="50.0 50.0 50.0"/>
+
+
+            <history
+                samples="32"/>
+
+
+            <origin
+                xyz="0.075 0.0 -0.015"
+                rpy="0.0 0.0 0.0"/>
+
+
+            <link
+                name="Body"/>
+
+        </sensor>
+
+
+        <!-- ======================================================
+             PRESSURE SENSOR
+             ====================================================== -->
+
+        <sensor
+            name="Pressure"
+            type="pressure"
+            rate="50.0">
+
+            <range
+                pressure="60000.0"/>
+
+
+            <history
+                samples="32"/>
+
+
+            <origin
+                xyz="0.040 0.084 0.000"
+                rpy="0.0 0.0 0.0"/>
+
+
+            <link
+                name="Body"/>
+
+        </sensor>
+
+
+        <!-- ======================================================
+             FORWARD LOOKING SONAR
+             ====================================================== -->
+
+        <sensor
+            name="ForwardSonar"
+            type="fls">
+
+            <specs
+                beams="128"
+                bins="256"
+                horizontal_fov="100.0"
+                vertical_fov="30.0"
+                output_format="uint16"/>
+
+
+            <settings
+                range_min="0.20"
+                range_max="6.0"
+                gain="1.0"/>
+
+
+            <noise
+                multiplicative="0.0"
+                additive="0.0"/>
+
+
+            <display
+                colormap="hot"/>
+
+
+            <origin
+                xyz="0.187 0.0 0.0"
+                rpy="0.0 0.0 0.0"/>
+
+
+            <link
+                name="Body"/>
+
+        </sensor>
+
+
+        <!-- ======================================================
+             INITIAL WORLD POSE
+             ====================================================== -->
+
+        <world_transform
+            xyz="$(arg robot_position)"
+            rpy="$(arg robot_rpy)"/>
+
+
+    </robot>
+
+</scenario>

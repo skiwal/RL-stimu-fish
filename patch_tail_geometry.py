@@ -1,21 +1,33 @@
 from pathlib import Path
+from datetime import datetime
 import re
 import shutil
-from datetime import datetime
+
+
+# ============================================================
+# CONFIG
+# ============================================================
 
 SCN = Path(
     "simulation/data/robots/bionic_fish/bionic_fish.scn"
 )
 
 if not SCN.exists():
-    raise SystemExit(f"ERROR: cannot find {SCN}")
+    raise SystemExit(
+        f"ERROR: cannot find:\n{SCN}"
+    )
+
 
 # ============================================================
-# Backup
+# BACKUP
 # ============================================================
 
 stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-backup = SCN.with_suffix(f".scn.backup_{stamp}")
+
+backup = SCN.with_name(
+    SCN.name + f".stage3_backup_{stamp}"
+)
+
 shutil.copy2(SCN, backup)
 
 text = SCN.read_text()
@@ -25,652 +37,470 @@ print(f"Backup: {backup}")
 
 
 # ============================================================
-# Helpers
+# HELPERS
 # ============================================================
 
-def replace_link(name: str, replacement: str):
-    global text
+def replace_named_block(
+    text,
+    tag,
+    name,
+    replacement,
+):
+    """
+    Replace one complete XML block such as:
+
+        <link ... name="MotorShaft" ...>
+            ...
+        </link>
+
+    Attribute order does not matter.
+    """
 
     pattern = (
-        r'<link\s+'
-        r'name="' + re.escape(name) + r'"'
-        r'.*?'
-        r'</link>'
+        rf'<{tag}\b'
+        rf'(?=[^>]*\bname="{re.escape(name)}")'
+        rf'[^>]*>'
+        rf'.*?'
+        rf'</{tag}>'
     )
 
-    text_new, n = re.subn(
+    new_text, count = re.subn(
         pattern,
-        replacement.strip(),
+        lambda _: replacement.strip(),
         text,
         count=1,
         flags=re.S,
     )
 
-    if n != 1:
+    if count != 1:
         raise RuntimeError(
-            f"Expected exactly one link '{name}', found {n}"
+            f"Cannot replace <{tag}> "
+            f'name="{name}": matches={count}'
         )
 
-    text = text_new
+    return new_text
 
 
-def box_part(
-    part_name: str,
-    dimensions,
-    position,
-    mass: float,
-    look="BionicFishTailLook",
-):
-    dx, dy, dz = dimensions
-    x, y, z = position
-
-    return f'''
-            <external_part
-                name="{part_name}"
-                type="box"
-                physics="submerged"
-                buoyant="true">
-
-                <dimensions
-                    xyz="{dx:.8f} {dy:.8f} {dz:.8f}"/>
-
-                <origin
-                    xyz="0.0 0.0 0.0"
-                    rpy="0.0 0.0 0.0"/>
-
-                <material
-                    name="$(arg material_name)"/>
-
-                <look
-                    name="{look}"/>
-
-                <mass
-                    value="{mass:.9f}"/>
-
-                <compound_transform
-                    xyz="{x:.8f} {y:.8f} {z:.8f}"
-                    rpy="0.0 0.0 0.0"/>
-
-            </external_part>
-'''
-
-
-def make_tail_link(
-    name: str,
-
-    # proximal thin connector
-    prox_length: float,
-    prox_height: float,
-
-    # 15 mm PLA support
-    support_height: float,
-
-    # tendon guide
-    guide_x: float,
-    guide_y_center: float,
-    guide_width: float,
-
-    # distal thin connector
-    distal_length: float,
-    distal_height: float,
-
-    # explicit masses
-    support_mass: float,
-    guide_mass_each: float,
+def opening_tag_exists(
+    text,
+    tag,
+    name,
+    required_attributes=None,
 ):
     """
-    Local x=0 is the proximal joint.
-
-    Stonefish fish direction:
-        tail extends along negative X.
-
-    Geometry is the mirrored-X equivalent of fishsim.
+    Check one opening tag without depending
+    on XML attribute order.
     """
 
-    support_length = 0.015
-    support_thickness = 0.003
-
-    guide_x_length = 0.006
-    guide_z_height = 0.014
-
-    spine_thickness_y = 0.001
-
-    # -----------------------------
-    # X locations
-    # -----------------------------
-
-    prox_x = -0.5 * prox_length
-
-    support_x = -(
-        prox_length
-        + 0.5 * support_length
+    required_attributes = (
+        required_attributes or {}
     )
-
-    distal_x = -(
-        prox_length
-        + support_length
-        + 0.5 * distal_length
-    )
-
-    parts = []
-
-    # --------------------------------------------------------
-    # Proximal thin spine / compliant-region representation
-    #
-    # Original MuJoCo connector mass = 1 g.
-    # --------------------------------------------------------
-
-    parts.append(
-        box_part(
-            f"{name}ProxSpine",
-            (
-                prox_length,
-                spine_thickness_y,
-                prox_height,
-            ),
-            (
-                prox_x,
-                0.0,
-                0.0,
-            ),
-            0.001,
-        )
-    )
-
-    # --------------------------------------------------------
-    # Main 15 mm structural support.
-    # --------------------------------------------------------
-
-    parts.append(
-        box_part(
-            f"{name}Support",
-            (
-                support_length,
-                support_thickness,
-                support_height,
-            ),
-            (
-                support_x,
-                0.0,
-                0.0,
-            ),
-            support_mass,
-        )
-    )
-
-    # --------------------------------------------------------
-    # Left and right tendon-guide arms.
-    #
-    # These reproduce the MuJoCo physical guide blocks.
-    # Tendon mathematical guide points remain in C++ and
-    # are NOT changed here.
-    # --------------------------------------------------------
-
-    parts.append(
-        box_part(
-            f"{name}GuideLeft",
-            (
-                guide_x_length,
-                guide_width,
-                guide_z_height,
-            ),
-            (
-                -guide_x,
-                -guide_y_center,
-                0.0,
-            ),
-            guide_mass_each,
-        )
-    )
-
-    parts.append(
-        box_part(
-            f"{name}GuideRight",
-            (
-                guide_x_length,
-                guide_width,
-                guide_z_height,
-            ),
-            (
-                -guide_x,
-                +guide_y_center,
-                0.0,
-            ),
-            guide_mass_each,
-        )
-    )
-
-    # --------------------------------------------------------
-    # Distal thin spine.
-    #
-    # Original MuJoCo connector mass = 1 g.
-    # --------------------------------------------------------
-
-    parts.append(
-        box_part(
-            f"{name}DistSpine",
-            (
-                distal_length,
-                spine_thickness_y,
-                distal_height,
-            ),
-            (
-                distal_x,
-                0.0,
-                0.0,
-            ),
-            0.001,
-        )
-    )
-
-    return f'''
-        <!-- ======================================================
-             {name.upper()} - FISHSIM-STYLE COMPOUND TAIL
-
-             Local origin = proximal revolute joint.
-
-             Replaces the previous full-volume fish-shaped
-             physics mesh with:
-
-                 thin spine
-                    +
-                 15 mm support
-                    +
-                 tendon guide arms
-                    +
-                 thin spine
-
-             Joint positions and tendon guide coordinates
-             remain unchanged.
-             ====================================================== -->
-
-        <link
-            name="{name}"
-            type="compound"
-            physics="submerged">
-
-{''.join(parts)}
-        </link>
-'''
-
-
-# ============================================================
-# Tail0
-#
-# fishsim:
-#
-# body-tail0      = 14 mm
-# proximal half   =  7 mm
-# support         = 15 mm
-# tail0-tail1     = 15 mm
-# distal half     =  7.5 mm
-#
-# joint distance:
-# 7 + 15 + 7.5 = 29.5 mm
-# ============================================================
-
-tail0 = make_tail_link(
-    name="Tail0",
-
-    prox_length=0.0070,
-    prox_height=0.075,
-
-    support_height=0.100,
-
-    guide_x=0.0190,
-    guide_y_center=0.02575,
-    guide_width=0.0485,
-
-    distal_length=0.0075,
-    distal_height=0.070,
-
-    support_mass=0.005625,
-    guide_mass_each=0.0050925,
-)
-
-replace_link("Tail0", tail0)
-
-
-# ============================================================
-# Tail1
-#
-# proximal = 15/2 = 7.5 mm
-# support  = 15 mm
-# distal   = 17/2 = 8.5 mm
-#
-# total = 31.0 mm
-# ============================================================
-
-tail1 = make_tail_link(
-    name="Tail1",
-
-    prox_length=0.0075,
-    prox_height=0.070,
-
-    support_height=0.095,
-
-    guide_x=0.0195,
-    guide_y_center=0.02075,
-    guide_width=0.0385,
-
-    distal_length=0.0085,
-    distal_height=0.065,
-
-    support_mass=0.00534375,
-    guide_mass_each=0.0040425,
-)
-
-replace_link("Tail1", tail1)
-
-
-# ============================================================
-# Tail2
-#
-# proximal = 17/2 = 8.5 mm
-# support  = 15 mm
-# distal   = 14/2 = 7 mm
-#
-# total = 30.5 mm
-# ============================================================
-
-tail2 = make_tail_link(
-    name="Tail2",
-
-    prox_length=0.0085,
-    prox_height=0.065,
-
-    support_height=0.090,
-
-    guide_x=0.0205,
-    guide_y_center=0.01575,
-    guide_width=0.0285,
-
-    distal_length=0.0070,
-    distal_height=0.060,
-
-    support_mass=0.0050625,
-    guide_mass_each=0.0029925,
-)
-
-replace_link("Tail2", tail2)
-
-
-# ============================================================
-# Tail3
-#
-# proximal = 14/2 = 7 mm
-# support  = 15 mm
-# distal   = 6/2 = 3 mm
-#
-# total = 25.0 mm
-# ============================================================
-
-tail3 = make_tail_link(
-    name="Tail3",
-
-    prox_length=0.0070,
-    prox_height=0.060,
-
-    support_height=0.085,
-
-    guide_x=0.0190,
-    guide_y_center=0.01075,
-    guide_width=0.0185,
-
-    distal_length=0.0030,
-    distal_height=0.055,
-
-    support_mass=0.00478125,
-    guide_mass_each=0.0019425,
-)
-
-replace_link("Tail3", tail3)
-
-
-# ============================================================
-# Tail4
-#
-# Original fishsim proximal half:
-#     tail3-tail4 / 2 = 3 mm
-#
-# Main support:
-#     15 mm
-#
-# Current verified Stonefish CaudalJoint position:
-#     21.55 mm from TailJoint4
-#
-# Therefore for THIS diagnostic we preserve that already
-# verified CaudalJoint location and use:
-#
-#     distal = 21.55 - 3 - 15
-#            = 3.55 mm
-#
-# We DO NOT move the caudal fin in this experiment.
-#
-# Mass of this distal connector stays 1 g, matching the
-# original fishsim connector-mass convention.
-# ============================================================
-
-tail4 = make_tail_link(
-    name="Tail4",
-
-    prox_length=0.0030,
-    prox_height=0.055,
-
-    support_height=0.080,
-
-    guide_x=0.0150,
-    guide_y_center=0.00575,
-    guide_width=0.0085,
-
-    distal_length=0.00355,
-    distal_height=0.045,
-
-    support_mass=0.004500,
-    guide_mass_each=0.0008925,
-)
-
-replace_link("Tail4", tail4)
-
-
-# ============================================================
-# Restore WET physics.
-#
-# Current public master still contains an old diagnostic
-# "surface" state. This test must use the stable wet model.
-# ============================================================
-
-text = text.replace(
-    'physics="surface"',
-    'physics="submerged"',
-)
-
-# MotorShaft remains SURFACE.
-motor_pattern = (
-    r'(<link\s+'
-    r'name="MotorShaft"\s+'
-    r'type="box"\s+'
-    r'physics=")submerged(")'
-)
-
-text, n_motor = re.subn(
-    motor_pattern,
-    r'\1surface\2',
-    text,
-    count=1,
-    flags=re.S,
-)
-
-if n_motor != 1:
-    raise RuntimeError(
-        f"MotorShaft physics patch failed: {n_motor}"
-    )
-
-
-# ============================================================
-# CaudalFin must be rigidly fixed to Tail4.
-#
-# Keep the already verified Stonefish origin:
-#     x = -0.02155 m
-#
-# This experiment is about Tail0..Tail4 geometry ONLY.
-# ============================================================
-
-caudal_fixed = '''
-        <joint
-            name="CaudalJoint"
-            type="fixed">
-
-            <parent
-                name="Tail4"/>
-
-            <child
-                name="CaudalFin"/>
-
-            <origin
-                xyz="-0.02155 0.0 0.0"
-                rpy="0.0 0.0 0.0"/>
-
-        </joint>
-'''
-
-caudal_pattern = (
-    r'<joint\s+'
-    r'name="CaudalJoint"\s+'
-    r'type="(?:fixed|revolute)">'
-    r'.*?'
-    r'</joint>'
-)
-
-text, n_caudal = re.subn(
-    caudal_pattern,
-    caudal_fixed.strip(),
-    text,
-    count=1,
-    flags=re.S,
-)
-
-if n_caudal != 1:
-    raise RuntimeError(
-        f"CaudalJoint patch failed: {n_caudal}"
-    )
-
-
-# ============================================================
-# Sanity checks
-# ============================================================
-
-expected_joint_origins = {
-    "TailJoint0": "-0.1810",
-    "TailJoint1": "-0.0295",
-    "TailJoint2": "-0.0310",
-    "TailJoint3": "-0.0305",
-    "TailJoint4": "-0.0250",
-}
-
-for joint, x in expected_joint_origins.items():
 
     pattern = (
-        rf'name="{joint}".*?'
-        rf'<origin\s+'
-        rf'xyz="{re.escape(x)} 0\.0 0\.0"'
+        rf'<{tag}\b'
+        rf'(?=[^>]*\bname="{re.escape(name)}")'
     )
 
-    if not re.search(
-        pattern,
-        text,
-        flags=re.S,
-    ):
-        raise RuntimeError(
-            f"Joint geometry changed unexpectedly: {joint}"
+    for key, value in required_attributes.items():
+        pattern += (
+            rf'(?=[^>]*\b'
+            rf'{re.escape(key)}='
+            rf'"{re.escape(value)}")'
         )
 
+    pattern += r'[^>]*>'
 
-for i in range(5):
-    if not re.search(
-        rf'<link\s+'
-        rf'name="Tail{i}"\s+'
-        rf'type="compound"\s+'
-        rf'physics="submerged">',
-        text,
-        flags=re.S,
-    ):
-        raise RuntimeError(
-            f"Tail{i} is not submerged compound"
+    return (
+        re.search(
+            pattern,
+            text,
+            flags=re.S,
         )
+        is not None
+    )
 
+
+# ============================================================
+# MOTOR SHAFT
+#
+# Source fishsim approximation:
+#
+# central shaft:
+#   15 x 120 x 15 mm
+#   mass = 0.05 kg
+#
+# crank arms:
+#   15 x 10 x 39.5 mm
+#
+# PLA density:
+#   1250 kg/m^3
+#
+# arm mass:
+#   0.015 * 0.010 * 0.0395 * 1250
+#   = 0.00740625 kg
+#
+# Motor link local coordinates:
+#
+# left arm:
+#   y = -0.055
+#   z = -0.01975
+#
+# right arm:
+#   y = +0.055
+#   z = +0.01975
+#
+# Tendon attachment ends will be:
+#
+# left:
+#   (0, -0.055, -0.0345)
+#
+# right:
+#   (0, +0.055, +0.0345)
+#
+# Those final attachment coordinates are used
+# in tendon_tail_actuator.cpp.
+# ============================================================
+
+motor_link = r'''
+<link
+    name="MotorShaft"
+    type="compound"
+    physics="submerged">
+
+    <external_part
+        name="MotorShaftCore"
+        type="box"
+        physics="submerged"
+        buoyant="false">
+
+        <dimensions
+            xyz="0.015 0.120 0.015"/>
+
+        <origin
+            xyz="0.0 0.0 0.0"
+            rpy="0.0 0.0 0.0"/>
+
+        <material
+            name="$(arg material_name)"/>
+
+        <look
+            name="BionicFishBodyLook"/>
+
+        <mass
+            value="0.050000000"/>
+
+        <compound_transform
+            xyz="0.0 0.0 0.0"
+            rpy="0.0 0.0 0.0"/>
+
+    </external_part>
+
+
+    <external_part
+        name="MotorArmLeft"
+        type="box"
+        physics="submerged"
+        buoyant="false">
+
+        <dimensions
+            xyz="0.015 0.010 0.0395"/>
+
+        <origin
+            xyz="0.0 0.0 0.0"
+            rpy="0.0 0.0 0.0"/>
+
+        <material
+            name="$(arg material_name)"/>
+
+        <look
+            name="BionicFishBodyLook"/>
+
+        <mass
+            value="0.007406250"/>
+
+        <compound_transform
+            xyz="0.0 -0.055 -0.01975"
+            rpy="0.0 0.0 0.0"/>
+
+    </external_part>
+
+
+    <external_part
+        name="MotorArmRight"
+        type="box"
+        physics="submerged"
+        buoyant="false">
+
+        <dimensions
+            xyz="0.015 0.010 0.0395"/>
+
+        <origin
+            xyz="0.0 0.0 0.0"
+            rpy="0.0 0.0 0.0"/>
+
+        <material
+            name="$(arg material_name)"/>
+
+        <look
+            name="BionicFishBodyLook"/>
+
+        <mass
+            value="0.007406250"/>
+
+        <compound_transform
+            xyz="0.0 0.055 0.01975"
+            rpy="0.0 0.0 0.0"/>
+
+    </external_part>
+
+</link>
+'''
+
+text = replace_named_block(
+    text,
+    "link",
+    "MotorShaft",
+    motor_link,
+)
+
+
+# ============================================================
+# M1 SERVO
+#
+# Source fishsim:
+#
+# velocity gain = 100
+# max torque    = ±100 Nm
+# max velocity  = ±2*pi*5 rad/s
+#
+# C++ later switches this servo explicitly
+# to VELOCITY mode and commands 1.25 Hz.
+# ============================================================
+
+motor_servo = r'''
+<actuator
+    name="M1Servo"
+    type="servo">
+
+    <controller
+        position_gain="0.0"
+        velocity_gain="100.0"
+        max_torque="100.0"
+        max_velocity="31.41592653589793"/>
+
+    <joint
+        name="M1Joint"/>
+
+    <initial
+        position="0.0"/>
+
+</actuator>
+'''
+
+text = replace_named_block(
+    text,
+    "actuator",
+    "M1Servo",
+    motor_servo,
+)
+
+
+# ============================================================
+# SANITY: M1 JOINT
+# ============================================================
+
+if not opening_tag_exists(
+    text,
+    "joint",
+    "M1Joint",
+    {
+        "type": "revolute",
+    },
+):
+    raise RuntimeError(
+        "ERROR: M1Joint is not revolute."
+    )
+
+
+# Extract complete M1Joint block so that
+# axis checking cannot accidentally cross into
+# another joint.
+
+m1_match = re.search(
+    r'<joint\b'
+    r'(?=[^>]*\bname="M1Joint")'
+    r'[^>]*>'
+    r'.*?'
+    r'</joint>',
+    text,
+    flags=re.S,
+)
+
+if not m1_match:
+    raise RuntimeError(
+        "ERROR: cannot find complete M1Joint."
+    )
+
+m1_block = m1_match.group(0)
 
 if not re.search(
-    r'name="CaudalJoint"\s+'
-    r'type="fixed"',
-    text,
+    r'<axis\b'
+    r'[^>]*'
+    r'xyz="0\.0\s+1\.0\s+0\.0"',
+    m1_block,
     flags=re.S,
 ):
     raise RuntimeError(
-        "CaudalJoint is not fixed"
+        "ERROR: M1Joint axis is not +Y."
     )
 
 
 # ============================================================
-# Check SURFACE links.
-#
-# IMPORTANT:
-# Inspect each opening <link ...> / <base_link ...> tag
-# independently. Do not allow regex to cross into another link.
+# SANITY: CAUDAL MUST REMAIN FIXED
 # ============================================================
 
-surface_links = []
-
-for match in re.finditer(
-    r'<(?:base_link|link)\b[^>]*>',
+if not opening_tag_exists(
     text,
-    flags=re.S,
+    "joint",
+    "CaudalJoint",
+    {
+        "type": "fixed",
+    },
 ):
-    tag = match.group(0)
-
-    if 'physics="surface"' not in tag:
-        continue
-
-    name_match = re.search(
-        r'\bname="([^"]+)"',
-        tag,
+    raise RuntimeError(
+        "ERROR: CaudalJoint is not fixed."
     )
 
-    if not name_match:
+
+# ============================================================
+# SANITY: TAIL LINKS MUST STILL EXIST
+# ============================================================
+
+for i in range(5):
+
+    name = f"Tail{i}"
+
+    if not opening_tag_exists(
+        text,
+        "link",
+        name,
+    ):
         raise RuntimeError(
-            "Found surface link without name:\n"
-            + tag
+            f"ERROR: {name} missing."
         )
 
-    surface_links.append(
-        name_match.group(1)
-    )
 
-if surface_links != ["MotorShaft"]:
+# ============================================================
+# SANITY: MOTOR PATCH
+# ============================================================
+
+if not opening_tag_exists(
+    text,
+    "link",
+    "MotorShaft",
+    {
+        "type": "compound",
+        "physics": "submerged",
+    },
+):
     raise RuntimeError(
-        "Unexpected surface links: "
-        + repr(surface_links)
+        "ERROR: MotorShaft compound patch failed."
     )
 
+
+for part in (
+    "MotorShaftCore",
+    "MotorArmLeft",
+    "MotorArmRight",
+):
+    if f'name="{part}"' not in text:
+        raise RuntimeError(
+            f"ERROR: missing {part}"
+        )
 
 
 # ============================================================
-# Write
+# SANITY: SERVO PATCH
+# ============================================================
+
+servo_match = re.search(
+    r'<actuator\b'
+    r'(?=[^>]*\bname="M1Servo")'
+    r'[^>]*>'
+    r'.*?'
+    r'</actuator>',
+    text,
+    flags=re.S,
+)
+
+if not servo_match:
+    raise RuntimeError(
+        "ERROR: cannot find M1Servo."
+    )
+
+servo_block = servo_match.group(0)
+
+checks = (
+    'velocity_gain="100.0"',
+    'max_torque="100.0"',
+    'max_velocity="31.41592653589793"',
+    'name="M1Joint"',
+)
+
+for value in checks:
+    if value not in servo_block:
+        raise RuntimeError(
+            "ERROR: M1Servo missing: "
+            + value
+        )
+
+
+# ============================================================
+# WRITE ONLY AFTER ALL CHECKS PASS
 # ============================================================
 
 SCN.write_text(text)
 
+
+# ============================================================
+# RESULT
+# ============================================================
+
 print()
 print("============================================")
-print("TAIL GEOMETRY PATCH COMPLETE")
+print("STAGE 3 MOTOR PATCH COMPLETE")
 print("============================================")
-print("Tail0..Tail4 : compound / submerged")
-print("CaudalJoint  : fixed")
-print("MotorShaft   : surface")
-print("Other fish   : submerged")
 print()
-print("Joint origins were NOT changed.")
-print("Tendon routing was NOT changed.")
-print("Tendon guide coordinates were NOT changed.")
-print("Tendon actuator code was NOT changed.")
+print("MotorShaft:")
+print("  type           = compound")
+print("  physics        = submerged")
+print("  shaft mass     = 0.050000 kg")
+print("  left arm mass  = 0.00740625 kg")
+print("  right arm mass = 0.00740625 kg")
+print()
+print("M1Joint:")
+print("  type = revolute")
+print("  axis = +Y")
+print()
+print("M1Servo:")
+print("  velocity gain = 100")
+print("  max torque    = 100 Nm")
+print("  max velocity  = 31.4159265 rad/s")
+print("                = 5 Hz")
+print()
+print("CaudalJoint:")
+print("  fixed")
+print()
+print("Tail0..Tail4:")
+print("  untouched")
+print()
+print("Tendon routing:")
+print("  untouched")
+print()
+print("Output:")
+print(f"  {SCN}")
+print()
+print("Backup:")
+print(f"  {backup}")
+print()
 print("============================================")
