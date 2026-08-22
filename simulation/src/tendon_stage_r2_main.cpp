@@ -1,12 +1,15 @@
 #include <Stonefish/core/GraphicalSimulationApp.h>
+
 #include "inc/tendon_stage_r2_simulator.h"
 
 #include <iostream>
 #include <string>
 
-namespace {
+namespace
+{
 
-std::string NormalizeDataPath(std::string path)
+std::string NormalizeDataPath(
+    std::string path)
 {
     if (path.empty())
         path = "../data/";
@@ -19,7 +22,10 @@ std::string NormalizeDataPath(std::string path)
 
 }
 
-int main(int argc, char** argv)
+
+int main(
+    int argc,
+    char** argv)
 {
     const std::string dataPath =
         NormalizeDataPath(
@@ -28,6 +34,7 @@ int main(int argc, char** argv)
             : "../data/");
 
     sf::RenderSettings render;
+
     render.windowW = 1920;
     render.windowH = 1080;
 
@@ -40,22 +47,21 @@ int main(int argc, char** argv)
         physicsSPS);
 
     std::cout
-        << "\nStarting PHASE 0 Thrust Validation\n"
-        << "  body             = fixed\n"
-        << "  motor            = disabled\n"
-        << "  tendon peak      = 3.0 N\n"
-        << "  frequency        = 0.60 Hz\n"
-        << "  caudal k         = 0.50 Nm/rad\n"
-        << "  caudal damping   = 0.005 Nms/rad\n"
-        << "  anchor reaction  = enabled\n"
-        << "  jacobian check   = enabled\n"
-        << "  loadcell         = reconstructed support reaction\n"
-        << "  forward          = +X\n"
-        << "  physics          = 2000 Hz\n"
+        << "\nStarting S-Bend Tendon Diagnostic\n"
+        << "  body          = fixed\n"
+        << "  caudal        = fixed to Tail4\n"
+        << "  left tendon   = constant 1.0 N\n"
+        << "  right tendon  = 0.0 N\n"
+        << "  routing       = [0,0,0,1,1]\n"
+        << "  tail k        = 0.65 Nm/rad\n"
+        << "  tail c        = 0.0 Nms/rad\n"
+        << "  motor/crank   = bypassed\n"
+        << "  physics       = 2000 Hz\n"
+        << "  output        = s_bend_diagnostic.csv\n"
         << std::endl;
 
     sf::GraphicalSimulationApp app(
-        "BionicFish - Phase 0 Thrust Validation",
+        "BionicFish - S-Bend Tendon Diagnostic",
         dataPath,
         render,
         helpers,

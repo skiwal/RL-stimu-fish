@@ -1,343 +1,321 @@
 #include "inc/tendon_stage_r2_simulator.h"
 
-#include <Stonefish/actuators/Actuator.h>
 #include <Stonefish/core/FeatherstoneRobot.h>
 #include <Stonefish/core/Robot.h>
 #include <Stonefish/core/ScenarioParser.h>
 #include <Stonefish/core/SimulationApp.h>
+
 #include <Stonefish/entities/FeatherstoneEntity.h>
 #include <Stonefish/entities/SolidEntity.h>
+
 #include <Stonefish/graphics/OpenGLTrackball.h>
 
-#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <stdexcept>
 #include <string>
 
-namespace {
+namespace
+{
 
 constexpr sf::Scalar kRadToDeg =
     57.29577951308232;
 
-constexpr sf::Scalar kCaudalK =
-    0.50;       // Nm/rad
-
-constexpr sf::Scalar kCaudalC =
-    0.005;      // Nms/rad
-
 }
 
-class CaudalSpringActuator final :
-    public sf::Actuator
+
+TendonStageR2Simulator::
+TendonStageR2Simulator(
+    sf::Scalar stepsPerSecond)
+    : sf::SimulationManager(
+          stepsPerSecond)
 {
-public:
-    CaudalSpringActuator(
-        const std::string& name,
-        sf::FeatherstoneEntity* dynamics,
-        unsigned int joint,
-        sf::Scalar k,
-        sf::Scalar c)
-        : sf::Actuator(name),
-          dynamics_(dynamics),
-          joint_(joint),
-          k_(k),
-          c_(c)
-    {}
-
-    sf::ActuatorType getType() const override
-    {
-        return sf::ActuatorType::MOTOR;
-    }
-
-    void Update(sf::Scalar dt) override
-    {
-        sf::Actuator::Update(dt);
-
-        if (!dynamics_) {
-            valid_ = false;
-            return;
-        }
-
-        btMultibodyLink::eFeatherstoneJointType
-            pt = btMultibodyLink::eInvalid,
-            vt = btMultibodyLink::eInvalid;
-
-        dynamics_->getJointPosition(
-            joint_,q_,pt);
-
-        dynamics_->getJointVelocity(
-            joint_,qdot_,vt);
-
-        valid_ =
-            pt == btMultibodyLink::eRevolute &&
-            vt == btMultibodyLink::eRevolute &&
-            std::isfinite(static_cast<double>(q_)) &&
-            std::isfinite(static_cast<double>(qdot_));
-
-        if (!valid_) {
-            torque_ = 0.0;
-            return;
-        }
-
-        torque_ = -k_*q_-c_*qdot_;
-        dynamics_->DriveJoint(joint_,torque_);
-    }
-
-    sf::Scalar Position() const { return q_; }
-    sf::Scalar Velocity() const { return qdot_; }
-    sf::Scalar Torque() const { return torque_; }
-    bool Valid() const { return valid_; }
-
-private:
-    sf::FeatherstoneEntity* dynamics_ = nullptr;
-    unsigned int joint_ = 0;
-
-    sf::Scalar k_ = 0.0;
-    sf::Scalar c_ = 0.0;
-
-    sf::Scalar q_ = 0.0;
-    sf::Scalar qdot_ = 0.0;
-    sf::Scalar torque_ = 0.0;
-
-    bool valid_ = false;
-};
-
-TendonStageR2Simulator::TendonStageR2Simulator(
-    sf::Scalar sps)
-    : sf::SimulationManager(sps)
-{
-    setCallSimulationStepCompleted(true);
+    setCallSimulationStepCompleted(
+        true);
 }
 
-void TendonStageR2Simulator::BuildScenario()
+
+void
+TendonStageR2Simulator::BuildScenario()
 {
-    auto* app = sf::SimulationApp::getApp();
+    auto* app =
+        sf::SimulationApp::getApp();
 
     if (!app)
         throw std::runtime_error(
             "SimulationApp unavailable.");
 
     const std::string scenario =
-        app->getDataPath()+"env/static_pool.scn";
+        app->getDataPath() +
+        "env/static_pool.scn";
 
-    std::cout << "\nLoading:\n  "
-              << scenario << "\n";
+    std::cout
+        << "\nLoading:\n  "
+        << scenario
+        << "\n";
 
     sf::ScenarioParser parser(this);
 
     if (!parser.Parse(scenario))
+    {
         throw std::runtime_error(
             "Failed to parse static_pool.scn");
+    }
 
     BindFish();
     SetNeutralInitialCondition();
     RegisterTendonActuator();
-    RegisterCaudalSpringActuator();
     OpenCsv();
     ConfigureCamera();
 
     std::cout
         << "\n============================================================\n"
-        << " BionicFish PHASE 0 - Thrust Validation\n"
+        << " S-BEND TENDON DIAGNOSTIC\n"
         << "============================================================\n"
-        << "Body fixed                 YES\n"
-        << "Motor                      DISABLED\n"
-        << "Tendon peak                3.0 N\n"
-        << "Tendon frequency           0.60 Hz\n"
-        << "Tail stiffness             0.65 Nm/rad\n"
-        << "Caudal spring k            " << kCaudalK << " Nm/rad\n"
-        << "Caudal damping c           " << kCaudalC << " Nms/rad\n"
-        << "Tendon anchor reaction     ENABLED\n"
-        << "Jacobian check             ENABLED\n"
-        << "Load-cell reconstruction   ENABLED\n"
-        << "Forward                    +X\n"
-        << "CSV                        tethered_thrust_test.csv\n"
+        << "Body                  FIXED\n"
+        << "CaudalFin             FIXED TO Tail4\n"
+        << "Fluid model           WET / SUBMERGED\n"
+        << "Left tendon           CONSTANT 1.0 N\n"
+        << "Right tendon          0.0 N\n"
+        << "Motor / crank         BYPASSED\n"
+        << "Tail hinge k          0.65 Nm/rad\n"
+        << "Tail hinge c          0.0 Nms/rad\n"
+        << "Routing               [0,0,0,1,1]\n"
+        << "Expected sign         J4 opposite to upstream joints\n"
+        << "CSV                    s_bend_diagnostic.csv\n"
         << "============================================================\n\n";
 }
 
-void TendonStageR2Simulator::BindFish()
+
+void
+TendonStageR2Simulator::BindFish()
 {
-    fishRobot_ = getRobot("BionicFish");
+    fishRobot_ =
+        getRobot("BionicFish");
 
     if (!fishRobot_)
+    {
         throw std::runtime_error(
             "BionicFish not found.");
+    }
 
     fishFeatherstoneRobot_ =
-        dynamic_cast<sf::FeatherstoneRobot*>(
-            fishRobot_);
+        dynamic_cast<
+            sf::FeatherstoneRobot*>(
+                fishRobot_);
 
     if (!fishFeatherstoneRobot_)
+    {
         throw std::runtime_error(
             "BionicFish is not FeatherstoneRobot.");
+    }
 
     fishDynamics_ =
-        fishFeatherstoneRobot_->getDynamics();
+        fishFeatherstoneRobot_
+            ->getDynamics();
 
     fishBody_ =
-        fishRobot_->getBaseLink();
+        fishRobot_
+            ->getBaseLink();
 
-    if (!fishDynamics_ || !fishBody_)
+    if (!fishDynamics_ ||
+        !fishBody_)
+    {
         throw std::runtime_error(
             "Fish dynamics unavailable.");
+    }
 
-    bodyLinkIndex_ = FindLinkIndex("Body");
+    bodyLinkIndex_ =
+        FindLinkIndex("Body");
 
     if (bodyLinkIndex_ != 0)
+    {
         throw std::runtime_error(
-            "Phase 0 expects Body to be Featherstone base link.");
+            "S-bend diagnostic expects Body as base link.");
+    }
 
-    for (std::size_t i=0; i<5; ++i) {
-        const std::string j =
-            "TailJoint"+std::to_string(i);
+    for (std::size_t i=0;
+         i<5;
+         ++i)
+    {
+        const std::string jointName =
+            "TailJoint" +
+            std::to_string(i);
 
-        const std::string l =
-            "Tail"+std::to_string(i);
+        const std::string linkName =
+            "Tail" +
+            std::to_string(i);
 
         tailJointIndices_[i] =
-            FindJointIndex(j.c_str());
+            FindJointIndex(
+                jointName.c_str());
 
         tailLinkIndices_[i] =
-            FindLinkIndex(l.c_str());
+            FindLinkIndex(
+                linkName.c_str());
 
         if (tailJointIndices_[i] < 0 ||
             tailLinkIndices_[i] < 0)
+        {
             throw std::runtime_error(
-                "Cannot bind "+j+"/"+l);
-
-        tailSolids_[i] =
-            fishDynamics_->getLink(
-                static_cast<unsigned int>(
-                    tailLinkIndices_[i])).solid;
+                "Cannot bind " +
+                jointName +
+                " / " +
+                linkName);
+        }
     }
 
-    caudalJointIndex_ =
-        FindJointIndex("CaudalJoint");
+    std::cout
+        << "\nS-bend binding:\n";
 
-    caudalLinkIndex_ =
-        FindLinkIndex("CaudalFin");
-
-    if (caudalJointIndex_ < 0 ||
-        caudalLinkIndex_ < 0)
-        throw std::runtime_error(
-            "Caudal joint/link unavailable.");
-
-    caudalFin_ =
-        fishDynamics_->getLink(
-            static_cast<unsigned int>(
-                caudalLinkIndex_)).solid;
-
-    std::cout << "\nPhase-0 binding:\n";
-
-    for (unsigned int i=0;
-         i<fishDynamics_->getNumOfJoints();
-         ++i) {
-        const auto j =
-            fishDynamics_->getJoint(i);
-
+    for (std::size_t i=0;
+         i<5;
+         ++i)
+    {
         std::cout
-            << "  joint " << i
-            << " " << fishDynamics_->getJointName(i)
-            << " parent=" << j.parent
-            << " child=" << j.child;
-
-        if (j.parent ==
-            static_cast<unsigned int>(bodyLinkIndex_))
-            std::cout << "  [BODY CHILD]";
-
-        std::cout << "\n";
+            << "  J"
+            << i
+            << " = "
+            << fishDynamics_
+                   ->getJointName(
+                       static_cast<unsigned int>(
+                           tailJointIndices_[i]))
+            << ", link="
+            << fishDynamics_
+                   ->getLink(
+                       static_cast<unsigned int>(
+                           tailLinkIndices_[i]))
+                   .solid
+                   ->getName()
+            << "\n";
     }
 
     std::cout << std::endl;
 }
 
-int TendonStageR2Simulator::FindJointIndex(
+
+int
+TendonStageR2Simulator::FindJointIndex(
     const char* name) const
 {
     if (!fishDynamics_ || !name)
         return -1;
 
-    const std::string a(name);
-    const std::string b =
-        "BionicFish/"+a;
+    const std::string plain(name);
+
+    const std::string scoped =
+        "BionicFish/" +
+        plain;
 
     for (unsigned int i=0;
-         i<fishDynamics_->getNumOfJoints();
-         ++i) {
-        const auto n =
-            fishDynamics_->getJointName(i);
+         i<fishDynamics_
+               ->getNumOfJoints();
+         ++i)
+    {
+        const std::string n =
+            fishDynamics_
+                ->getJointName(i);
 
-        if (n==a || n==b)
-            return static_cast<int>(i);
+        if (n == plain ||
+            n == scoped)
+        {
+            return
+                static_cast<int>(i);
+        }
     }
 
     return -1;
 }
 
-int TendonStageR2Simulator::FindLinkIndex(
+
+int
+TendonStageR2Simulator::FindLinkIndex(
     const char* name) const
 {
     if (!fishDynamics_ || !name)
         return -1;
 
-    const std::string a(name);
-    const std::string b =
-        "BionicFish/"+a;
+    const std::string plain(name);
+
+    const std::string scoped =
+        "BionicFish/" +
+        plain;
 
     for (unsigned int i=0;
-         i<fishDynamics_->getNumOfLinks();
-         ++i) {
-        auto* s =
-            fishDynamics_->getLink(i).solid;
+         i<fishDynamics_
+               ->getNumOfLinks();
+         ++i)
+    {
+        auto* solid =
+            fishDynamics_
+                ->getLink(i)
+                .solid;
 
-        if (!s)
+        if (!solid)
             continue;
 
-        const auto n = s->getName();
+        const std::string n =
+            solid->getName();
 
-        if (n==a || n==b)
-            return static_cast<int>(i);
+        if (n == plain ||
+            n == scoped)
+        {
+            return
+                static_cast<int>(i);
+        }
     }
 
     return -1;
 }
 
-void TendonStageR2Simulator::SetNeutralInitialCondition()
-{
-    for (int j : tailJointIndices_)
-        fishDynamics_->setJointIC(
-            static_cast<unsigned int>(j),
-            0.0,0.0);
 
-    fishDynamics_->setJointIC(
-        static_cast<unsigned int>(
-            caudalJointIndex_),
-        0.0,0.0);
+void
+TendonStageR2Simulator::
+SetNeutralInitialCondition()
+{
+    for (int joint :
+         tailJointIndices_)
+    {
+        fishDynamics_->setJointIC(
+            static_cast<unsigned int>(
+                joint),
+            0.0,
+            0.0);
+    }
 }
 
-void TendonStageR2Simulator::RegisterTendonActuator()
+
+void
+TendonStageR2Simulator::
+RegisterTendonActuator()
 {
     TendonTailParameters p;
 
-    p.passiveStiffnessNmRad = 0.65;
-    p.passiveDampingNmsRad = 0.0;
+    p.passiveStiffnessNmRad =
+        0.00;
 
-    p.directTestTensionN = 3.0;
-    p.directTestFrequencyHz = 0.60;
-    p.startTimeS = 1.0;
-    p.rampTimeS = 1.0;
+    p.passiveDampingNmsRad =
+        0.0;
+
+    p.diagnosticLeftTensionN =
+        4.0;
 
     p.jointSafetyLimitRad =
-        1.0471975511965976;
+        1.3962634016;
 
     p.jacobianEpsilonRad =
         1.0e-5;
 
-    std::array<unsigned int,5> joints{};
-    std::array<unsigned int,5> links{};
+    std::array<unsigned int,5>
+        joints{};
 
-    for (std::size_t i=0; i<5; ++i) {
+    std::array<unsigned int,5>
+        links{};
+
+    for (std::size_t i=0;
+         i<5;
+         ++i)
+    {
         joints[i] =
             static_cast<unsigned int>(
                 tailJointIndices_[i]);
@@ -349,7 +327,7 @@ void TendonStageR2Simulator::RegisterTendonActuator()
 
     tendonActuator_ =
         new TendonTailActuator(
-            "BionicFish/Phase0Tendon",
+            "BionicFish/SBendDiagnosticTendon",
             fishDynamics_,
             static_cast<unsigned int>(
                 bodyLinkIndex_),
@@ -357,324 +335,264 @@ void TendonStageR2Simulator::RegisterTendonActuator()
             joints,
             p);
 
-    AddActuator(tendonActuator_);
+    AddActuator(
+        tendonActuator_);
 }
 
-void TendonStageR2Simulator::RegisterCaudalSpringActuator()
-{
-    caudalSpringActuator_ =
-        new CaudalSpringActuator(
-            "BionicFish/CaudalPassiveSpring",
-            fishDynamics_,
-            static_cast<unsigned int>(
-                caudalJointIndex_),
-            kCaudalK,
-            kCaudalC);
 
-    AddActuator(caudalSpringActuator_);
-}
-
-void TendonStageR2Simulator::ConfigureCamera()
+void
+TendonStageR2Simulator::
+ConfigureCamera()
 {
-    auto* tb = getTrackball();
+    auto* tb =
+        getTrackball();
 
     if (!tb || !fishBody_)
         return;
 
-    tb->GlueToMoving(fishBody_);
+    tb->GlueToMoving(
+        fishBody_);
+
     tb->UpdateCenterPos();
     tb->MouseScroll(-10.5f);
     tb->UpdateTransform();
 }
 
-sf::Vector3
-TendonStageR2Simulator::GetSurfaceHydroForce(
-    sf::SolidEntity* s) const
-{
-    if (!s)
-        return sf::Vector3(0,0,0);
 
-    sf::Vector3 Fb,Tb,Fd,Td,Ff,Tf;
-
-    s->getHydrodynamicForces(
-        Fb,Tb,Fd,Td,Ff,Tf);
-
-    return Fd+Ff;
-}
-
-sf::Vector3
-TendonStageR2Simulator::GetTailSurfaceForce() const
-{
-    sf::Vector3 F(0,0,0);
-
-    for (auto* s : tailSolids_)
-        F += GetSurfaceHydroForce(s);
-
-    F += GetSurfaceHydroForce(caudalFin_);
-
-    return F;
-}
-
-/*
- Fixed Body force balance:
-
- 0 = F_body_external
-     + sum(F_child_on_body)
-     + R_support
-
- Stonefish getJointFeedback() returns
- parent-on-child reaction.
-
- Therefore:
- child-on-body = -F_joint
-
- and:
- R_support =
-     -F_body_external
-     + sum(F_joint_parent_on_child)
-
- Torque is reconstructed around Body CG.
-*/
-TendonStageR2Simulator::Wrench
-TendonStageR2Simulator::GetSupportReaction() const
-{
-    Wrench R;
-
-    if (!fishDynamics_ || !fishBody_)
-        return R;
-
-    const sf::Vector3 bodyCG =
-        fishDynamics_->getLinkTransform(
-            static_cast<unsigned int>(
-                bodyLinkIndex_)).getOrigin();
-
-    const sf::Vector3 bodyAppliedForce =
-        fishBody_->getAppliedForce();
-
-    const sf::Vector3 bodyAppliedTorque =
-        fishDynamics_->getMultiBody()
-            ->getBaseTorque();
-
-    R.force = -bodyAppliedForce;
-    R.torque = -bodyAppliedTorque;
-
-    for (unsigned int i=0;
-         i<fishDynamics_->getNumOfJoints();
-         ++i) {
-        const auto j =
-            fishDynamics_->getJoint(i);
-
-        if (j.parent !=
-            static_cast<unsigned int>(
-                bodyLinkIndex_))
-            continue;
-
-        sf::Vector3 fChild, tChild;
-
-        fishDynamics_->getJointFeedback(
-            i,fChild,tChild);
-
-        const auto childT =
-            fishDynamics_->getLinkTransform(
-                j.child);
-
-        // Feedback is expressed in child CG frame.
-        const sf::Vector3 fWorld =
-            childT.getBasis()*fChild;
-
-        const sf::Vector3 tWorld =
-            childT.getBasis()*tChild;
-
-        const sf::Vector3 r =
-            childT.getOrigin()-bodyCG;
-
-        R.force += fWorld;
-
-        R.torque +=
-            tWorld+r.cross(fWorld);
-    }
-
-    return R;
-}
-
-void TendonStageR2Simulator::OpenCsv()
+void
+TendonStageR2Simulator::OpenCsv()
 {
     csv_.open(
-        "tethered_thrust_test.csv",
-        std::ios::out|std::ios::trunc);
+        "s_bend_diagnostic.csv",
+        std::ios::out |
+        std::ios::trunc);
 
     if (!csv_)
+    {
         throw std::runtime_error(
-            "Cannot create CSV.");
+            "Cannot create s_bend_diagnostic.csv");
+    }
 
     csv_
-        << "time_s,phase,"
-        << "left_tension_n,right_tension_n,"
-        << "left_length_m,right_length_m,";
+        << "time_s,"
+        << "left_tension_n,"
+        << "right_tension_n,"
+        << "left_length_m,"
+        << "right_length_m,";
 
     for (int i=0; i<5; ++i)
+    {
         csv_
-            << "j" << i << "_deg,"
-            << "j" << i << "_qdot_rad_s,";
+            << "j"
+            << i
+            << "_deg,";
+    }
 
-    csv_
-        << "caudal_deg,"
-        << "caudal_qdot_rad_s,"
-        << "caudal_spring_torque_nm,"
-        << "anchor_fx_n,anchor_fy_n,anchor_fz_n,"
-        << "tendon_force_residual_n,"
-        << "tendon_torque_residual_nm,";
-
+    // Absolute / cumulative orientation of each tail link.
     for (int i=0; i<5; ++i)
+    {
         csv_
-            << "jt" << i
-            << "_pointforce_nm,";
+            << "theta"
+            << i
+            << "_cum_deg,";
+    }
 
+    // Actual force acting at each LEFT tendon guide.
     for (int i=0; i<5; ++i)
+    {
         csv_
-            << "jt" << i
+            << "guide"
+            << i
+            << "_fx_n,"
+            << "guide"
+            << i
+            << "_fy_n,"
+            << "guide"
+            << i
+            << "_fz_n,";
+    }
+
+    // Generalized tendon torque from actual applied point forces.
+    for (int i=0; i<5; ++i)
+    {
+        csv_
+            << "jt"
+            << i
+            << "_force_nm,";
+    }
+
+    // Independent -T dL/dq calculation.
+    for (int i=0; i<5; ++i)
+    {
+        csv_
+            << "jt"
+            << i
             << "_jacobian_nm,";
-
-    csv_
-        << "jacobian_max_error_nm,";
+    }
 
     for (int i=0; i<5; ++i)
+    {
         csv_
-            << "tail" << i
-            << "_surface_fx_n,";
+            << "jt"
+            << i
+            << "_error_nm,";
+    }
+
+    for (int i=0; i<5; ++i)
+    {
+        csv_
+            << "jt"
+            << i
+            << "_passive_nm,";
+    }
 
     csv_
-        << "caudal_surface_fx_n,"
-        << "tail_surface_fx_n,"
-        << "tail_surface_fy_n,"
-        << "tail_surface_fz_n,"
-        << "support_rx_n,"
-        << "support_ry_n,"
-        << "support_rz_n,"
-        << "support_tx_nm,"
-        << "support_ty_nm,"
-        << "support_tz_nm,"
-        << "loadcell_thrust_fx_n,"
-        << "mean_loadcell_thrust_fx_n,"
-        << "mean_tail_surface_fx_n,"
-        << "tendon_safety_tripped,"
-        << "caudal_valid\n";
+        << "anchor_fx_n,"
+        << "anchor_fy_n,"
+        << "anchor_fz_n,"
+        << "tendon_force_residual_n,"
+        << "tendon_torque_residual_nm,"
+        << "jacobian_max_error_nm,"
+        << "safety_tripped\n";
 
-    csv_ << std::setprecision(10);
+    csv_
+        << std::setprecision(12);
 }
 
-void TendonStageR2Simulator::RecordSample()
+
+void
+TendonStageR2Simulator::
+RecordSample()
 {
     if (!csv_ ||
-        !tendonActuator_ ||
-        !caudalSpringActuator_)
+        !tendonActuator_)
+    {
         return;
+    }
 
     const auto s =
-        tendonActuator_->GetSnapshot();
-
-    std::array<sf::Vector3,5> tailF;
-
-    for (std::size_t i=0; i<5; ++i)
-        tailF[i] =
-            GetSurfaceHydroForce(
-                tailSolids_[i]);
-
-    const auto caudalF =
-        GetSurfaceHydroForce(caudalFin_);
-
-    const sf::Scalar meanThrust =
-        meanAccumTimeS_ > 0.0
-        ? thrustImpulseNs_/meanAccumTimeS_
-        : 0.0;
-
-    const sf::Scalar meanSurface =
-        meanAccumTimeS_ > 0.0
-        ? tailSurfaceImpulseNs_/meanAccumTimeS_
-        : 0.0;
+        tendonActuator_
+            ->GetSnapshot();
 
     csv_
-        << s.timeS << ","
-        << s.testPhase << ","
-        << s.commandedTensionN[0] << ","
-        << s.commandedTensionN[1] << ","
-        << s.tendonLengthM[0] << ","
-        << s.tendonLengthM[1] << ",";
+        << s.timeS
+        << ","
+        << s.commandedTensionN[0]
+        << ","
+        << s.commandedTensionN[1]
+        << ","
+        << s.tendonLengthM[0]
+        << ","
+        << s.tendonLengthM[1]
+        << ",";
 
-    for (std::size_t i=0; i<5; ++i)
+    // Local hinge angles.
+    for (std::size_t i=0;
+         i<5;
+         ++i)
+    {
         csv_
             << s.jointPositionRad[i]
-                *kRadToDeg << ","
-            << s.jointVelocityRadS[i]
+               * kRadToDeg
             << ",";
+    }
+
+    // Cumulative tail-link orientation.
+    sf::Scalar cumulative = 0.0;
+
+    for (std::size_t i=0;
+         i<5;
+         ++i)
+    {
+        cumulative +=
+            s.jointPositionRad[i];
+
+        csv_
+            << cumulative
+               * kRadToDeg
+            << ",";
+    }
+
+    // Guide point forces.
+    for (const auto& F :
+         s.guideForceWorld)
+    {
+        csv_
+            << F.x()
+            << ","
+            << F.y()
+            << ","
+            << F.z()
+            << ",";
+    }
+
+    for (sf::Scalar v :
+         s.tendonTorqueFromForcesNm)
+    {
+        csv_
+            << v
+            << ",";
+    }
+
+    for (sf::Scalar v :
+         s.tendonTorqueFromJacobianNm)
+    {
+        csv_
+            << v
+            << ",";
+    }
+
+    for (sf::Scalar v :
+         s.tendonTorqueErrorNm)
+    {
+        csv_
+            << v
+            << ",";
+    }
+
+    for (sf::Scalar v :
+         s.passiveTorqueNm)
+    {
+        csv_
+            << v
+            << ",";
+    }
 
     csv_
-        << caudalSpringActuator_->Position()
-            *kRadToDeg << ","
-        << caudalSpringActuator_->Velocity() << ","
-        << caudalSpringActuator_->Torque() << ","
-
-        << s.bodyAnchorForceWorld.x() << ","
-        << s.bodyAnchorForceWorld.y() << ","
-        << s.bodyAnchorForceWorld.z() << ","
-
-        << s.tendonNetForceWorld.length() << ","
-        << s.tendonNetTorqueWorld.length() << ",";
-
-    for (auto v : s.tendonTorqueFromForcesNm)
-        csv_ << v << ",";
-
-    for (auto v : s.tendonTorqueFromJacobianNm)
-        csv_ << v << ",";
-
-    csv_ << s.jacobianMaxErrorNm << ",";
-
-    for (const auto& F : tailF)
-        csv_ << F.x() << ",";
-
-    csv_
-        << caudalF.x() << ","
-
-        << lastTailSurface_.x() << ","
-        << lastTailSurface_.y() << ","
-        << lastTailSurface_.z() << ","
-
-        << lastSupport_.force.x() << ","
-        << lastSupport_.force.y() << ","
-        << lastSupport_.force.z() << ","
-
-        << lastSupport_.torque.x() << ","
-        << lastSupport_.torque.y() << ","
-        << lastSupport_.torque.z() << ","
-
-        << lastLoadcellThrustFx_ << ","
-        << meanThrust << ","
-        << meanSurface << ","
-
-        << (s.safetyTripped ? 1 : 0) << ","
-        << (caudalSpringActuator_->Valid() ? 1 : 0)
+        << s.bodyAnchorForceWorld.x()
+        << ","
+        << s.bodyAnchorForceWorld.y()
+        << ","
+        << s.bodyAnchorForceWorld.z()
+        << ","
+        << s.tendonNetForceWorld.length()
+        << ","
+        << s.tendonNetTorqueWorld.length()
+        << ","
+        << s.jacobianMaxErrorNm
+        << ","
+        << (s.safetyTripped ? 1 : 0)
         << "\n";
 }
 
-void TendonStageR2Simulator::PrintTelemetry()
+
+void
+TendonStageR2Simulator::
+PrintTelemetry()
 {
-    if (!tendonActuator_ ||
-        !caudalSpringActuator_)
+    if (!tendonActuator_)
         return;
 
     const auto s =
-        tendonActuator_->GetSnapshot();
-
-    const sf::Scalar meanThrust =
-        meanAccumTimeS_ > 0.0
-        ? thrustImpulseNs_/meanAccumTimeS_
-        : 0.0;
+        tendonActuator_
+            ->GetSnapshot();
 
     std::cout
         << std::fixed
         << std::setprecision(4)
 
-        << "[P0] t=" << s.timeS
+        << "[S-BEND] t="
+        << s.timeS
 
         << " T=("
         << s.commandedTensionN[0]
@@ -682,14 +600,65 @@ void TendonStageR2Simulator::PrintTelemetry()
         << s.commandedTensionN[1]
         << ")"
 
-        << " loadFx="
-        << lastLoadcellThrustFx_
+        << " Jdeg=(";
 
-        << " meanFx="
-        << meanThrust
+    for (std::size_t i=0;
+         i<5;
+         ++i)
+    {
+        if (i)
+            std::cout << ",";
 
-        << " tailSurfFx="
-        << lastTailSurface_.x()
+        std::cout
+            << s.jointPositionRad[i]
+               * kRadToDeg;
+    }
+
+    std::cout
+        << ") tauF=(";
+
+    for (std::size_t i=0;
+         i<5;
+         ++i)
+    {
+        if (i)
+            std::cout << ",";
+
+        std::cout
+            << s.tendonTorqueFromForcesNm[i];
+    }
+
+    std::cout
+        << ") tauJ=(";
+
+    for (std::size_t i=0;
+         i<5;
+         ++i)
+    {
+        if (i)
+            std::cout << ",";
+
+        std::cout
+            << s.tendonTorqueFromJacobianNm[i];
+    }
+
+    std::cout
+        << ") guideFy=(";
+
+    for (std::size_t i=0;
+         i<5;
+         ++i)
+    {
+        if (i)
+            std::cout << ",";
+
+        std::cout
+            << s.guideForceWorld[i].y();
+    }
+
+    std::cout
+        << ") jacErr="
+        << s.jacobianMaxErrorNm
 
         << " consF="
         << s.tendonNetForceWorld.length()
@@ -697,70 +666,41 @@ void TendonStageR2Simulator::PrintTelemetry()
         << " consT="
         << s.tendonNetTorqueWorld.length()
 
-        << " jacErr="
-        << s.jacobianMaxErrorNm
-
-        << " C="
-        << caudalSpringActuator_->Position()
-            *kRadToDeg
-        << "deg"
-
         << " safety="
-        << (s.safetyTripped ? "TRIPPED":"OK")
+        << (s.safetyTripped
+            ? "TRIPPED"
+            : "OK")
 
         << std::endl;
 }
 
-void TendonStageR2Simulator::SimulationStepCompleted(
+
+void
+TendonStageR2Simulator::
+SimulationStepCompleted(
     sf::Scalar dt)
 {
     elapsedTimeS_ += dt;
 
-    /*
-     IMPORTANT:
-     This runs after Bullet solved the step.
-     Joint feedback therefore belongs to the
-     step that just completed.
-    */
-    lastSupport_ =
-        GetSupportReaction();
-
-    lastTailSurface_ =
-        GetTailSurfaceForce();
-
-    /*
-     R_support = stand force acting ON fish.
-
-     Positive propulsion means fish would
-     accelerate toward +X if released.
-
-     Therefore the load-cell thrust sign is:
-         F_thrust = -R_support
-    */
-    lastLoadcellThrustFx_ =
-        -lastSupport_.force.x();
-
-    if (elapsedTimeS_ >= meanStartTimeS_) {
-        thrustImpulseNs_ +=
-            lastLoadcellThrustFx_*dt;
-
-        tailSurfaceImpulseNs_ +=
-            lastTailSurface_.x()*dt;
-
-        meanAccumTimeS_ += dt;
-    }
-
     if (lastCsvTimeS_ < 0.0 ||
-        elapsedTimeS_-lastCsvTimeS_
-            >= csvPeriodS_) {
+        elapsedTimeS_
+            - lastCsvTimeS_
+            >= csvPeriodS_)
+    {
         RecordSample();
-        lastCsvTimeS_ = elapsedTimeS_;
+
+        lastCsvTimeS_ =
+            elapsedTimeS_;
     }
 
     if (lastConsoleTimeS_ < 0.0 ||
-        elapsedTimeS_-lastConsoleTimeS_
-            >= consolePeriodS_) {
+        elapsedTimeS_
+            - lastConsoleTimeS_
+            >= consolePeriodS_)
+    {
         PrintTelemetry();
-        lastConsoleTimeS_ = elapsedTimeS_;
+
+        lastConsoleTimeS_ =
+            elapsedTimeS_;
     }
 }
